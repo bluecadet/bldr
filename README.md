@@ -1,10 +1,6 @@
-<div style="text-align: center">
 
 # 🚨 🚨 🚨 This jawn is in active development. 🚨 🚨 🚨
-
-Use at your own risk.
-
-</div>
+<p align="center">Use at your own risk.</p>
 
 # Bldr
 
