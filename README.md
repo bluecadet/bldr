@@ -4,23 +4,24 @@
 
 `npm i -g @bluecadet/bldr`
 
+## Documentation
 
-[Config documentation](#config)
-[Command documentation](#commands)
+- [Config documentation](#config)
+  - [Config Setup](#config-setup)
+  - [PostCSS config](#postcss-config)
+  - [Esbuild and Rollup Config](#esbuildrollup-override-config)
+- [Command documentation](#commands)
+- [Processing documentation](#processing)
 
 ## Config
 
-Bldr relies on a `bldrConfig.js` file to point to where files should be sourced, distributed, and watched. Bldr supports 2 main processes: `dev` and `build`, where `dev` is meant to run locally, and `build` is meant to for production. The main difference:
-
-JS files in `dev` are processed with esBuild, while JS files in `build` are processed with rollup.
-
-This keeps development builds fast, and production builds more thorough.
+Bldr relies on a `bldrConfig.js` file to point to where files should be sourced, distributed to, and watched. Bldr supports 2 main processes: `dev` and `build`, where `dev` is meant to run locally, and `build` is meant for production. The main difference: JS files in `dev` are processed with [esBuild](https://esbuild.github.io/), while JS files in `build` are processed with [Rollup](https://rollupjs.org). CSS is always processed by [PostCss](https://postcss.org/). This keeps development builds fast, and production builds more thorough.
 
 ### Config Setup
 
 #### Base config
 
-```
+```js
 module.exports = {
   dev: {
     // file config
@@ -33,7 +34,7 @@ module.exports = {
 
 Both `dev` and `build` support the following objects (described below):
 
-```
+```js
 {
   css: {
     // src/dest/watch config for processing files with postcss
@@ -49,7 +50,7 @@ Both `dev` and `build` support the following objects (described below):
 
 Each of these keys can support a single object (`css: {}`) OR and arracy of objects:
 
-```
+```js
 {
   css: [
     {
@@ -77,7 +78,7 @@ This is useful if there are multiple directories in one project to run processes
 
 Example:
 
-```
+```js
 css: {
   src: './path/to/src/css/**/*.css'
 }
@@ -87,7 +88,7 @@ css: {
 
 Example:
 
-```
+```js
 css: {
   dest: './path/to/public/css/'
 }
@@ -97,7 +98,7 @@ css: {
 
 Example:
 
-```
+```js
 css: {
   watch: [
     './path/to/src/css/**/*.css',
@@ -108,7 +109,7 @@ css: {
 
 Example config:
 
-```
+```js
 module.exports = {
   dev: {
     css: {
@@ -132,7 +133,7 @@ Once an env config object is created, they can be ran using the flag `env=ENV_KE
 
 Example config:
 
-```
+```js
 module.exports = {
   dev: {
     css: [
@@ -163,10 +164,12 @@ module.exports = {
 ```
 
 In this example, `bldr dev` will watch and process css in both the `theme` and `cms` directories, but running
+
+```bash
+$ bldr dev env=themeOnly
 ```
-bldr dev env=themeOnly
-```
-will only watch the `theme` directory.
+
+will only watch the `theme` directory. Multiple `env` objects can be configured.
 
 Each object in the `env` config has the same options as the `dev` and `build` config.
 
@@ -179,7 +182,7 @@ Configure postcss by adding a `postcss.config.js` file to the root of your proje
 
 Both esBuild and rollup options can be changed/overwritten in the config. The following config is available:
 
-```
+```js
 const buildStatistics = require('rollup-plugin-build-statistics');
 
 module.exports = {
@@ -196,17 +199,21 @@ module.exports = {
   rollup: {
     inputOptions: {
       plugins: [
-        // Array of rollup plugins
+        // Array of rollup input plugins
         buildStatistics({
           projectName: 'awesome-project',
         }),
+      ]
+    },
+    outputOptions: {
+      plugins: [
+        // Array of rollup output plugins
       ]
     },
     overridePlugins: false,
     rollup: require('rollup'), // overrides bldr version of rollup
   }
 }
-
 ```
 
 If `overridePlugins` is set to false (default value), items in the `plugins` arrays will be added to the existing bldr plugins. If `overridePlugins` is set to true, then default bldr plugins will not be used, and only those provided in the `plugins` array will be added.
@@ -217,7 +224,7 @@ If you need a specific version of esbuild or rollup, add the require statement a
 
 ### `init`
 
-```
+```bash
 $ bldr init
 ```
 
@@ -226,7 +233,7 @@ Running `init` will attempt to create boilerplate config files in the project ro
 
 ### `dev`
 
-```
+```bash
 $ bldr dev
 ```
 
@@ -234,7 +241,7 @@ Running `dev` will run postcss and esbuild without minification.
 
 ### `watch`
 
-```
+```bash
 $ bldr watch
 ```
 
@@ -245,10 +252,18 @@ Running `watch` will run postcss and esbuild without minification (same as `dev`
 
 ### `build`
 
-```
+```bash
 $ bldr build
 ```
 
 Running `build` will run postcss and rollup with minification. Rollup will also run babel.
 
 
+## Processing
+
+Default Rollup plugins:
+- @rollup/plugin-babel
+- @rollup/plugin-commonjs
+- rollup-plugin-terser
+- @rollup/plugin-node-resolve
+- @rollup/plugin-eslint
