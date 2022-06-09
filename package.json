@@ -1,18 +1,28 @@
 {
-  "name": "bldr",
-  "version": "1.0.0",
+  "name": "@bluecadet/bldr",
+  "version": "0.1.0",
   "description": "",
+  "bugs": {
+    "url": "https://github.com/bluecadet/bldr/issues"
+  },
   "main": "index.js",
+  "repository": "github:bluecadet/bldr",
   "directories": {
     "lib": "lib"
   },
   "bin": {
     "bldr": "./index.js"
   },
+  "preferGlobal": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "contributors": [
+    {
+      "name": "Shaun Baer",
+      "email": "shaun@bluecadet.com"
+    }
+  ],
   "license": "ISC",
   "dependencies": {
     "@rollup/plugin-babel": "^5.3.1",
