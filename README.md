@@ -1,6 +1,12 @@
 # Bldr
 
-`npm i -g bldr`
+## Installation
+
+`npm i -g @bluecadet/bldr`
+
+
+[Config documentation](#config)
+[Command documentation](#commands)
 
 ## Config
 
