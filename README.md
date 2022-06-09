@@ -8,6 +8,7 @@
 
 - [Config documentation](#config)
   - [Config Setup](#config-setup)
+  - [Environment Config](#environment-config)
   - [PostCSS config](#postcss-config)
   - [Esbuild and Rollup Config](#esbuildrollup-override-config)
 - [Command documentation](#commands)
@@ -48,7 +49,7 @@ Both `dev` and `build` support the following objects (described below):
 }
 ```
 
-Each of these keys can support a single object (`css: {}`) OR and arracy of objects:
+Each of these keys can support a single object (`css: {}`) OR and array of objects:
 
 ```js
 {
@@ -59,7 +60,7 @@ Each of these keys can support a single object (`css: {}`) OR and arracy of obje
     {
       // src/dest/watch config
     },
-  },
+  ],
   js: {
     // src/dest/watch config
   },
@@ -120,12 +121,42 @@ module.exports = {
         './path/to/other/css/**/*.css'
       ]
     }
+  },
+  build: {
+    css: {
+      src: './path/to/src/css/**/*.css',
+      dest: './path/to/public/css/',
+      watch: [
+        './path/to/src/css/**/*.css',
+        './path/to/other/css/**/*.css'
+      ]
+    }
   }
 }
 ```
 
+**Note:** if your config values are the same for both environments, you can simply store the value in a variable and pass it to both dev and build:
 
-#### `dev` environment config
+```js
+const defaultConfig = {
+  css: {
+    src: './path/to/src/css/**/*.css',
+    dest: './path/to/public/css/',
+    watch: [
+      './path/to/src/css/**/*.css',
+      './path/to/other/css/**/*.css'
+    ]
+  }
+};
+
+module.exports = {
+  dev: defaultConfig,
+  build: defaultConfig
+}
+```
+
+
+#### Environment config
 
 Within the `dev` process, an `env` object can be added to define seperate build environments. This allows you to create specific config for a specific set of files (such as 'cms' or 'theme'). Consider it to be multiple `dev` configurations.
 
