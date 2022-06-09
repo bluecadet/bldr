@@ -1,6 +1,7 @@
-
+<center>
 # 🚨 🚨 🚨 This jawn is in active development. 🚨 🚨 🚨
-<p align="center">Use at your own risk.</p>
+Use at your own risk.
+</center>
 
 # Bldr
 
