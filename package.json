@@ -1,27 +1,26 @@
 {
   "name": "@bluecadet/bldr",
   "version": "0.1.0",
-  "description": "",
   "bugs": {
     "url": "https://github.com/bluecadet/bldr/issues"
   },
   "main": "index.js",
-  "repository": "github:bluecadet/bldr",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bluecadet/bldr.git"
+  },
   "directories": {
     "lib": "lib"
   },
   "bin": {
-    "bldr": "./index.js"
+    "bldr": "index.js"
   },
   "preferGlobal": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "contributors": [
-    {
-      "name": "Shaun Baer",
-      "email": "shaun@bluecadet.com"
-    }
+    "Shaun Baer <shaun@bluecadet.com>"
   ],
   "license": "ISC",
   "dependencies": {
@@ -53,5 +52,8 @@
     "stylelint-declaration-block-no-ignored-properties": "^2.5.0",
     "stylelint-high-performance-animation": "^1.6.0",
     "yargs": "^17.5.1"
-  }
+  },
+  "homepage": "https://github.com/bluecadet/bldr#readme",
+  "devDependencies": {},
+  "author": ""
 }
