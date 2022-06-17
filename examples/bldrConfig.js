@@ -80,12 +80,6 @@ module.exports = {
       watch: '',
     }
   },
-  postCSS: {
-    plugins: [
-      require('postcss-assets')
-    ],
-    overridePlugins: false
-  },
   esBuild: {
     plugins: [
       require("essass"),
