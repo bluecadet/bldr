@@ -25,24 +25,38 @@
 
 ## Config
 
-Bldr relies on a `bldrConfig.js` file to point to where files should be sourced, distributed to, and watched. Bldr supports 2 main processes: `dev` and `build`, where `dev` is meant to run locally, and `build` is meant for production. The main difference: JS files in `dev` are processed with [esBuild](https://esbuild.github.io/), while JS files in `build` are processed with [Rollup](https://rollupjs.org). CSS is always processed by [PostCss](https://postcss.org/). This keeps development builds fast, and production builds more thorough.
+Bldr relies on a `bldrConfig.js` file to point to where files should be sourced, distributed to, and watched.
+
+Bldr supports 2 main processes: `dev` and `build`, where `dev` is meant to run locally, and `build` is meant for production. The main difference: JS files in `dev` are processed with [esBuild](https://esbuild.github.io/), while JS files in `build` are processed with [Rollup](https://rollupjs.org). CSS is always processed by [PostCss](https://postcss.org/). This keeps development builds fast, and production builds more thorough.
 
 ### Config Setup
 
 #### Base config
 
+Config can be setup to either export a single object, or an object with `dev` and `build` objects.
+
+If path values for the `dev` and `build` processes are identical, you can use export a single object:
+
+```js
+module.exports = {
+  // file configuration
+}
+```
+
+If you need to support different path structures for `dev` and `build` commands, use the following configuration:
+
 ```js
 module.exports = {
   dev: {
-    // file config
+    // file configuration
   },
   build: {
-    // file config
+    // file configuration
   }
 }
 ```
 
-Both `dev` and `build` support the following objects (described below):
+Both the single config object and the `dev` and `build` keyed object support the following file configuration objects (described below):
 
 ```js
 {
@@ -117,7 +131,21 @@ css: {
 }
 ```
 
-Example config:
+##### Example basic config:
+```js
+module.exports = {
+  css: {
+    src: './path/to/src/css/**/*.css',
+    dest: './path/to/public/css/',
+    watch: [
+      './path/to/src/css/**/*.css',
+      './path/to/other/css/**/*.css'
+    ]
+  }
+}
+```
+
+##### Example dev/build config:
 
 ```js
 module.exports = {
@@ -144,34 +172,44 @@ module.exports = {
 }
 ```
 
-**Note:** if your config values are the same for both environments, you can simply store the value in a variable and pass it to both dev and build:
 
-```js
-const defaultConfig = {
-  css: {
-    src: './path/to/src/css/**/*.css',
-    dest: './path/to/public/css/',
-    watch: [
-      './path/to/src/css/**/*.css',
-      './path/to/other/css/**/*.css'
-    ]
-  }
-};
-
-module.exports = {
-  dev: defaultConfig,
-  build: defaultConfig
-}
-```
 
 
 #### Environment config
 
-Within the `dev` process, an `env` object can be added to define seperate build environments. This allows you to create specific config for a specific set of files (such as 'cms' or 'theme'). Consider it to be multiple `dev` configurations.
+Within the basic config object or the `dev` key, an `env` object can be added to define seperate build environments. This allows you to create specific config for a specific set of files (such as 'cms' or 'theme'). Consider it to be multiple `dev` configurations.
 
 Once an env config object is created, they can be ran using the flag `env=ENV_KEY_NAME`.
 
-Example config:
+Example basic config:
+
+```js
+module.exports = {
+  css: [
+    {
+      src: './theme/src/css/**/*.css',
+      dest: './theme/public/css/',
+      watch: ['./theme/src/css/**/*.css',]
+    },
+    {
+      src: './cms/src/css/**/*.css',
+      dest: './cms/public/css/',
+      watch: ['./cms/src/css/**/*.css',]
+    },
+  ],
+  env: {
+    themeOnly: {
+      css: {
+        src: './theme/src/css/**/*.css',
+        dest: './theme/public/css/',
+        watch: ['./theme/src/css/**/*.css',]
+      },
+    }
+  }
+}
+```
+
+Example dev/build config:
 
 ```js
 module.exports = {
@@ -187,9 +225,7 @@ module.exports = {
         dest: './cms/public/css/',
         watch: ['./cms/src/css/**/*.css',]
       },
-    ]
-
-    },
+    ],
     env: {
       themeOnly: {
         css: {
@@ -216,7 +252,9 @@ Each object in the `env` config has the same options as the `dev` and `build` co
 
 ### PostCSS config
 
-Configure postcss by adding a `postcss.config.js` file to the root of your project.
+Configure postcss by adding a `postcss.config.js` file to the root of your project. bldr uses [postcss-load-config](https://github.com/postcss/postcss-load-config) under the hood. As such, make sure to add plugins using the object syntax in the `postcss-load-config` documentation [here](https://github.com/postcss/postcss-load-config#examples).
+
+In addition to the default context variables of (`ctx.env` (`process.env.NODE_ENV`) and `ctx.cwd` (`process.cwd()`)), there is an additional `bldrEnv`, which will have the value of the current build command (`dev`, `build`, or `watch`). Again, refer to the `postcss-load-config` documentation [here](https://github.com/postcss/postcss-load-config#examples).
 
 ### EsBuild/Rollup override config
 
@@ -287,7 +325,7 @@ $ bldr watch
 
 Running `watch` will run postcss and esbuild without minification (same as `dev`). Additionally:
 - a chokidar instance will initialize to watch files and run appropriate processes when files are added/removed/updated based on file type
-- a browsersync instance will be created. Edit `bldrConfigLocal.js` to add options as needed.
+- a browsersync instance will be created if it does not exist. Edit `bldrConfigLocal.js` to add [browsersync options](https://browsersync.io/docs/options) as needed.
 
 
 ### `build`
