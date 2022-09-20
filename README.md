@@ -298,6 +298,23 @@ If `overridePlugins` is set to false (default value), items in the `plugins` arr
 
 If you need a specific version of esbuild or rollup, add the require statement as shown above.
 
+### Local Config
+
+Create a local config file by running `bldr init` or creating a file in root named `bldrConfigLocal.js`.
+
+Local config is primarily used to store browsersync settings. As such, it is not a file that needs to be tracked.
+
+Example dev/build config:
+
+```js
+module.exports = {
+  browserSync: {
+    proxy: 'http://site.local'
+    // other browsersync options as per https://browsersync.io/docs/options
+  }
+}
+```
+
 ## Commands
 
 ### `init`
