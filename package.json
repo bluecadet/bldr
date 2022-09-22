@@ -1,6 +1,6 @@
 {
   "name": "@bluecadet/bldr",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "bugs": {
     "url": "https://github.com/bluecadet/bldr/issues"
   },
@@ -15,7 +15,6 @@
   "bin": {
     "bldr": "index.js"
   },
-  "preferGlobal": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
