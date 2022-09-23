@@ -172,7 +172,46 @@ module.exports = {
 }
 ```
 
+#### `watchReload` config
 
+When running `bldr watch` you may need other files to trigger an automatic reload. To do this, add a `watchReload` key with a value of an array to config:
+
+##### Example basic config:
+```js
+module.exports = {
+  css: {
+    ...
+  },
+  js: {
+    ...
+  },
+  watchReload: [
+    './**/*.twig',
+    './**/*.html',
+    './**/*.php'
+  ]
+}
+```
+
+##### Example dev/build config:
+In practice, the `watchReload` key only applies to the `watch` process, which will only ever honor basic and `dev` config, so its not needed in `build`.
+
+```js
+module.exports = {
+  dev: {
+    css: {...},
+    js: {...},
+    watchReload: [
+      './**/*.twig',
+      './**/*.html',
+      './**/*.php'
+    ]
+  },
+  build: {
+    css: {...}
+  }
+}
+```
 
 
 #### Environment config
