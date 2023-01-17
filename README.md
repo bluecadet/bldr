@@ -20,6 +20,8 @@
   - [Environment Config](#environment-config)
   - [PostCSS config](#postcss-config)
   - [Esbuild and Rollup Config](#esbuildrollup-override-config)
+    - [Recommended Babel Config](#recommended-babel-config)
+  - [Browsersync Config](#browsersync-config)
 - [Command documentation](#commands)
 - [Processing documentation](#processing)
 
@@ -336,6 +338,53 @@ module.exports = {
 If `overridePlugins` is set to false (default value), items in the `plugins` arrays will be added to the existing bldr plugins. If `overridePlugins` is set to true, then default bldr plugins will not be used, and only those provided in the `plugins` array will be added.
 
 If you need a specific version of esbuild or rollup, add the require statement as shown above.
+
+#### Recommended Babel Config
+
+By default, if a babel config file exists, bldr will use the `@rollup/plugin-babel` with the options of `{babelHelpers: 'bundled'}`. You can override this config by setting an object in the rollup section of `bldrConfig.js`:
+
+```
+{
+  ...,
+  rollup: {
+    babelPluginOptions: {
+      babelHelpers: 'bundled',
+    }
+  }
+```
+
+More options [here](https://github.com/rollup/plugins/tree/master/packages/babel#options).
+
+##### Babel Config
+
+While you can setup babel as you like, the following is recommended (particularly with the default setting `babelHelpers` to runtime):
+
+Install the following packages to your projects package.json:
+```
+npm i --save-dev @babel/preset-env core-js
+```
+
+then create a `babel.config.json` file containing:
+
+```
+{
+  "compact" : false,
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "useBuiltIns": "usage",
+        "corejs": 3
+      }
+    ]
+  ]
+}
+```
+
+
+#### Browsersync Config
+
+If you would like to run watch mode without browsersync, you can disable broswersync by adding `disableBrowsersync: true` to your bldrConfig.js file.
 
 ### Local Config
 
