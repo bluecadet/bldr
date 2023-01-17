@@ -1,6 +1,6 @@
 {
   "name": "@bluecadet/bldr",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "bugs": {
     "url": "https://github.com/bluecadet/bldr/issues"
   },
@@ -41,8 +41,8 @@
     "gifsicle": "^5.2.1",
     "glob": "^8.0.3",
     "imagemin": "^7.0.1",
-    "imagemin-pngquant": "^9.0.2",
     "imagemin-mozjpeg": "^9.0.0",
+    "imagemin-pngquant": "^9.0.2",
     "imagemin-svgo": "^9.0.0",
     "node-sass": "^7.0.1",
     "node-sass-glob": "^1.0.4",
