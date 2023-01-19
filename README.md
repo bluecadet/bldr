@@ -302,42 +302,53 @@ In addition to the default context variables of (`ctx.env` (`process.env.NODE_EN
 Both esBuild and rollup options can be changed/overwritten in the config. The following config is available:
 
 ```js
-const buildStatistics = require('rollup-plugin-build-statistics');
+// Some plugin you would like to add
 
 module.exports = {
   dev: ...,
   build: ...,
   esBuild: {
     plugins: [
-      // Array of esbuild plugins
-      require("essass"),
+      // Array of esbuild plugins to add (install in your root package.json)
+      // if `esBuild.overridePlugins` is set to true, this array will replace the default bldr array.
+      // if not, then these will be added after bldrs default plugin set. See Processing documentation below
     ],
-    overridePlugins: false,
-    esBuild: require('esbuild'), // overrides bldr version of esbuild
+    overridePlugins: false, // set to true to override default bldr plugins
+    esBuild: require('esbuild'), // overrides bldr version of esbuild. Default: null
   },
   rollup: {
+    omitBabel: false, // set to true if babel should not be ran
+    useTerser: true,  // set to false if terser should not be ran
+    babelPluginOptions: {
+      // see @rollup/plugin-babel options at https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers)
+      // default: { babelHelpers: 'bundled' }
+    },
     inputOptions: {
-      plugins: [
-        // Array of rollup input plugins
-        buildStatistics({
-          projectName: 'awesome-project',
-        }),
-      ]
+      // see rollups inputOptions object at https://rollupjs.org/guide/en/#inputoptions-object
+      // `file` will automatically be added, so no need to add here
+      // default additions: { external: [/@babel\/runtime/] }
     },
+    inputPlugins: [
+      // array of rollup input plugins.
+      // if `rollup.overrideInputPlugins` is set to true, this array will replace the default bldr array.
+      // if not, then these will be added after bldrs default input plugin set. See Processing documentation below
+    ],
+    overrideInputPlugins: false, // set to true to override default bldr plugins
     outputOptions: {
-      plugins: [
-        // Array of rollup output plugins
-      ]
+      // see rollups outputOptions object at https://rollupjs.org/guide/en/#outputoptions-object
+      // `file` will automatically be added, so no need to add here
     },
-    overridePlugins: false,
-    rollup: require('rollup'), // overrides bldr version of rollup
+    outputPlugins: [
+      // array of rollup output plugins.
+      // if `rollup.overrideOutputPlugins` is set to true, this array will replace the default bldr array.
+      // if not, then these will be added after bldrs default plugin set. See Processing documentation below
+    ],
+    overrideOutputPlugins: false, // set to true to override default bldr plugins
+    rollup: require('rollup') // if you wish to use a specific version of rollup, you can require it here. Default: null
   }
 }
 ```
 
-If `overridePlugins` is set to false (default value), items in the `plugins` arrays will be added to the existing bldr plugins. If `overridePlugins` is set to true, then default bldr plugins will not be used, and only those provided in the `plugins` array will be added.
-
-If you need a specific version of esbuild or rollup, add the require statement as shown above.
 
 #### Recommended Babel Config
 
@@ -444,9 +455,174 @@ Running `build` will run postcss and rollup with minification. Rollup will also 
 
 ## Processing
 
-Default Rollup plugins:
-- @rollup/plugin-babel
+Default Rollup input plugins:
 - @rollup/plugin-commonjs
-- rollup-plugin-terser
+- @rollup/plugin-babel
 - @rollup/plugin-node-resolve
-- @rollup/plugin-eslint
+
+Default Rollup output plugins:
+- none
+
+
+## Complete Config Example:
+
+```js
+
+
+module.exports = {
+  // ----------------------- BASIC CONFIG ----------------------- //
+  css: {
+    src: 'path/to/css/files/**/*.css',
+    dist: 'path/to/css/destination',
+    watch: ['paths/to/watch/css/files/**/*.css'],
+  },
+  // !-- OR IF MULTIPLE SOURCES
+  // css: [
+  //   {
+  //     src: 'path/to/css/files/**/*.css',
+  //     dist: 'path/to/css/destination',
+  //     watch: ['paths/to/watch/css/files/**/*.css'],
+  //   },
+  //   {
+  //     src: 'path/to/css/files/2/**/*.css',
+  //     dist: 'path/to/css/destination/2',
+  //     watch: ['paths/to/watch/css/files/2/**/*.css'],
+  //   }
+  // ],
+  // --!
+  sass: {
+    src: 'path/to/sass/files/**/*.scss',
+    dist: 'path/to/sass/destination',
+    watch: ['paths/to/watch/sass/files/**/*.scss'],
+  },
+  // !-- OR IF MULTIPLE SOURCES
+  // sass: [
+  //   {
+  //     src: 'path/to/sass/files/**/*.scss',
+  //     dist: 'path/to/sass/destination',
+  //     watch: ['paths/to/watch/sass/files/**/*.scss'],
+  //   },
+  //   {
+  //     src: 'path/to/sass/files/2/**/*.scss',
+  //     dist: 'path/to/sass/destination/2',
+  //     watch: ['paths/to/watch/sass/files/2/**/*.scss'],
+  //   }
+  // ],
+  // --!
+  js: {
+    src: 'path/to/js/files/**/*.js',
+    dist: 'path/to/js/destination',
+    watch: ['paths/to/watch/js/files/**/*.js'],
+  },
+  // !-- OR IF MULTIPLE SOURCES
+  // js: [
+  //   {
+  //     src: 'path/to/js/files/**/*.js',
+  //     dist: 'path/to/js/destination',
+  //     watch: ['paths/to/watch/js/files/**/*.js'],
+  //   },
+  //   {
+  //     src: 'path/to/js/files/2',
+  //     dist: 'path/to/js/destination/2',
+  //     watch: ['paths/to/watch/js/files/2/**/*.js'],
+  //   }
+  // ],
+  // --!
+  images: {
+    src: 'path/to/image/files/*.{jpg,JPG,jpeg,JPEG,gif,png,svg}',
+    dist: 'path/to/image/files/destination',
+    watch: ['paths/to/watch/image/files/**/*'],
+  },
+  // !-- OR IF MULTIPLE SOURCES
+  // images: [
+  //   {
+  //     src: 'path/to/image/files/*.{jpg,JPG,jpeg,JPEG,gif,png,svg}',
+  //     dist: 'path/to/image/files/destination',
+  //     watch: ['paths/to/watch/image/files/**/*'],
+  //   },
+  //   {
+  //     src: 'path/to/image/files/2/*.{jpg,JPG,jpeg,JPEG,gif,png,svg}',
+  //     dist: 'path/to/image/files/destination/2',
+  //     watch: ['paths/to/watch/image/files/2/**/*'],
+  //   },
+  // ],
+  // --!
+  watchReload: [
+    'some/path/to/watch/**/*.php',
+    'some/path/to/watch/**/*.cjs',
+    'some/path/to/watch/**/*.twig',
+    'some/path/to/watch/**/*.html',
+  ],
+  env: { // Optional - add custom enviornments (run with `-e=SampleEnv` or `env=SampleEnv)
+    SampleEnv: { // name of env in cli `env=` parameter
+      css: { ... },    // Can also be array. Same as basic css config above.
+      js: { ... },     // Can also be array. Same as basic js config above.
+      images: { ... }, // Can also be array. Same as basic image config above.
+      watchReload: []  // Same as basic watchReload config above.
+    }
+  },
+  // --------------------- END BASIC CONFIG --------------------- //
+
+
+  // ---------- SEPERATE DEV/BUILD ENVIRORNMENT CONFIG ---------- //
+  // ---- IF USING DEV/BUILD CONFIG, DO NOT USE BASIC CONFIG ---- //
+  dev: {
+    // see basic config above
+  },
+  build: {
+    // see basic config above
+  },
+  // -------- END SEPERATE DEV/BUILD ENVIRORNMENT CONFIG -------- //
+
+
+  // -------------------- BROWSERSYNC CONFIG -------------------- //
+  browsersync: {
+    disable: false, // set to true to prevent browsersync from instatiating in watch env.
+  },
+
+
+  // ---------------------- ESBUILD CONFIG --------------------- //
+  esBuild: {
+    plugins: [
+      // Array of esbuild plugins to add (install in your root package.json)
+      // if `esBuild.overridePlugins` is set to true, this array will replace the default bldr array.
+      // if not, then these will be added after bldrs default plugin set. See Processing documentation below
+    ],
+    overridePlugins: false, // set to true to override default bldr plugins
+    esBuild: require('esbuild'), // overrides bldr version of esbuild. Default: null
+  },
+
+
+  // ---------------------- ROLLUP CONFIG --------------------- //
+  rollup: {
+    omitBabel: false, // set to true if babel should not be ran
+    useTerser: true,  // set to false if terser should not be ran
+    babelPluginOptions: {
+      // see @rollup/plugin-babel options at https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers)
+      // default: { babelHelpers: 'bundled' }
+    },
+    inputOptions: {
+      // see rollups inputOptions object at https://rollupjs.org/guide/en/#inputoptions-object
+      // `file` will automatically be added, so no need to add here
+      // default additions: { external: [/@babel\/runtime/] }
+    },
+    inputPlugins: [
+      // array of rollup input plugins.
+      // if `rollup.overrideInputPlugins` is set to true, this array will replace the default bldr array.
+      // if not, then these will be added after bldrs default input plugin set. See Processing documentation below
+    ],
+    overrideInputPlugins: false, // set to true to override default bldr plugins
+    outputOptions: {
+      // see rollups outputOptions object at https://rollupjs.org/guide/en/#outputoptions-object
+      // `file` will automatically be added, so no need to add here
+    },
+    outputPlugins: [
+      // array of rollup output plugins.
+      // if `rollup.overrideOutputPlugins` is set to true, this array will replace the default bldr array.
+      // if not, then these will be added after bldrs default plugin set. See Processing documentation below
+    ],
+    overrideOutputPlugins: false, // set to true to override default bldr plugins
+    rollup: require('rollup') // if you wish to use a specific version of rollup, you can require it here. Default: null
+  }
+}
+```
