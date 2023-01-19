@@ -6,8 +6,10 @@
 
 
 <center>
-<h1>Bldr</h1>
+<h1>Bldr 💪</h1>
+TL;DR: Bldr is a configuration based task runner for css, js, sass, and image.
 </center>
+
 
 ## Installation
 
@@ -30,9 +32,12 @@ Then run `npm run dev`, which will run `bldr dev`, etc.
 If you need to pass parameters to a script, add `--` between the command and the parameter:
 `npm run dev -- env=SampleEnv`
 
+
 ## Documentation
 
 - [Command documentation](#commands)
+- [Configuration Overview](#configuration-overview)
+- [Basic Configuration](#basic-onfiguration)
 - [Config documentation](#config)
   - [Config Setup](#config-setup)
   - [Environment Config](#environment-config)
@@ -42,6 +47,7 @@ If you need to pass parameters to a script, add `--` between the command and the
   - [Browsersync Config](#browsersync-config)
 - [Processing documentation](#processing)
 - [Complete Config Example](#complete-config-example)
+
 
 ## Commands
 
@@ -83,19 +89,19 @@ $ bldr build:dev
 
 Running `build:dev` will build all files with postcss and esbuild, the same as files processing in `bldr dev`. All files are processed once and then the process ends.
 
-## Config
+## Configuration Overview
 
 Bldr relies on a `bldrConfig.js` file to point to where files should be sourced, distributed to, and watched.
 
-Bldr supports 2 main processes: `dev` and `build`, where `dev` is meant to run locally, and `build` is meant for production. The main difference: JS files in `dev` are processed with [esBuild](https://esbuild.github.io/), while JS files in `build` are processed with [Rollup](https://rollupjs.org). CSS is always processed by [PostCss](https://postcss.org/). This keeps development builds fast, and production builds more thorough.
+Bldr was created to allow multiple configurations within `bldrConfig.js` based on the need of a project. Config can be setup to either export a single object (see Basic Configuration below), or an object with seperate `dev` and `build` objects (see Advanced Configuration below).
 
-### Config Setup
+Bldr can handle processing css, js, sass, and image files. Each of these processes is configured in a key, and can be added or removed as required by the project. Each process configuration requires an object (or array of objects) that point to file sources, destinations, and 'watch' sources.
 
-#### Base config
 
-Config can be setup to either export a single object, or an object with `dev` and `build` objects.
 
-If path values for the `dev` and `build` processes are identical, you can use export a single object:
+## Basic Configuration
+
+Bldr configuration determines the processes that are ran. At minimum, `bldrConfig.js` should export an object:
 
 ```js
 module.exports = {
@@ -103,135 +109,104 @@ module.exports = {
 }
 ```
 
-If you need to support different path structures for `dev` and `build` commands, use the following configuration:
+The following processes can be added:
 
 ```js
 module.exports = {
-  dev: {
-    // file configuration
-  },
-  build: {
-    // file configuration
-  }
-}
-```
-
-Both the single config object and the `dev` and `build` keyed object support the following file configuration objects (described below):
-
-```js
-{
   css: {
-    // src/dest/watch config for processing files with postcss
+    // processes .css files with postcss
   },
   sass: {
-    // src/dest/watch config for processing files with node sass and then postcss
+    // processes .sass files with node-sass and then postcss
   },
   js: {
-    // src/dest/watch config for processing files with esbuild (dev) or rollup (build)
+    // processes .js files with esbuild (bldr dev) or rollup (bldr build)
   },
   images: {
-    // src/dest/watch config for processing files with postcss
+    // processes image files with imagemin (via imagemin-mozjpeg, imagemin-pngquant, and imagemin-svgo)
   }
 }
 ```
 
-Each of these keys can support a single object (`css: {}`) OR and array of objects:
+Each process can also accept and array of config object if multiple file locations should be processed:
+
+```js
+module.exports = {
+  css: [
+    {
+      // process config
+    },
+    {
+      // process config
+    },
+  ]
+}
+```
+
+If an array of config objects is present, each config object will be ran as its own process. In other words, if `css` is an array, two seperate postcss processes will be ran, one for each configuration object.
+
+### Process Configuration Objects
+
+For each process, the following config is required:
 
 ```js
 {
-  css: [
+  src: './path/to/src/files/**/*.[ext]',
+  dest: './path/to/destination/directory/',
+  watch: [
+    './path/to/files/to/watch/**/*.[ext]',
+  ]
+}
+```
+
+### `src`, `dest`, `watch` configuration
+
+- `src` config expects a path (string). This path is the 'incoming' path for processing, and should include a file extension as needed for the process. Glob patterns can be used.
+
+- `dest` config expects a path (string). This path is the 'destination' for processing. This is the directory where builds will be created.
+
+- `watch` config is only used in the `dev` process, and expects an array of paths (array of strings). These paths will be 'watched' by chokidar.
+
+**Example js config:**
+
+```js
+module.exports = {
+  js: {
+    src: './path/to/src/js/**/*.js',
+    dest: './path/to/destination/js/',
+    watch: [
+      '../path/to/other/js/moldules/**/*.js',
+    ]
+  },
+}
+```
+
+**Example js config with multiple build locations:**
+
+```js
+module.exports = {
+  js: [
     {
-      // src/dest/watch config
+      src: './path/to/theme/src/js/**/*.js',
+      dest: './path/to/theme/dest/js/',
+      watch: [
+        '../path/to/theme/js/moldules/**/*.js',
+      ]
     },
     {
-      // src/dest/watch config
+      src: './path/to/child-theme/src/js/*.js',
+      dest: './path/to/child-theme/dest/js/',
+      watch: [
+        '../path/to/child-theme/src/js/moldules/**/*.js',
+      ]
     },
   ],
 }
 ```
 
-This is useful if there are multiple directories in one project to run processes on.
+### `watchReload` config
 
-
-#### `src`, `dest`, `watch` config
-
-`src` config expects a path (string). This path is the 'incoming' path for processing. Glob patterns can be used.
-
-Example:
-
-```js
-css: {
-  src: './path/to/src/css/**/*.css'
-}
-```
-
-`dest` config expects a path (string). This path is the 'destination' for processing. This is the directory where builds will be created.
-
-Example:
-
-```js
-css: {
-  dest: './path/to/public/css/'
-}
-```
-
-`watch` config is only used in the `dev` process, and expects an array of paths (array of strings). These paths will be 'watched' by chokidar.
-
-Example:
-
-```js
-css: {
-  watch: [
-    './path/to/src/css/**/*.css',
-    './path/to/other/css/**/*.css'
-  ]
-}
-```
-
-##### Example basic config:
-```js
-module.exports = {
-  css: {
-    src: './path/to/src/css/**/*.css',
-    dest: './path/to/public/css/',
-    watch: [
-      './path/to/src/css/**/*.css',
-      './path/to/other/css/**/*.css'
-    ]
-  }
-}
-```
-
-##### Example dev/build config:
-
-```js
-module.exports = {
-  dev: {
-    css: {
-      src: './path/to/src/css/**/*.css',
-      dest: './path/to/public/css/',
-      watch: [
-        './path/to/src/css/**/*.css',
-        './path/to/other/css/**/*.css'
-      ]
-    }
-  },
-  build: {
-    css: {
-      src: './path/to/src/css/**/*.css',
-      dest: './path/to/public/css/',
-      watch: [
-        './path/to/src/css/**/*.css',
-        './path/to/other/css/**/*.css'
-      ]
-    }
-  }
-}
-```
-
-#### `watchReload` config
-
-When running `bldr watch` you may need other files to trigger an automatic reload. To do this, add a `watchReload` key with a value of an array to config:
+When running `bldr dev` you may want additional files or file types to trigger an automatic reload. To do this, add a `watchReload` key with a value of an array to config:
 
 ##### Example basic config:
 ```js
@@ -249,6 +224,201 @@ module.exports = {
   ]
 }
 ```
+
+### `env` config
+
+Projects can have many parts. Some may have just one source for assets, some may have multiple. For example, you may be working on a theme for a CMS, but also need bldr to process assets for a plugin. With `env` configuration, you can setup 'environments' with their own process configurations:
+
+```js
+module.exports = {
+  css: [
+    {
+      src: './path/to/theme/css/**/*.css',
+      dest: './path/to/public/css/',
+      watch: [
+        './path/to/theme/css/**/*.css',
+        './path/to/other/css/**/*.css'
+      ]
+    },
+    {
+      src: './path/to/plugin/src/css/**/*.css',
+      dest: './path/to/plugin/build/css/',
+      watch: [
+        './path/to/plugin/src/css/**/*.css',
+        './path/to/plugin/style-guide/css/**/*.css'
+      ]
+    },
+  ],
+  js: {
+    ...
+  },
+  env: {
+    'themeOnly': {
+      css: {
+        src: './path/to/theme/css/**/*.css',
+        dest: './path/to/public/css/',
+        watch: [
+          './path/to/theme/css/**/*.css',
+          './path/to/other/css/**/*.css'
+        ]
+      },
+      js: {
+        ...
+      },
+    },
+    'pluginOnly': {
+      css: {
+        src: './path/to/plugin/src/css/**/*.css',
+        dest: './path/to/plugin/build/css/',
+        watch: [
+          './path/to/plugin/src/css/**/*.css',
+          './path/to/plugin/style-guide/css/**/*.css'
+        ]
+      },
+      js: {
+        ...
+      },
+    }
+  }
+}
+```
+
+**IMPORTANT NOTE ABOUT ENVIRONMENTS**
+
+Each environment key is treated as its own set of configuration. Configuration for each environment **_is not_** inherited, or other wise read, from the basic configuration. In other words, each environment needs its own processes defined as needed. This allows you to, for example, run _just_ css in an environment if desired.
+
+If similar config is required in both basic and environment, its best to setup config in variables before the `module.exports = {}` in the config file:
+
+```js
+const themeCSS = {
+  src: './path/to/theme/css/**/*.css',
+  dest: './path/to/public/css/',
+  watch: [
+    './path/to/theme/css/**/*.css',
+    './path/to/other/css/**/*.css'
+  ]
+};
+
+module.exports = {
+  css: [
+    themeCSS,
+    {
+      src: './path/to/plugin/src/css/**/*.css',
+      dest: './path/to/plugin/build/css/',
+      watch: [
+        './path/to/plugin/src/css/**/*.css',
+        './path/to/plugin/style-guide/css/**/*.css'
+      ]
+    },
+  ],
+  js: {
+    ...
+  },
+  env: {
+    'themeCssOnly': {
+      css: themeCSS,
+    }
+  }
+}
+```
+
+### CLI commands and `env`
+
+`env` keys can only be loaded from `bldr dev`. To use configuration from an `env` key, add the `env=` (or `-e=`) param with a value equal to the key of the `env` object you want to run.
+
+**Example**
+
+```js
+// bldrConfig.js
+const themeCSS = {
+  src: './path/to/theme/css/**/*.css',
+  dest: './path/to/public/css/',
+  watch: [
+    './path/to/theme/css/**/*.css',
+    './path/to/other/css/**/*.css'
+  ]
+};
+
+module.exports = {
+  css: [
+    themeCSS,
+    {
+      // some other config
+    },
+  ],
+  env: {
+    'themeCssOnly': {
+      css: themeCSS,
+    },
+    'whateverNameYouWant': {
+      js: {
+        // some other config
+      },
+    }
+  }
+}
+```
+
+In command line, to use the `themeCssOnly` env config, you would run:
+
+```bash
+$ bldr dev env=themeCssOnly # or bldr dev -e=themeCssOnly
+```
+
+In command line, to use the `whateverNameYouWant` env config, you would run:
+
+```bash
+$ bldr dev env=whateverNameYouWant
+```
+
+
+## Advanced Configuration
+
+Bldr supports `dev` and `build` configuration keys at the root of the config object. Think of them as bldr command environments.
+
+This allows `bldr dev` and `bldr build:dev` to have a seperate set of process configurations (via the `dev` key) from the process configurations used in `bldr build` (via the `build` key):
+
+```js
+module.exports = {
+  dev: {
+    css: {
+      src: './path/to/src/css/**/*.css',
+      dest: './path/to/public/css/',
+      watch: [
+        './path/to/src/css/**/*.css',
+        './path/to/other/css/**/*.css'
+      ]
+    }
+  },
+  build: {
+    css: [
+      {
+        src: './path/to/src/css/**/*.css',
+        dest: './path/to/public/css/',
+        watch: [
+          './path/to/src/css/**/*.css',
+          './path/to/other/css/**/*.css'
+        ]
+      },
+      {
+        src: './path/to/some-plugin/src/css/**/*.css',
+        dest: './path/to/some-plugin/build/css/',
+        watch: [
+          './path/to/some-plugin/src/css/**/*.css',
+          './path/to/some-plugin/style-guide/css/**/*.css'
+        ]
+      },
+    ]
+  }
+}
+```
+
+The `dev` key can take all settings in the Basic Configuration section. The `build` key can as well, but the `watchReload` and `env` keys aren't needed, as they will not be relevant in the `bldr build` processing.
+
+
+
+
+
 
 ##### Example dev/build config:
 In practice, the `watchReload` key only applies to the `watch` process, which will only ever honor basic and `dev` config, so its not needed in `build`.
