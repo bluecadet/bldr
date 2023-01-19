@@ -418,120 +418,22 @@ The `dev` key can take all settings in the Basic Configuration section. The `bui
 
 
 
-
-
-##### Example dev/build config:
-In practice, the `watchReload` key only applies to the `watch` process, which will only ever honor basic and `dev` config, so its not needed in `build`.
-
-```js
-module.exports = {
-  dev: {
-    css: {...},
-    js: {...},
-    watchReload: [
-      './**/*.twig',
-      './**/*.html',
-      './**/*.php'
-    ]
-  },
-  build: {
-    css: {...}
-  }
-}
-```
-
-
-#### Environment config
-
-Within the basic config object or the `dev` key, an `env` object can be added to define seperate build environments. This allows you to create specific config for a specific set of files (such as 'cms' or 'theme'). Consider it to be multiple `dev` configurations.
-
-Once an env config object is created, they can be ran using the flag `env=ENV_KEY_NAME`.
-
-Example basic config:
-
-```js
-module.exports = {
-  css: [
-    {
-      src: './theme/src/css/**/*.css',
-      dest: './theme/public/css/',
-      watch: ['./theme/src/css/**/*.css',]
-    },
-    {
-      src: './cms/src/css/**/*.css',
-      dest: './cms/public/css/',
-      watch: ['./cms/src/css/**/*.css',]
-    },
-  ],
-  env: {
-    themeOnly: {
-      css: {
-        src: './theme/src/css/**/*.css',
-        dest: './theme/public/css/',
-        watch: ['./theme/src/css/**/*.css',]
-      },
-    }
-  }
-}
-```
-
-Example dev/build config:
-
-```js
-module.exports = {
-  dev: {
-    css: [
-      {
-        src: './theme/src/css/**/*.css',
-        dest: './theme/public/css/',
-        watch: ['./theme/src/css/**/*.css',]
-      },
-      {
-        src: './cms/src/css/**/*.css',
-        dest: './cms/public/css/',
-        watch: ['./cms/src/css/**/*.css',]
-      },
-    ],
-    env: {
-      themeOnly: {
-        css: {
-          src: './theme/src/css/**/*.css',
-          dest: './theme/public/css/',
-          watch: ['./theme/src/css/**/*.css',]
-        },
-      }
-    }
-  }
-}
-```
-
-In this example, `bldr dev` will watch and process css in both the `theme` and `cms` directories, but running
-
-```bash
-$ bldr dev env=themeOnly
-```
-
-will only watch the `theme` directory. Multiple `env` objects can be configured.
-
-Each object in the `env` config has the same options as the `dev` and `build` config.
-
-
-### PostCSS config
+## PostCSS config
 
 Configure postcss by adding a `postcss.config.js` file to the root of your project. bldr uses [postcss-load-config](https://github.com/postcss/postcss-load-config) under the hood. As such, make sure to add plugins using the object syntax in the `postcss-load-config` documentation [here](https://github.com/postcss/postcss-load-config#examples).
 
-In addition to the default context variables of (`ctx.env` (`process.env.NODE_ENV`) and `ctx.cwd` (`process.cwd()`)), there is an additional `bldrEnv`, which will have the value of the current build command (`dev`, `build`, or `watch`). Again, refer to the `postcss-load-config` documentation [here](https://github.com/postcss/postcss-load-config#examples).
+In addition to the default context variables of (`ctx.env` (`process.env.NODE_ENV`) and `ctx.cwd` (`process.cwd()`)), there is an additional `bldrEnv`, which will have the value of the current build command (`dev`, `build`, or `build:dev`). Again, refer to the `postcss-load-config` documentation [here](https://github.com/postcss/postcss-load-config#examples).
 
-### EsBuild/Rollup override config
 
-Both esBuild and rollup options can be changed/overwritten in the config. The following config is available:
+## EsBuild and Rollup config
+
+In addition to processes, you can also add config to override or add to the default esBuild and Rollup process.
+
+The following configuration options are available:
 
 ```js
-// Some plugin you would like to add
 
 module.exports = {
-  dev: ...,
-  build: ...,
   esBuild: {
     plugins: [
       // Array of esbuild plugins to add (install in your root package.json)
@@ -575,26 +477,18 @@ module.exports = {
 ```
 
 
-#### Recommended Babel Config
+### Babel (via @rollup/plugin-babel)
 
-By default, if a babel config file exists, bldr will use the `@rollup/plugin-babel` with the options of `{babelHelpers: 'bundled'}`. You can override this config by setting an object in the rollup section of `bldrConfig.js`:
+If a [valid babel config file](https://babeljs.io/docs/en/config-files) exists in the same root as where bldr was ran, bldr will include `@rollup/plugin-babel` with the default options of `{babelHelpers: 'bundled'}`, and Babel will be ran using your local config file. To override, see the documentation for `rollup.babelPluginOptions` above.
 
-```
-{
-  ...,
-  rollup: {
-    babelPluginOptions: {
-      babelHelpers: 'runtime',
-    }
-  }
-```
+If you do not want Babel to be ran, simply do not include a
 
-More options [here](https://github.com/rollup/plugins/tree/master/packages/babel#options).
+**_Note:_ Babel will only conditionally be ran when using the `bldr build` command.**
 
 
-##### Babel Config
+### Babel Config
 
-While you can setup babel as you like, here is a working example to get it working.
+While you can setup babel config however you like, here is a working example to get it working.
 
 1. Install the following packages to your projects package.json:
 ```
@@ -619,9 +513,10 @@ npm i --save-dev @babel/preset-env core-js
 ```
 
 
-#### Browsersync Config
+### Browsersync Config
 
 If you would like to run watch mode without browsersync, you can disable broswersync by adding `browsersync: {disable: true}` to your bldrConfig.js file.
+
 
 ### Local Config
 
