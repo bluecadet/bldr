@@ -11,10 +11,28 @@
 
 ## Installation
 
+Bldr can be installed globally:
 `npm i -g @bluecadet/bldr`
+
+Or, install it as a dependency:
+`npm i @bluecadet/bldr`
+
+You can then add scripts to package.json to run commands:
+```js
+  scripts: {
+    'dev': 'bldr dev',
+    'build': 'bldr build',
+    'buildDev': 'bldr build:dev'
+  }
+```
+Then run `npm run dev`, which will run `bldr dev`, etc.
+
+If you need to pass parameters to a script, add `--` between the command and the parameter:
+`npm run dev -- env=SampleEnv`
 
 ## Documentation
 
+- [Command documentation](#commands)
 - [Config documentation](#config)
   - [Config Setup](#config-setup)
   - [Environment Config](#environment-config)
@@ -22,8 +40,48 @@
   - [Esbuild and Rollup Config](#esbuildrollup-override-config)
     - [Recommended Babel Config](#recommended-babel-config)
   - [Browsersync Config](#browsersync-config)
-- [Command documentation](#commands)
 - [Processing documentation](#processing)
+- [Complete Config Example](#complete-config-example)
+
+## Commands
+
+### `init`
+
+```bash
+$ bldr init
+```
+
+Running `init` will attempt to create boilerplate config files in the project root.
+
+
+### `dev`
+
+```bash
+$ bldr dev
+```
+
+Running `dev` will run postcss and esbuild without minification. Additionally:
+- files in `watch` and `watchReload` arrays will be observed and appropriate processes will be ran when files are added/removed/updated based on file type
+- a browsersync instance will be created. Edit `bldrConfigLocal.js` to add [browsersync options](https://browsersync.io/docs/options) as needed.
+  - Set `browsersync.disable` is set to true in the config (see )
+- `bldr watch` is an alias for `bldr dev`
+
+
+### `build`
+
+```bash
+$ bldr build
+```
+
+Running `build` will run postcss and rollup with minification. Rollup will also run babel.
+
+### `build:dev`
+
+```bash
+$ bldr build:dev
+```
+
+Running `build:dev` will build all files with postcss and esbuild, the same as files processing in `bldr dev`. All files are processed once and then the process ends.
 
 ## Config
 
@@ -65,6 +123,9 @@ Both the single config object and the `dev` and `build` keyed object support the
   css: {
     // src/dest/watch config for processing files with postcss
   },
+  sass: {
+    // src/dest/watch config for processing files with node sass and then postcss
+  },
   js: {
     // src/dest/watch config for processing files with esbuild (dev) or rollup (build)
   },
@@ -86,12 +147,6 @@ Each of these keys can support a single object (`css: {}`) OR and array of objec
       // src/dest/watch config
     },
   ],
-  js: {
-    // src/dest/watch config
-  },
-  images: {
-    // src/dest/watch config
-  }
 }
 ```
 
@@ -359,23 +414,24 @@ By default, if a babel config file exists, bldr will use the `@rollup/plugin-bab
   ...,
   rollup: {
     babelPluginOptions: {
-      babelHelpers: 'bundled',
+      babelHelpers: 'runtime',
     }
   }
 ```
 
 More options [here](https://github.com/rollup/plugins/tree/master/packages/babel#options).
 
+
 ##### Babel Config
 
-While you can setup babel as you like, the following is recommended (particularly with the default setting `babelHelpers` to runtime):
+While you can setup babel as you like, here is a working example to get it working.
 
-Install the following packages to your projects package.json:
+1. Install the following packages to your projects package.json:
 ```
 npm i --save-dev @babel/preset-env core-js
 ```
 
-then create a `babel.config.json` file containing:
+2. Create a `babel.config.json` file containing:
 
 ```
 {
@@ -395,7 +451,7 @@ then create a `babel.config.json` file containing:
 
 #### Browsersync Config
 
-If you would like to run watch mode without browsersync, you can disable broswersync by adding `disableBrowsersync: true` to your bldrConfig.js file.
+If you would like to run watch mode without browsersync, you can disable broswersync by adding `browsersync: {disable: true}` to your bldrConfig.js file.
 
 ### Local Config
 
@@ -413,45 +469,6 @@ module.exports = {
   }
 }
 ```
-
-## Commands
-
-### `init`
-
-```bash
-$ bldr init
-```
-
-Running `init` will attempt to create boilerplate config files in the project root.
-
-
-### `dev`
-
-```bash
-$ bldr dev
-```
-
-Running `dev` will run postcss and esbuild without minification.
-
-### `watch`
-
-```bash
-$ bldr watch
-```
-
-Running `watch` will run postcss and esbuild without minification (same as `dev`). Additionally:
-- a chokidar instance will initialize to watch files and run appropriate processes when files are added/removed/updated based on file type
-- a browsersync instance will be created if it does not exist. Edit `bldrConfigLocal.js` to add [browsersync options](https://browsersync.io/docs/options) as needed.
-
-
-### `build`
-
-```bash
-$ bldr build
-```
-
-Running `build` will run postcss and rollup with minification. Rollup will also run babel.
-
 
 ## Processing
 
@@ -577,7 +594,7 @@ module.exports = {
 
   // -------------------- BROWSERSYNC CONFIG -------------------- //
   browsersync: {
-    disable: false, // set to true to prevent browsersync from instatiating in watch env.
+    disable: false, // set to true to prevent browsersync from instatiating in watch env. Default: true
   },
 
 
@@ -595,8 +612,8 @@ module.exports = {
 
   // ---------------------- ROLLUP CONFIG --------------------- //
   rollup: {
-    omitBabel: false, // set to true if babel should not be ran
-    useTerser: true,  // set to false if terser should not be ran
+    omitBabel: false, // set to true if babel should not be ran. Default: false
+    useTerser: true,  // set to false if terser should not be ran. Default: true
     babelPluginOptions: {
       // see @rollup/plugin-babel options at https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers)
       // default: { babelHelpers: 'bundled' }
@@ -604,7 +621,7 @@ module.exports = {
     inputOptions: {
       // see rollups inputOptions object at https://rollupjs.org/guide/en/#inputoptions-object
       // `file` will automatically be added, so no need to add here
-      // default additions: { external: [/@babel\/runtime/] }
+      // default: { external: [/@babel\/runtime/] }
     },
     inputPlugins: [
       // array of rollup input plugins.
