@@ -1,5 +1,6 @@
 
 import { getConfigData, getLocalConfigData } from '../lib/utils/bldrConfigHelpers.js';
+
 import createWatchPathArray from '../lib/utils/createWatchPathArray.js';
 
 // const argv                                      = require('yargs').argv;
@@ -21,12 +22,13 @@ export default async function RunBldrDev(commandOptions) {
 
   const configData   = await getConfigData(commandOptions);
   const localData    = await getLocalConfigData(commandOptions);
-  configData.isWatch = commandOptions.settings?.watch;
 
-  // /**
-  //  * Run esbuild
-  //  * @param {object} bsInstance BrowserSync Instance
-  //  */
+  console.log(configData);
+
+  /**
+   * Run esbuild
+   * @param {object} bsInstance BrowserSync Instance
+   */
   // this.esBuild = (bsInstance = false) => {
   //   handleEsBuild(
   //     configData,
@@ -83,86 +85,6 @@ export default async function RunBldrDev(commandOptions) {
 }
 
 
-
-  // const {configRootData, configData, envKey} = getDevConfigData(argv);
-  // const localConfigPath                      = path.normalize(`${process.cwd()}/bldrConfigLocal.js`);
-  // const localConfigData                      = fs.existsSync(localConfigPath) ? require(localConfigPath): false;
-
-  // configData.isWatch = true;
-
-  // /**
-  //  * Run esbuild
-  //  * @param {object} bsInstance BrowserSync Instance
-  //  */
-  // this.esBuild = (bsInstance = false) => {
-  //   handleEsBuild(
-  //     configData,
-  //     configRootData?.esbuild,
-  //     bsInstance,
-  //   );
-  // }
-
-  // /**
-  //  * Run PostCSS function
-  //  * @param {object} bsInstance Browsersync Instance
-  //  */
-  // this.handleWatchPostCSS = (bsInstance = false) => {
-
-  //   handlePostCss(
-  //     configData,
-  //     configRootData?.postCSS,
-  //     false,
-  //     bsInstance
-  //   )
-  // }
-
-
-  // /**
-  //  * Run PostCSS function
-  //  * @param {object} bsInstance Browsersync Instance
-  //  */
-  // this.handleWatchSass = (bsInstance = false) => {
-
-  //   handleSass(
-  //     configData,
-  //     false,
-  //     bsInstance
-  //   )
-  // }
-
-  // /**
-  //  * Run Images function
-  //  * @param {object} bsInstance Browsersync Instance
-  //  */
-  // this.handleWatchImages = (bsInstance = false) => {
-  //   runImages(
-  //     configData
-  //   );
-  // }
-
-
-  // /**
-  //  * Create an array based on watch path arrays in config
-  //  * @param {object} group
-  //  * @returns array
-  //  */
-  // this.createWatchPathArray = (group) => {
-  //   const pathArray =  [];
-
-  //   if ( Array.isArray(group) ) {
-  //     group.map(g => {
-  //       if (g?.watch) {
-  //         g.watch.map(w => pathArray.push(w));
-  //       }
-  //     });
-  //   } else {
-  //     if ( group?.watch) {
-  //       group.watch.map(w => pathArray.push(w));
-  //     }
-  //   }
-
-  //   return pathArray;
-  // }
 
   // this.sassExts    = ['.scss', '.sass'];
   // this.postCssExts = ['.css','.pcss','.postcss','.scss','.sass',];
