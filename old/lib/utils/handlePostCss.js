@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-const runSass = require('../processes/sass');
-const {handleProcessSuccess, handleProcessWarn} = require('../utils/handleMessaging');
+const {runPostCSS} = require('../processes/postCss');
+const {handleProcessSuccess, handleProcessWarn} = require('./handleMessaging');
 
 async function handleGroupArray(configSrc, options) {
   let anyError = false;
@@ -11,7 +11,7 @@ async function handleGroupArray(configSrc, options) {
     gOptions.from        = group.src;
     gOptions.to          = group.dest;
     gOptions.logFullName = true;
-    const postCssErrorCaught = await runSass(gOptions);
+    const postCssErrorCaught = await runPostCSS(gOptions);
 
     if ( postCssErrorCaught ) {
       anyError = true;
@@ -25,44 +25,47 @@ async function handleGroupArray(configSrc, options) {
  * Run PostCSS function
  * @param {object} bsInstance Browsersync Instance
  */
-async function handleSass(
+async function handlePostCss(
   configData,
+  userConfig,
   production = false,
   bsInstance = false,
 ) {
 
-
-  if (!('sass' in configData)) {
+  if (!('css' in configData)) {
     return false;
   }
 
-  const configSrc  = configData.sass;
-  let postCssError = false;
-  const options     = {
+  const configSrc = configData.css;
+
+  const options = {
+    userConfig: userConfig,
     root:       process.cwd(),
     useMaps:    !production,
     minify:     production,
     isWatch:    configData.isWatch,
   };
 
+  let postCssError = false;
+
   if ( Array.isArray(configSrc) ) {
-    postCssError = handleGroupArray(configSrc, options);
+    postCssError = await handleGroupArray(configSrc, options);
   } else {
     options.from = configSrc.src;
     options.to   = configSrc.dest;
-    postCssError = await runSass(options);
+    postCssError = await runPostCSS(options);
   }
 
   if (bsInstance) {
-    bsInstance.stream({match: "**/*.css"})
+    bsInstance.reload("*.css");
   }
 
   if ( postCssError ) {
     handleProcessWarn('postCSS error occured, unable to complete. see above.')
   } else {
-    handleProcessSuccess(`sass complete`);
+    handleProcessSuccess(`postCSS complete`);
   }
 }
 
 
-module.exports = handleSass;
+module.exports = handlePostCss;
