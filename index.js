@@ -24,7 +24,6 @@ bldr.command('build')
   .option('-k, --key <key>', 'env key name from config (ie "css")')
   .action(() => {
     commandSettings.bldrEnv  = 'build';
-    console.log(commandSettings);
     // RunBldrDev(commandSettings);
   });
 
@@ -34,7 +33,7 @@ bldr.command('dev:once')
   .option('-k, --key <key>', 'env key name from config (ie "css")')
   .action((options) => {
     commandSettings.bldrEnv  = 'dev';
-    commandSettings.settings = { ...{once: true}, ...options };
+    commandSettings.settings = { ...{watch: false, once: true}, ...options };
     RunBldrDev(commandSettings);
   });
 

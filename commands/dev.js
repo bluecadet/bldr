@@ -1,29 +1,122 @@
+import { getConfigData } from '../lib/utils/getConfigData.js';
+import { handleProcessAction, handleProcessWarn } from '../lib/utils/reporters.js';
+// import { settings } from '../lib/settings/bldrSettings.js';
+import handleSass from '../lib/processes/sass.js';
 
-import { getConfigData, getLocalConfigData } from '../lib/utils/bldrConfigHelpers.js';
+import { extname } from 'node:path';
+import colors from 'colors';
 
-import createWatchPathArray from '../lib/utils/createWatchPathArray.js';
-
-// const argv                                      = require('yargs').argv;
-// const path                                      = require('path');
-// // const fsx                                       = require('fs-extra');
-// const fs                                        = require('fs');
-// const chokidar                                  = require('chokidar');
-// const colors                                    = require('colors');
-// const { getDevConfigData }                      = require('../utils/configHelpers');
-// const { runImages }                             = require('../processes/images');
-// const handlePostCss                             = require('../utils/handlePostCss');
-// const handleEsBuild                             = require('../utils/handleEsBuild');
-// const handleSass                                = require('../utils/handleSass');
-// const {handleMessageSuccess, handleMessageWarn} = require('../utils/handleMessaging');
+import util from 'node:util';
+import Module from "node:module";
+const require  = Module.createRequire(import.meta.url);
+const chokidar = require('chokidar');
 
 
 
-export default async function RunBldrDev(commandOptions) {
+export default async function(commandOptions) {
 
-  const configData   = await getConfigData(commandOptions);
-  const localData    = await getLocalConfigData(commandOptions);
+  const configData  = await getConfigData(commandOptions);
+  const envKey      = commandOptions.settings?.key;
+  const sassExts    = ['.scss', '.sass'];
+  const postCssExts = ['.css','.pcss','.postcss'];
+  const jsExts      = ['.js','.jsx', '.cjs', '.mjs'];
+  const imageExts   = ['.jpg','.jpeg','.png','.gif','.svg', 'webp'];
+  const reloadExts  = [];
+  let   bsInstance  = false;
 
-  console.log(configData);
+  if ( envKey ) {
+    handleProcessAction('bldr', 'Starting dev using ${envKey} enviornment...');
+  } else {
+    handleProcessAction('bldr', 'Starting dev...');
+  }
+
+  // console.log(configData);
+  // console.log(util.inspect(configData, {showHidden: false, depth: null, colors: true}));
+
+  handleSass(configData, bsInstance);
+
+
+
+  const handleFile = (ext, file) => {
+    if (sassExts.includes(ext)) {
+      handleSass(configData, bsInstance);
+    }
+
+    if (postCssExts.includes(ext)) {
+      // handleWatchPostCSS(bsInstance);
+    }
+
+    if (jsExts.includes(ext)) {
+      // esBuild(bsInstance);
+    }
+
+    if (imageExts.includes(ext)) {
+      // handleWatchImages(bsInstance);
+    }
+
+    if (reloadExts.includes(ext) && bsInstance ) {
+      bsInstance.reload();
+      handleMessageSuccess('bldr', `${path.basename(filepath)} triggered reload`);
+    }
+  };
+
+  const handleChokidar = async () => {
+
+    // Chokidar watcher
+    const watcher = chokidar.watch(configData.watch.files, {
+      ignored: /(^|[\/\\])\../, // ignore dotfiles
+      persistent: true,
+      ignoreInitial: true,
+    });
+
+    watcher
+      .on('ready', () => {
+        console.log(``);
+        console.log(`----------------------------------------`);
+        console.log(`[${colors.blue('bldr')}] ${colors.magenta('💪 Ready and waiting for changes!')}`)
+        console.log(`----------------------------------------`);
+        console.log(``);
+      })
+      .on('add', filePath => {
+        handleFile(extname(filePath), filePath);
+      })
+      .on('change', filePath => {
+        handleFile(extname(filePath), filePath);
+      })
+      .on('unlink', filePath => {
+        handleFile(extname(filePath), filePath);
+      });
+  }
+
+
+
+  // Create browsersync instance if appropriate
+  // if ( !configData?.processSettings?.browsersync?.disable ) {
+  //   if ( !configData?.local ) {
+  //     handleProcessWarn('bldr', `Create a ${settings.localFilename} file in project root to configure browsersync`);
+  //   }
+
+  //   const bsOptions = configData.local || {};
+  //   const bsName    = bsOptions?.browserSync?.instanceName ?? `bldr-${Math.floor(Math.random() * 1000)}`;
+  //   bsInstance      = require("browser-sync").create(bsName);
+
+  //   bsOptions.logPrefix = 'bldr';
+  //   bsOptions.logFileChanges = false;
+  //   bsInstance.init(bsOptions, handleChokidar());
+  // } else {
+
+  //   if ( configData?.processSettings?.browsersync?.disable ) {
+  //     handleProcessWarn('bldr', 'Browsersync is disabled in config');
+  //   }
+
+  //   handleChokidar();
+  // }
+
+
+
+
+
+
 
   /**
    * Run esbuild
@@ -86,11 +179,6 @@ export default async function RunBldrDev(commandOptions) {
 
 
 
-  // this.sassExts    = ['.scss', '.sass'];
-  // this.postCssExts = ['.css','.pcss','.postcss','.scss','.sass',];
-  // this.jsExts      = ['.js','.jsx'];
-  // this.imageExts   = ['.jpg','.jpeg','.png','.gif','.svg',];
-  // this.reloadExts  = [];
 
   // if ( configData?.watchReload ) {
   //   configData.watchReload.forEach(p => {
