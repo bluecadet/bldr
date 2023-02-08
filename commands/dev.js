@@ -1,7 +1,9 @@
 import { getConfigData } from '../lib/utils/getConfigData.js';
 import { handleProcessAction, handleProcessWarn } from '../lib/utils/reporters.js';
 // import { settings } from '../lib/settings/bldrSettings.js';
-import handleSass from '../lib/processes/sass.js';
+import { processSass } from '../lib/processes/sass.js';
+import { processPostcss } from '../lib/processes/postcss.js';
+import { processEsBuild } from '../lib/processes/esBuild.js';
 
 import { extname } from 'node:path';
 import colors from 'colors';
@@ -12,8 +14,7 @@ const require  = Module.createRequire(import.meta.url);
 const chokidar = require('chokidar');
 
 
-
-export default async function(commandOptions) {
+export const RunBldrDev = async (commandOptions) => {
 
   const configData  = await getConfigData(commandOptions);
   const envKey      = commandOptions.settings?.key;
@@ -33,13 +34,15 @@ export default async function(commandOptions) {
   // console.log(configData);
   // console.log(util.inspect(configData, {showHidden: false, depth: null, colors: true}));
 
-  handleSass(configData, bsInstance);
+  await processSass(configData, bsInstance);
+  await processPostcss(configData, bsInstance);
+  await processEsBuild(configData, bsInstance);
 
 
 
-  const handleFile = (ext, file) => {
+  const handleFile = async (ext, file) => {
     if (sassExts.includes(ext)) {
-      handleSass(configData, bsInstance);
+      await processSass(configData, bsInstance);
     }
 
     if (postCssExts.includes(ext)) {
@@ -112,7 +115,7 @@ export default async function(commandOptions) {
   //   handleChokidar();
   // }
 
-
+}
 
 
 
@@ -175,7 +178,7 @@ export default async function(commandOptions) {
   //     bsInstance,
   //   );
   // }
-}
+
 
 
 
