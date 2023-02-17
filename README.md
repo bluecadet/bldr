@@ -444,7 +444,7 @@ module.exports = {
     esBuild: require('esbuild'), // overrides bldr version of esbuild. Default: null
   },
   rollup: {
-    omitBabel: false, // set to true if babel should not be ran
+    useBabel: false, // set to true if babel should not be ran
     useTerser: true,  // set to false if terser should not be ran
     babelPluginOptions: {
       // see @rollup/plugin-babel options at https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers)
@@ -677,7 +677,7 @@ module.exports = {
 
   // ---------------------- ROLLUP CONFIG --------------------- //
   rollup: {
-    omitBabel: false, // set to true if babel should not be ran. Default: false
+    useBabel: true, // set to false if babel should not be ran. Default: true
     useTerser: true,  // set to false if terser should not be ran. Default: true
     babelPluginOptions: {
       // see @rollup/plugin-babel options at https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers)

@@ -1,9 +1,11 @@
 import { getConfigData } from '../lib/utils/getConfigData.js';
 import { handleProcessAction, handleProcessWarn } from '../lib/utils/reporters.js';
-// import { settings } from '../lib/settings/bldrSettings.js';
+import { settings } from '../lib/settings/bldrSettings.js';
 import { processSass } from '../lib/processes/sass.js';
 import { processPostcss } from '../lib/processes/postcss.js';
 import { processEsBuild } from '../lib/processes/esBuild.js';
+import { processRollup } from '../lib/processes/rollup.js';
+import { processImages } from '../lib/processes/images.js';
 
 import { extname } from 'node:path';
 import colors from 'colors';
@@ -31,12 +33,13 @@ export const RunBldrDev = async (commandOptions) => {
     handleProcessAction('bldr', 'Starting dev...');
   }
 
-  // console.log(configData);
-  // console.log(util.inspect(configData, {showHidden: false, depth: null, colors: true}));
+  console.log(util.inspect(configData, {showHidden: false, depth: null, colors: true}));
 
-  await processSass(configData, bsInstance);
-  await processPostcss(configData, bsInstance);
-  await processEsBuild(configData, bsInstance);
+  // await processSass(configData, bsInstance);
+  // await processPostcss(configData, bsInstance);
+  // await processEsBuild(configData, bsInstance);
+  // // await processRollup(configData);
+  // await processImages(configData, bsInstance);
 
 
 
@@ -46,14 +49,16 @@ export const RunBldrDev = async (commandOptions) => {
     }
 
     if (postCssExts.includes(ext)) {
-      // handleWatchPostCSS(bsInstance);
+      await processPostcss(configData, bsInstance);
     }
 
     if (jsExts.includes(ext)) {
+      await processEsBuild(configData, bsInstance);
       // esBuild(bsInstance);
     }
 
     if (imageExts.includes(ext)) {
+      await processImages(configData, bsInstance);
       // handleWatchImages(bsInstance);
     }
 
@@ -94,26 +99,26 @@ export const RunBldrDev = async (commandOptions) => {
 
 
   // Create browsersync instance if appropriate
-  // if ( !configData?.processSettings?.browsersync?.disable ) {
-  //   if ( !configData?.local ) {
-  //     handleProcessWarn('bldr', `Create a ${settings.localFilename} file in project root to configure browsersync`);
-  //   }
+  if ( !configData?.processSettings?.browsersync?.disable ) {
+    if ( !configData?.local ) {
+      handleProcessWarn('bldr', `Create a ${settings.localFilename} file in project root to configure browsersync`);
+    }
 
-  //   const bsOptions = configData.local || {};
-  //   const bsName    = bsOptions?.browserSync?.instanceName ?? `bldr-${Math.floor(Math.random() * 1000)}`;
-  //   bsInstance      = require("browser-sync").create(bsName);
+    const bsOptions = configData.local || {};
+    const bsName    = bsOptions?.browserSync?.instanceName ?? `bldr-${Math.floor(Math.random() * 1000)}`;
+    bsInstance      = require("browser-sync").create(bsName);
 
-  //   bsOptions.logPrefix = 'bldr';
-  //   bsOptions.logFileChanges = false;
-  //   bsInstance.init(bsOptions, handleChokidar());
-  // } else {
+    bsOptions.logPrefix = 'bldr';
+    bsOptions.logFileChanges = false;
+    bsInstance.init(bsOptions, handleChokidar());
+  } else {
 
-  //   if ( configData?.processSettings?.browsersync?.disable ) {
-  //     handleProcessWarn('bldr', 'Browsersync is disabled in config');
-  //   }
+    if ( configData?.processSettings?.browsersync?.disable ) {
+      handleProcessWarn('bldr', 'Browsersync is disabled in config');
+    }
 
-  //   handleChokidar();
-  // }
+    handleChokidar();
+  }
 
 }
 
