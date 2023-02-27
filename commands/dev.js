@@ -1,16 +1,15 @@
 import { getConfigData } from '../lib/utils/getConfigData.js';
-import { handleProcessAction, handleProcessWarn } from '../lib/utils/reporters.js';
+import { handleProcessAction, handleProcessWarn, handleProcessSuccess } from '../lib/utils/reporters.js';
 import { settings } from '../lib/settings/bldrSettings.js';
 import { processSass } from '../lib/processes/sass.js';
 import { processPostcss } from '../lib/processes/postcss.js';
 import { processEsBuild } from '../lib/processes/esBuild.js';
-import { processRollup } from '../lib/processes/rollup.js';
 import { processImages } from '../lib/processes/images.js';
+import { basename } from 'node:path';
 
 import { extname } from 'node:path';
-import colors from 'colors';
 
-import util from 'node:util';
+// import util from 'node:util';
 import Module from "node:module";
 const require  = Module.createRequire(import.meta.url);
 const chokidar = require('chokidar');
@@ -27,23 +26,49 @@ export const RunBldrDev = async (commandOptions) => {
   const reloadExts  = [];
   let   bsInstance  = false;
 
+
+  if ( commandOptions.settings?.once ) {
+
+    if ( envKey ) {
+      handleProcessAction('bldr', 'Running single dev build using ${envKey} env configuration...');
+    } else {
+      handleProcessAction('bldr', 'Running single dev build...');
+    }
+
+    const processStart = new Date().getTime();
+
+    await processSass(configData, bsInstance);
+    await processPostcss(configData, bsInstance);
+    await processEsBuild(configData, bsInstance);
+    await processImages(configData, bsInstance);
+
+    const processEnd = new Date().getTime();
+
+    handleProcessAction('bldr', '✨ Dev processes complete ✨', `${(processEnd - processStart)/1000}`);
+
+    return;
+  }
+
+
   if ( envKey ) {
-    handleProcessAction('bldr', 'Starting dev using ${envKey} enviornment...');
+    handleProcessAction('bldr', 'Starting dev using ${envKey} env configuration...');
   } else {
     handleProcessAction('bldr', 'Starting dev...');
   }
 
-  console.log(util.inspect(configData, {showHidden: false, depth: null, colors: true}));
+  // Run processes before starting local build
+  if ( commandOptions.settings?.start ) {
+    handleProcessAction('bldr', 'Running initial processes...');
+    await processSass(configData, bsInstance);
+    await processPostcss(configData, bsInstance);
+    await processEsBuild(configData, bsInstance);
+    await processImages(configData, bsInstance);
+  }
 
-  // await processSass(configData, bsInstance);
-  // await processPostcss(configData, bsInstance);
-  // await processEsBuild(configData, bsInstance);
-  // // await processRollup(configData);
-  // await processImages(configData, bsInstance);
 
-
-
+  // Handle a single file from Chokidar event
   const handleFile = async (ext, file) => {
+
     if (sassExts.includes(ext)) {
       await processSass(configData, bsInstance);
     }
@@ -62,9 +87,9 @@ export const RunBldrDev = async (commandOptions) => {
       // handleWatchImages(bsInstance);
     }
 
-    if (reloadExts.includes(ext) && bsInstance ) {
+    if (configData.watch.reloadExts.includes(ext) && bsInstance ) {
       bsInstance.reload();
-      handleMessageSuccess('bldr', `${path.basename(filepath)} triggered reload`);
+      handleProcessSuccess('bldr', `${basename(file)} triggered reload`);
     }
   };
 
@@ -80,9 +105,9 @@ export const RunBldrDev = async (commandOptions) => {
     watcher
       .on('ready', () => {
         console.log(``);
-        console.log(`----------------------------------------`);
-        console.log(`[${colors.blue('bldr')}] ${colors.magenta('💪 Ready and waiting for changes!')}`)
-        console.log(`----------------------------------------`);
+        console.log(`-------------------------------------------`);
+        handleProcessAction('bldr', '💪 Ready and waiting for changes!');
+        console.log(`-------------------------------------------`);
         console.log(``);
       })
       .on('add', filePath => {
@@ -106,11 +131,13 @@ export const RunBldrDev = async (commandOptions) => {
 
     const bsOptions = configData.local || {};
     const bsName    = bsOptions?.browserSync?.instanceName ?? `bldr-${Math.floor(Math.random() * 1000)}`;
-    bsInstance      = require("browser-sync").create(bsName);
+    bsInstance      = await require("browser-sync").create(bsName);
 
     bsOptions.logPrefix = 'bldr';
     bsOptions.logFileChanges = false;
-    bsInstance.init(bsOptions, handleChokidar());
+    console.log(bsOptions);
+    await bsInstance.init(bsOptions, handleChokidar());
+
   } else {
 
     if ( configData?.processSettings?.browsersync?.disable ) {
