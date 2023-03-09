@@ -23,14 +23,15 @@ export const RunBldrDev = async (commandOptions) => {
   const postCssExts = ['.css','.pcss','.postcss'];
   const jsExts      = ['.js','.jsx', '.cjs', '.mjs'];
   const imageExts   = ['.jpg','.jpeg','.png','.gif','.svg', 'webp'];
-  const reloadExts  = [];
   let   bsInstance  = false;
 
+  await processSass(configData, bsInstance);
+  return;
 
   if ( commandOptions.settings?.once ) {
 
     if ( envKey ) {
-      handleProcessAction('bldr', 'Running single dev build using ${envKey} env configuration...');
+      handleProcessAction('bldr', `Running single dev build using ${envKey} env configuration...`);
     } else {
       handleProcessAction('bldr', 'Running single dev build...');
     }
@@ -51,7 +52,7 @@ export const RunBldrDev = async (commandOptions) => {
 
 
   if ( envKey ) {
-    handleProcessAction('bldr', 'Starting dev using ${envKey} env configuration...');
+    handleProcessAction('bldr', `Starting dev using ${envKey} env configuration...`);
   } else {
     handleProcessAction('bldr', 'Starting dev...');
   }

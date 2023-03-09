@@ -22,10 +22,17 @@ export const RunBldrBuild = async (commandOptions) => {
 
   const processStart = new Date().getTime();
 
-  await processSass(configData);
-  await processPostcss(configData);
-  await processImages(configData);
-  await processRollup(configData);
+  await Promise.all([
+    processSass(configData),
+    processPostcss(configData),
+    processImages(configData),
+    processRollup(configData),
+  ]);
+
+  // await processSass(configData);
+  // await processPostcss(configData);
+  // await processImages(configData);
+  // await processRollup(configData);
 
   const processEnd = new Date().getTime();
 

@@ -28,10 +28,10 @@ const handleCommands = async () => {
 
   bldrCLI
     .description('Configurable build tool for css, sass, js and images')
-    .option('-e, --env <name>', 'env key name from config')
-    .configureHelp({
-      showGlobalOptions: true,
-    });
+    .option('-e, --env <name>', 'env key name from config');
+    // .configureHelp({
+    //   showGlobalOptions: true,
+    // });
 
   bldrCLI.command('dev')
     .description('create a local dev environment with live reloading')

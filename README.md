@@ -656,55 +656,65 @@ module.exports = {
   },
   // -------- END SEPERATE DEV/BUILD ENVIRORNMENT CONFIG -------- //
 
+  // -------------------- PROCESS CONFIG -------------------- //
+  processSettings: {
 
-  // -------------------- BROWSERSYNC CONFIG -------------------- //
-  browsersync: {
-    disable: false, // set to true to prevent browsersync from instatiating in watch env. Default: true
-  },
-
-
-  // ---------------------- ESBUILD CONFIG --------------------- //
-  esBuild: {
-    plugins: [
-      // Array of esbuild plugins to add (install in your root package.json)
-      // if `esBuild.overridePlugins` is set to true, this array will replace the default bldr array.
-      // if not, then these will be added after bldrs default plugin set. See Processing documentation below
-    ],
-    overridePlugins: false, // set to true to override default bldr plugins
-    esBuild: require('esbuild'), // overrides bldr version of esbuild. Default: null
-  },
-
-
-  // ---------------------- ROLLUP CONFIG --------------------- //
-  rollup: {
-    useBabel: true, // set to false if babel should not be ran. Default: true
-    useTerser: true,  // set to false if terser should not be ran. Default: true
-    babelPluginOptions: {
-      // see @rollup/plugin-babel options at https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers)
-      // default: { babelHelpers: 'bundled' }
+    // -------------------- BROWSERSYNC CONFIG -------------------- //
+    browsersync: {
+      disable: false, // set to true to prevent browsersync from instatiating in watch env. Default: true
     },
-    inputOptions: {
-      // see rollups inputOptions object at https://rollupjs.org/guide/en/#inputoptions-object
-      // `file` will automatically be added, so no need to add here
-      // default: { external: [/@babel\/runtime/] }
+
+
+    // ---------------------- ESBUILD CONFIG --------------------- //
+    esBuild: {
+      plugins: [
+        // Array of esbuild plugins to add (install in your root package.json)
+        // if `esBuild.overridePlugins` is set to true, this array will replace the default bldr array.
+        // if not, then these will be added after bldrs default plugin set. See Processing documentation below
+      ],
+      overridePlugins: false, // set to true to override default bldr plugins
+      esBuild: require('esbuild'), // overrides bldr version of esbuild. Default: null
     },
-    inputPlugins: [
-      // array of rollup input plugins.
-      // if `rollup.overrideInputPlugins` is set to true, this array will replace the default bldr array.
-      // if not, then these will be added after bldrs default input plugin set. See Processing documentation below
-    ],
-    overrideInputPlugins: false, // set to true to override default bldr plugins
-    outputOptions: {
-      // see rollups outputOptions object at https://rollupjs.org/guide/en/#outputoptions-object
-      // `file` will automatically be added, so no need to add here
+
+
+    // ---------------------- ROLLUP CONFIG --------------------- //
+    rollup: {
+      useBabel: true, // set to false if babel should not be ran. Default: true
+      useTerser: true,  // set to false if terser should not be ran. Default: true
+      babelPluginOptions: {
+        // see @rollup/plugin-babel options at https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers)
+        // default: { babelHelpers: 'bundled' }
+      },
+      inputOptions: {
+        // see rollups inputOptions object at https://rollupjs.org/guide/en/#inputoptions-object
+        // `file` will automatically be added, so no need to add here
+        // default: { external: [/@babel\/runtime/] }
+      },
+      inputPlugins: [
+        // array of rollup input plugins.
+        // if `rollup.overrideInputPlugins` is set to true, this array will replace the default bldr array.
+        // if not, then these will be added after bldrs default input plugin set. See Processing documentation below
+      ],
+      overrideInputPlugins: false, // set to true to override default bldr plugins
+      outputOptions: {
+        // see rollups outputOptions object at https://rollupjs.org/guide/en/#outputoptions-object
+        // `file` will automatically be added, so no need to add here
+      },
+      outputPlugins: [
+        // array of rollup output plugins.
+        // if `rollup.overrideOutputPlugins` is set to true, this array will replace the default bldr array.
+        // if not, then these will be added after bldrs default plugin set. See Processing documentation below
+      ],
+      overrideOutputPlugins: false, // set to true to override default bldr plugins
+      rollup: require('rollup') // if you wish to use a specific version of rollup, you can require it here. Default: null
+    }
+
+    // ---------------------- SASS CONFIG --------------------- //
+    sass: {
+      sassProcessor: null, // defaults to node sass. You can require [dart-sass](https://www.npmjs.com/package/sass) here if preferred
+      importer: null,      // defaults to [node-sass-magic-importer](https://www.npmjs.com/package/node-sass-magic-importer)
+      importerOpts: {},    // options for the importer, defaults to empty object
     },
-    outputPlugins: [
-      // array of rollup output plugins.
-      // if `rollup.overrideOutputPlugins` is set to true, this array will replace the default bldr array.
-      // if not, then these will be added after bldrs default plugin set. See Processing documentation below
-    ],
-    overrideOutputPlugins: false, // set to true to override default bldr plugins
-    rollup: require('rollup') // if you wish to use a specific version of rollup, you can require it here. Default: null
   }
 }
 ```
