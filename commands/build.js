@@ -29,11 +29,6 @@ export const RunBldrBuild = async (commandOptions) => {
     processRollup(configData),
   ]);
 
-  // await processSass(configData);
-  // await processPostcss(configData);
-  // await processImages(configData);
-  // await processRollup(configData);
-
   const processEnd = new Date().getTime();
 
 

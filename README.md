@@ -1,22 +1,10 @@
-<center>
-<h1>🚨 🚨 🚨 <br>This jawn is in active development.<br>🚨 🚨 🚨</h1>
-<p>Use at your own risk.</p>
-</center>
-
-
-
-<center>
-<h1>Bldr 💪</h1>
-TL;DR: Bldr is a configuration based task runner for css, js, sass, and image.
-</center>
+<h1 style="text-align: center;">Bldr 💪</h1>
+<p style="text-align: center">TL;DR: Bldr is a (very opinionated) configuration based task runner for css, js, sass, and image.</p>
 
 
 ## Installation
 
-Bldr can be installed globally:
-`npm i -g @bluecadet/bldr`
-
-Or, install it as a dependency:
+We recommend installing Bldr as a project dependency:
 `npm i @bluecadet/bldr`
 
 You can then add scripts to package.json to run commands:
@@ -24,9 +12,14 @@ You can then add scripts to package.json to run commands:
   scripts: {
     'dev': 'bldr dev',
     'build': 'bldr build',
-    'buildDev': 'bldr build:dev'
+    'devOnce': 'bldr dev --once'
   }
 ```
+
+but you can also install it globally:
+`npm i -g @bluecadet/bldr`
+
+
 Then run `npm run dev`, which will run `bldr dev`, etc.
 
 If you need to pass parameters to a script, add `--` between the command and the parameter:
@@ -35,15 +28,16 @@ If you need to pass parameters to a script, add `--` between the command and the
 
 ## Documentation
 
-- [Command documentation](#commands)
+- [Command Documentation](#commands)
+- [Command Option Documentation](#command-optionss)
 - [Configuration Overview](#configuration-overview)
 - [Basic Configuration](#basic-onfiguration)
 - [Config documentation](#config)
   - [Config Setup](#config-setup)
   - [Environment Config](#environment-config)
   - [PostCSS config](#postcss-config)
-  - [Esbuild and Rollup Config](#esbuildrollup-override-config)
-    - [Recommended Babel Config](#recommended-babel-config)
+  - [Process Settings Configuration](#process-settings-configuration)
+  - [Recommended Babel Config](#recommended-babel-config)
   - [Browsersync Config](#browsersync-config)
 - [Processing documentation](#processing)
 - [Complete Config Example](#complete-config-example)
@@ -57,7 +51,7 @@ If you need to pass parameters to a script, add `--` between the command and the
 $ bldr init
 ```
 
-Running `init` will attempt to create boilerplate config files in the project root.
+Running `init` will run a simple interactive config setup.
 
 
 ### `dev`
@@ -81,13 +75,26 @@ $ bldr build
 
 Running `build` will run postcss and rollup with minification. Rollup will also run babel.
 
-### `build:dev`
+## Command Options
 
-```bash
-$ bldr build:dev
-```
+### `--env=some_key` (or `-e some_key`)
 
-Running `build:dev` will build all files with postcss and esbuild, the same as files processing in `bldr dev`. All files are processed once and then the process ends.
+If the `env` object is setup in config, you can run a command with `--env=env_key_name` to run that config setup. See [env config](#env-config) below.
+
+
+### `--once` (or `-o`)
+
+**For the `dev` command only.**
+
+Running `bldr dev -o` will run a single build of all assets using the `dev` settings.
+
+
+### `--start` (or `-s`)
+
+**For the `dev` command only.**
+
+Running `bldr dev -s` will run a single build of all assets before starting up browsersync and watch tasks. By default, `bldr dev` does not do this.
+
 
 ## Configuration Overview
 
@@ -324,7 +331,7 @@ module.exports = {
 
 ### CLI commands and `env`
 
-`env` keys can only be loaded from `bldr dev`. To use configuration from an `env` key, add the `env=` (or `-e=`) param with a value equal to the key of the `env` object you want to run.
+To use configuration from an `env` key, add the `env=` (or `-e=`) param with a value equal to the key of the `env` object you want to run.
 
 **Example**
 
@@ -422,10 +429,12 @@ The `dev` key can take all settings in the Basic Configuration section. The `bui
 
 Configure postcss by adding a `postcss.config.js` file to the root of your project. bldr uses [postcss-load-config](https://github.com/postcss/postcss-load-config) under the hood. As such, make sure to add plugins using the object syntax in the `postcss-load-config` documentation [here](https://github.com/postcss/postcss-load-config#examples).
 
-In addition to the default context variables of (`ctx.env` (`process.env.NODE_ENV`) and `ctx.cwd` (`process.cwd()`)), there is an additional `bldrEnv`, which will have the value of the current build command (`dev`, `build`, or `build:dev`). Again, refer to the `postcss-load-config` documentation [here](https://github.com/postcss/postcss-load-config#examples).
+In addition to the default context variables of (`ctx.env` (`process.env.NODE_ENV`) and `ctx.cwd` (`process.cwd()`)), there is an additional `bldrEnv`, which will have the value of the current build command (`dev`, `build`). Other options based on commands are available in the `ctx` object under `settings` (such as `watch` and `once` if applicable)
+
+Again, refer to the `postcss-load-config` documentation [here](https://github.com/postcss/postcss-load-config#examples) for further details.
 
 
-## EsBuild and Rollup config
+## Process Settings Configuration
 
 In addition to processes, you can also add config to override or add to the default esBuild and Rollup process.
 
@@ -434,50 +443,134 @@ The following configuration options are available:
 ```js
 
 module.exports = {
-  esBuild: {
-    plugins: [
-      // Array of esbuild plugins to add (install in your root package.json)
-      // if `esBuild.overridePlugins` is set to true, this array will replace the default bldr array.
-      // if not, then these will be added after bldrs default plugin set. See Processing documentation below
-    ],
-    overridePlugins: false, // set to true to override default bldr plugins
-    esBuild: require('esbuild'), // overrides bldr version of esbuild. Default: null
-  },
-  rollup: {
-    useBabel: false, // set to true if babel should not be ran
-    useTerser: true,  // set to false if terser should not be ran
-    babelPluginOptions: {
-      // see @rollup/plugin-babel options at https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers)
-      // default: { babelHelpers: 'bundled' }
+  processSettings: {
+    esBuild: {
+      plugins: [
+        // Array of esbuild plugins to add (install in your root package.json)
+        // if `esBuild.overridePlugins` is set to true, this array will replace the default bldr array.
+        // if not, then these will be added after bldrs default plugin set. See Processing documentation below
+      ],
+      overridePlugins: false, // set to true to override default bldr plugins
+      esBuild: require('esbuild'), // overrides bldr version of esbuild. Default: null
     },
-    inputOptions: {
-      // see rollups inputOptions object at https://rollupjs.org/guide/en/#inputoptions-object
-      // `file` will automatically be added, so no need to add here
-      // default additions: { external: [/@babel\/runtime/] }
+    rollup: {
+      useBabel: false, // set to true if babel should not be ran
+      useTerser: true,  // set to false if terser should not be ran
+      babelPluginOptions: {
+        // see @rollup/plugin-babel options at https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers)
+        // default: { babelHelpers: 'bundled' }
+      },
+      inputOptions: {
+        // see rollups inputOptions object at https://rollupjs.org/guide/en/#inputoptions-object
+        // `file` will automatically be added, so no need to add here
+        // default additions: { external: [/@babel\/runtime/] }
+      },
+      inputPlugins: [
+        // array of rollup input plugins.
+        // if `rollup.overrideInputPlugins` is set to true, this array will replace the default bldr array.
+        // if not, then these will be added after bldrs default input plugin set. See Processing documentation below
+      ],
+      overrideInputPlugins: false, // set to true to override default bldr plugins
+      outputOptions: {
+        // see rollups outputOptions object at https://rollupjs.org/guide/en/#outputoptions-object
+        // `file` will automatically be added, so no need to add here
+      },
+      outputPlugins: [
+        // array of rollup output plugins.
+        // if `rollup.overrideOutputPlugins` is set to true, this array will replace the default bldr array.
+        // if not, then these will be added after bldrs default plugin set. See Processing documentation below
+      ],
+      overrideOutputPlugins: false, // set to true to override default bldr plugins
+      rollup: require('rollup') // if you wish to use a specific version of rollup, you can require it here. Default: null
+    }
+  }
+}
+```
+
+### EsBuild
+```js
+
+module.exports = {
+  processSettings: {
+    esBuild: {
+      plugins: [
+        // Array of esbuild plugins to add (install in your root package.json)
+        // if `esBuild.overridePlugins` is set to true, this array will replace the default bldr array.
+        // if not, then these will be added after bldrs default plugin set. See Processing documentation below
+      ],
+      overridePlugins: false, // set to true to override default bldr plugins
+    }
+  }
+}
+```
+
+### Rollup
+```js
+
+module.exports = {
+  processSettings: {
+    rollup: {
+      useBabel: true, // set to false if babel should not be ran. Default: true
+      useTerser: true,  // set to false if terser should not be ran. Default: true
+      babelPluginOptions: {
+        // see @rollup/plugin-babel options at https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers)
+        // default: { babelHelpers: 'bundled' }
+      },
+      inputOptions: {
+        // see rollups inputOptions object at https://rollupjs.org/guide/en/#inputoptions-object
+        // `file` will automatically be added, so no need to add here
+        // default: { external: [/@babel\/runtime/] }
+      },
+      inputPlugins: [
+        // array of rollup input plugins.
+        // if `rollup.overrideInputPlugins` is set to true, this array will replace the default bldr array.
+        // if not, then these will be added after bldrs default input plugin set. See Processing documentation below
+      ],
+      overrideInputPlugins: false, // set to true to override default bldr plugins
+      outputOptions: {
+        // see rollups outputOptions object at https://rollupjs.org/guide/en/#outputoptions-object
+        // `file` will automatically be added, so no need to add here
+      },
+      outputPlugins: [
+        // array of rollup output plugins.
+        // if `rollup.overrideOutputPlugins` is set to true, this array will replace the default bldr array.
+        // if not, then these will be added after bldrs default plugin set. See Processing documentation below
+      ],
+      overrideOutputPlugins: false, // set to true to override default bldr plugins
+      rollup: require('rollup') // if you wish to use a specific version of rollup, you can require it here. Default: null
+    }
+  }
+}
+```
+
+### Browsersync
+```js
+
+module.exports = {
+  processSettings: {
+    browsersync: {
+      disable: false, // set to true to prevent browsersync from instatiating in watch env. Default: true
     },
-    inputPlugins: [
-      // array of rollup input plugins.
-      // if `rollup.overrideInputPlugins` is set to true, this array will replace the default bldr array.
-      // if not, then these will be added after bldrs default input plugin set. See Processing documentation below
-    ],
-    overrideInputPlugins: false, // set to true to override default bldr plugins
-    outputOptions: {
-      // see rollups outputOptions object at https://rollupjs.org/guide/en/#outputoptions-object
-      // `file` will automatically be added, so no need to add here
+  }
+}
+```
+
+### Sass
+```js
+
+module.exports = {
+  processSettings: {
+    sass: {
+      sassProcessor: null, // defaults to node sass. You can require dart-sass here if preferred
+      importer: null,      // defaults to node-sass-magic-importer
+      importerOpts: {},    // options for the importer, defaults to empty object
     },
-    outputPlugins: [
-      // array of rollup output plugins.
-      // if `rollup.overrideOutputPlugins` is set to true, this array will replace the default bldr array.
-      // if not, then these will be added after bldrs default plugin set. See Processing documentation below
-    ],
-    overrideOutputPlugins: false, // set to true to override default bldr plugins
-    rollup: require('rollup') // if you wish to use a specific version of rollup, you can require it here. Default: null
   }
 }
 ```
 
 
-### Babel (via @rollup/plugin-babel)
+## Babel (via @rollup/plugin-babel)
 
 If a [valid babel config file](https://babeljs.io/docs/en/config-files) exists in the same root as where bldr was ran, bldr will include `@rollup/plugin-babel` with the default options of `{babelHelpers: 'bundled'}`, and Babel will be ran using your local config file. To override, see the documentation for `rollup.babelPluginOptions` above.
 
@@ -515,7 +608,7 @@ npm i --save-dev @babel/preset-env core-js
 
 ### Browsersync Config
 
-If you would like to run watch mode without browsersync, you can disable broswersync by adding `browsersync: {disable: true}` to your bldrConfig.js file.
+If you would like to run watch mode without browsersync, you can disable broswersync by adding `processSettings: {browsersync: {disable: true}}` to your bldrConfig.js file.
 
 
 ### Local Config
@@ -541,6 +634,7 @@ Default Rollup input plugins:
 - @rollup/plugin-commonjs
 - @rollup/plugin-babel
 - @rollup/plugin-node-resolve
+- rollup-plugin-inject-process-env
 
 Default Rollup output plugins:
 - none
@@ -707,7 +801,7 @@ module.exports = {
       ],
       overrideOutputPlugins: false, // set to true to override default bldr plugins
       rollup: require('rollup') // if you wish to use a specific version of rollup, you can require it here. Default: null
-    }
+    },
 
     // ---------------------- SASS CONFIG --------------------- //
     sass: {
