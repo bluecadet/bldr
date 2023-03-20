@@ -11,6 +11,7 @@ import { extname } from 'node:path';
 
 // import util from 'node:util';
 import Module from "node:module";
+import { resolveObjectURL } from 'node:buffer';
 const require  = Module.createRequire(import.meta.url);
 const chokidar = require('chokidar');
 
