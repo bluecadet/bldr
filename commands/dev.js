@@ -25,9 +25,6 @@ export const RunBldrDev = async (commandOptions) => {
   const imageExts   = ['.jpg','.jpeg','.png','.gif','.svg', 'webp'];
   let   bsInstance  = false;
 
-  await processSass(configData, bsInstance);
-  return;
-
   if ( commandOptions.settings?.once ) {
 
     if ( envKey ) {
@@ -130,14 +127,18 @@ export const RunBldrDev = async (commandOptions) => {
       handleProcessWarn('bldr', `Create a ${settings.localFilename} file in project root to configure browsersync`);
     }
 
-    const bsOptions = configData.local || {};
-    const bsName    = bsOptions?.browserSync?.instanceName ?? `bldr-${Math.floor(Math.random() * 1000)}`;
-    bsInstance      = await require("browser-sync").create(bsName);
+    const bsLocalOpts = configData.local || {};
+    const bsName      = bsLocalOpts?.browserSync?.instanceName ?? `bldr-${Math.floor(Math.random() * 1000)}`;
+    const bsOptions   = bsLocalOpts?.browserSync ? {...bsLocalOpts.browserSync} : {};
+    bsInstance        = await require("browser-sync").create(bsName);
 
+    // Bldr enforced options
     bsOptions.logPrefix = 'bldr';
     bsOptions.logFileChanges = false;
-    console.log(bsOptions);
-    await bsInstance.init(bsOptions, handleChokidar());
+
+    await bsInstance.init(bsOptions, async () => {
+      await handleChokidar();
+    });
 
   } else {
 
