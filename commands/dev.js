@@ -2,7 +2,8 @@ import { getConfigData } from '../lib/utils/getConfigData.js';
 import { handleProcessAction, handleProcessWarn, handleProcessSuccess } from '../lib/utils/reporters.js';
 import { settings } from '../lib/settings/bldrSettings.js';
 import { processSass } from '../lib/processes/sass.js';
-import { processPostcss } from '../lib/processes/postcss.js';
+// import { processPostcss } from '../lib/processes/postcss.js';
+import { ProcessPostcss } from '../lib/processes/postcss.js';
 import { processEsBuild } from '../lib/processes/esBuild.js';
 import { processImages } from '../lib/processes/images.js';
 import { basename } from 'node:path';
@@ -26,43 +27,47 @@ export const RunBldrDev = async (commandOptions) => {
   const imageExts   = ['.jpg','.jpeg','.png','.gif','.svg', 'webp'];
   let   bsInstance  = false;
 
-  if ( commandOptions.settings?.once ) {
+  const postcss = new ProcessPostcss(configData, bsInstance);
 
-    if ( envKey ) {
-      handleProcessAction('bldr', `Running single dev build using ${envKey} env configuration...`);
-    } else {
-      handleProcessAction('bldr', 'Running single dev build...');
-    }
+  await postcss.run();
 
-    const processStart = new Date().getTime();
+  // if ( commandOptions.settings?.once ) {
 
-    await processSass(configData, bsInstance);
-    await processPostcss(configData, bsInstance);
-    await processEsBuild(configData, bsInstance);
-    await processImages(configData, bsInstance);
+  //   if ( envKey ) {
+  //     handleProcessAction('bldr', `Running single dev build using ${envKey} env configuration...`);
+  //   } else {
+  //     handleProcessAction('bldr', 'Running single dev build...');
+  //   }
 
-    const processEnd = new Date().getTime();
+  //   const processStart = new Date().getTime();
 
-    handleProcessAction('bldr', '✨ Dev processes complete ✨', `${(processEnd - processStart)/1000}`);
+  //   await processSass(configData, bsInstance);
+  //   await processPostcss(configData, bsInstance);
+  //   await processEsBuild(configData, bsInstance);
+  //   await processImages(configData, bsInstance);
 
-    return;
-  }
+  //   const processEnd = new Date().getTime();
+
+  //   handleProcessAction('bldr', '✨ Dev processes complete ✨', `${(processEnd - processStart)/1000}`);
+
+  //   return;
+  // }
 
 
-  if ( envKey ) {
-    handleProcessAction('bldr', `Starting dev using ${envKey} env configuration...`);
-  } else {
-    handleProcessAction('bldr', 'Starting dev...');
-  }
+  // if ( envKey ) {
+  //   handleProcessAction('bldr', `Starting dev using ${envKey} env configuration...`);
+  // } else {
+  //   handleProcessAction('bldr', 'Starting dev...');
+  // }
 
-  // Run processes before starting local build
-  if ( commandOptions.settings?.start ) {
-    handleProcessAction('bldr', 'Running initial processes...');
-    await processSass(configData, bsInstance);
-    await processPostcss(configData, bsInstance);
-    await processEsBuild(configData, bsInstance);
-    await processImages(configData, bsInstance);
-  }
+  // // Run processes before starting local build
+  // if ( commandOptions.settings?.start ) {
+  //   handleProcessAction('bldr', 'Running initial processes...');
+  //   await processSass(configData, bsInstance);
+  //   await processPostcss(configData, bsInstance);
+  //   await processEsBuild(configData, bsInstance);
+  //   await processImages(configData, bsInstance);
+  // }
 
 
   // Handle a single file from Chokidar event
@@ -123,32 +128,32 @@ export const RunBldrDev = async (commandOptions) => {
 
 
   // Create browsersync instance if appropriate
-  if ( !configData?.processSettings?.browsersync?.disable ) {
-    if ( !configData?.local ) {
-      handleProcessWarn('bldr', `Create a ${settings.localFilename} file in project root to configure browsersync`);
-    }
+  // if ( !configData?.processSettings?.browsersync?.disable ) {
+  //   if ( !configData?.local ) {
+  //     handleProcessWarn('bldr', `Create a ${settings.localFilename} file in project root to configure browsersync`);
+  //   }
 
-    const bsLocalOpts = configData.local || {};
-    const bsName      = bsLocalOpts?.browserSync?.instanceName ?? `bldr-${Math.floor(Math.random() * 1000)}`;
-    const bsOptions   = bsLocalOpts?.browserSync ? {...bsLocalOpts.browserSync} : {};
-    bsInstance        = await require("browser-sync").create(bsName);
+  //   const bsLocalOpts = configData.local || {};
+  //   const bsName      = bsLocalOpts?.browserSync?.instanceName ?? `bldr-${Math.floor(Math.random() * 1000)}`;
+  //   const bsOptions   = bsLocalOpts?.browserSync ? {...bsLocalOpts.browserSync} : {};
+  //   bsInstance        = await require("browser-sync").create(bsName);
 
-    // Bldr enforced options
-    bsOptions.logPrefix = 'bldr';
-    bsOptions.logFileChanges = false;
+  //   // Bldr enforced options
+  //   bsOptions.logPrefix = 'bldr';
+  //   bsOptions.logFileChanges = false;
 
-    await bsInstance.init(bsOptions, async () => {
-      await handleChokidar();
-    });
+  //   await bsInstance.init(bsOptions, async () => {
+  //     await handleChokidar();
+  //   });
 
-  } else {
+  // } else {
 
-    if ( configData?.processSettings?.browsersync?.disable ) {
-      handleProcessWarn('bldr', 'Browsersync is disabled in config');
-    }
+  //   if ( configData?.processSettings?.browsersync?.disable ) {
+  //     handleProcessWarn('bldr', 'Browsersync is disabled in config');
+  //   }
 
-    handleChokidar();
-  }
+  //   handleChokidar();
+  // }
 
 }
 
