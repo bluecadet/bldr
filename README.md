@@ -803,6 +803,12 @@ module.exports = {
       rollup: require('rollup') // if you wish to use a specific version of rollup, you can require it here. Default: null
     },
 
+    // ---------------------- ESLint CONFIG --------------------- //
+    eslint: {
+      omit: null,              // set to true to skip eslint
+      forceBuildIfError: null, // set to true to force builds to run if linting errors are found
+    },
+
     // ---------------------- SASS CONFIG --------------------- //
     sass: {
       sassProcessor: null, // defaults to node sass. You can require [dart-sass](https://www.npmjs.com/package/sass) here if preferred
