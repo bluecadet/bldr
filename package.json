@@ -1,6 +1,6 @@
 {
   "name": "@bluecadet/bldr",
-  "version": "1.0.0-beta.8",
+  "version": "1.0.0-beta.9",
   "bugs": {
     "url": "https://github.com/bluecadet/bldr/issues"
   },
@@ -25,7 +25,7 @@
   "license": "ISC",
   "dependencies": {
     "@rollup/plugin-babel": "^6.0.3",
-    "@rollup/plugin-commonjs": "^24.1.0",
+    "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-node-resolve": "^15.0.2",
     "browser-sync": "^2.29.1",
     "chalk": "^5.2.0",
@@ -33,15 +33,15 @@
     "colors": "^1.4.0",
     "commander": "^10.0.1",
     "enquirer": "^2.3.6",
-    "esbuild": "^0.17.18",
-    "eslint": "^8.39.0",
+    "esbuild": "^0.17.19",
+    "eslint": "^8.40.0",
     "fast-glob": "^3.2.12",
     "fs-extra": "^11.1.1",
     "imagemin": "^8.0.1",
     "imagemin-mozjpeg": "^10.0.0",
     "imagemin-pngquant": "^9.0.2",
     "imagemin-svgo": "^10.0.1",
-    "inquirer": "^9.2.0",
+    "inquirer": "^9.2.3",
     "node-sass": "^8.0.0",
     "node-sass-glob-importer": "^5.3.2",
     "node-sass-magic-importer": "^5.3.2",
@@ -51,9 +51,9 @@
     "postcss-sass": "^0.5.0",
     "postcss-scss": "^4.0.6",
     "postcss-syntax": "^0.36.2",
-    "rollup": "^3.21.0",
+    "rollup": "^3.21.8",
     "rollup-plugin-inject-process-env": "^1.3.1",
-    "terser": "^5.17.1"
+    "terser": "^5.17.4"
   },
   "homepage": "https://github.com/bluecadet/bldr#readme",
   "author": ""

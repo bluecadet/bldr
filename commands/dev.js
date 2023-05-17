@@ -5,14 +5,11 @@ import { processSass } from '../lib/processes/sass.js';
 import { processPostcss } from '../lib/processes/postcss.js';
 import { processEsBuild } from '../lib/processes/esBuild.js';
 import { processImages } from '../lib/processes/images.js';
-import { basename } from 'node:path';
-
-import { extname } from 'node:path';
+import { basename, extname } from 'node:path';
 
 // import util from 'node:util';
-import Module from "node:module";
-import { resolveObjectURL } from 'node:buffer';
-const require  = Module.createRequire(import.meta.url);
+import { createRequire } from 'node:module'
+const require = createRequire(import.meta.url);
 const chokidar = require('chokidar');
 
 
@@ -25,6 +22,7 @@ export const RunBldrDev = async (commandOptions) => {
   const jsExts      = ['.js','.jsx', '.cjs', '.mjs'];
   const imageExts   = ['.jpg','.jpeg','.png','.gif','.svg', 'webp'];
   let   bsInstance  = false;
+  let   bsInstanceName = false;
 
   if ( commandOptions.settings?.once ) {
 
@@ -36,10 +34,10 @@ export const RunBldrDev = async (commandOptions) => {
 
     const processStart = new Date().getTime();
 
-    await processSass(configData, bsInstance);
-    await processPostcss(configData, bsInstance);
-    await processEsBuild(configData, bsInstance);
-    await processImages(configData, bsInstance);
+    await processSass(configData);
+    await processPostcss(configData);
+    await processEsBuild(configData);
+    await processImages(configData);
 
     const processEnd = new Date().getTime();
 
@@ -69,21 +67,33 @@ export const RunBldrDev = async (commandOptions) => {
   const handleFile = async (ext, file) => {
 
     if (sassExts.includes(ext)) {
-      await processSass(configData, bsInstance);
+      await processSass(configData);
+      if ( bsInstance ) {
+        bsInstance.stream({match: "**/*.css"});
+        bsInstance.reload("*.css");
+      }
     }
 
     if (postCssExts.includes(ext)) {
-      await processPostcss(configData, bsInstance);
+      await processPostcss(configData);
+      if ( bsInstance ) {
+        bsInstance.stream({match: "**/*.css"});
+        bsInstance.reload("*.css");
+      }
     }
 
     if (jsExts.includes(ext)) {
-      await processEsBuild(configData, bsInstance);
-      // esBuild(bsInstance);
+      await processEsBuild(configData);
+      if ( bsInstance ) {
+        bsInstance.reload();
+      }
     }
 
     if (imageExts.includes(ext)) {
-      await processImages(configData, bsInstance);
-      // handleWatchImages(bsInstance);
+      await processImages(configData);
+      if ( bsInstance ) {
+        bsInstance.reload();
+      }
     }
 
     if (configData.watch.reloadExts.includes(ext) && bsInstance ) {
@@ -92,7 +102,7 @@ export const RunBldrDev = async (commandOptions) => {
     }
   };
 
-  const handleChokidar = async () => {
+  const handleChokidar = () => {
 
     // Chokidar watcher
     const watcher = chokidar.watch(configData.watch.files, {
@@ -129,16 +139,16 @@ export const RunBldrDev = async (commandOptions) => {
     }
 
     const bsLocalOpts = configData.local || {};
-    const bsName      = bsLocalOpts?.browserSync?.instanceName ?? `bldr-${Math.floor(Math.random() * 1000)}`;
     const bsOptions   = bsLocalOpts?.browserSync ? {...bsLocalOpts.browserSync} : {};
-    bsInstance        = await require("browser-sync").create(bsName);
+    bsInstanceName    = bsLocalOpts?.browserSync?.instanceName ?? `bldr-${Math.floor(Math.random() * 1000)}`;
+    bsInstance        = await require("browser-sync").create(bsInstanceName);
 
     // Bldr enforced options
     bsOptions.logPrefix = 'bldr';
     bsOptions.logFileChanges = false;
 
-    await bsInstance.init(bsOptions, async () => {
-      await handleChokidar();
+    bsInstance.init(bsOptions, () => {
+      handleChokidar();
     });
 
   } else {
