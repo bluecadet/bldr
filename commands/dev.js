@@ -69,16 +69,16 @@ export const RunBldrDev = async (commandOptions) => {
     if (sassExts.includes(ext)) {
       await processSass(configData);
       if ( bsInstance ) {
-        bsInstance.stream({match: "**/*.css"});
-        bsInstance.reload("**/*.css");
+        // bsInstance.stream({match: "**/*.css"});
+        bsInstance.reload(["*.css"]);
       }
     }
 
     if (postCssExts.includes(ext)) {
       await processPostcss(configData);
       if ( bsInstance ) {
-        bsInstance.stream({match: "**/*.css"});
-        bsInstance.reload("**/*.css");
+        // bsInstance.stream({match: "**/*.css"});
+        bsInstance.reload(["*.css"]);
       }
     }
 
