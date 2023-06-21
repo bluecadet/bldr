@@ -85,14 +85,14 @@ export const RunBldrDev = async (commandOptions) => {
     if (jsExts.includes(ext)) {
       await processEsBuild(configData);
       if ( bsInstance ) {
-        bsInstance.reload({stream: true});
+        bsInstance.reload(["*.js"]);
       }
     }
 
     if (imageExts.includes(ext)) {
       await processImages(configData);
       if ( bsInstance ) {
-        bsInstance.reload({stream: true});
+        bsInstance.reload();
       }
     }
 
