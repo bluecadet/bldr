@@ -1,6 +1,6 @@
 {
   "name": "@bluecadet/bldr",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "bugs": {
     "url": "https://github.com/bluecadet/bldr/issues"
   },
@@ -41,9 +41,7 @@
     "imagemin-mozjpeg": "^10.0.0",
     "imagemin-pngquant": "^9.0.2",
     "imagemin-svgo": "^10.0.1",
-    "inquirer": "^9.2.12",
     "node-sass": "^9.0.0",
-    "node-sass-glob-importer": "^5.3.3",
     "node-sass-magic-importer": "^5.3.3",
     "postcss": "^8.4.33",
     "postcss-load-config": "^5.0.2",
