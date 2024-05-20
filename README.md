@@ -38,6 +38,7 @@ If you need to pass parameters to a script, add `--` between the command and the
   - [PostCSS config](#postcss-config)
   - [Process Settings Configuration](#process-settings-configuration)
   - [Recommended Babel Config](#recommended-babel-config)
+  - [Recommended SWC Config](#recommended-swc-config)
   - [Browsersync Config](#browsersync-config)
 - [Processing documentation](#processing)
 - [Complete Config Example](#complete-config-example)
@@ -454,16 +455,22 @@ module.exports = {
       esBuild: require('esbuild'), // overrides bldr version of esbuild. Default: null
     },
     rollup: {
-      useBabel: false, // set to true if babel should not be ran
-      useTerser: true,  // set to false if terser should not be ran
+      useBabel: false, // set to true if babel should be ran (default: false)
+      useTerser: true,  // set to false if terser should not be ran (default: true)
       babelPluginOptions: {
         // see @rollup/plugin-babel options at https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers)
         // default: { babelHelpers: 'bundled' }
       },
+      useSWC: false, // set to true if SWC should not be ran (default: false)
+      swcOptions: {
+        // see SWC Configuration at https://swc.rs/docs/configuration/swcrc
+        // default: {}
+      }
       inputOptions: {
         // see rollups inputOptions object at https://rollupjs.org/guide/en/#inputoptions-object
         // `file` will automatically be added, so no need to add here
-        // default additions: { external: [/@babel\/runtime/] }
+        // default: {}
+        // if using babel, set to { external: [/@babel\/runtime/] }
       },
       inputPlugins: [
         // array of rollup input plugins.
@@ -510,16 +517,22 @@ module.exports = {
 module.exports = {
   processSettings: {
     rollup: {
-      useBabel: true, // set to false if babel should not be ran. Default: true
-      useTerser: true,  // set to false if terser should not be ran. Default: true
+      useBabel: false, // set to true if babel should be ran (default: false)
+      useTerser: true,  // set to false if terser should not be ran (default: true)
       babelPluginOptions: {
         // see @rollup/plugin-babel options at https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers)
         // default: { babelHelpers: 'bundled' }
       },
+      useSWC: false, // set to true if SWC should not be ran (default: false)
+      swcOptions: {
+        // see SWC Configuration at https://swc.rs/docs/configuration/swcrc
+        // default: {}
+      }
       inputOptions: {
         // see rollups inputOptions object at https://rollupjs.org/guide/en/#inputoptions-object
         // `file` will automatically be added, so no need to add here
-        // default: { external: [/@babel\/runtime/] }
+        // default: {}
+        // if using babel, set to { external: [/@babel\/runtime/] }
       },
       inputPlugins: [
         // array of rollup input plugins.
