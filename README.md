@@ -129,9 +129,10 @@ module.exports = {
   js: {
     // processes .js files with esbuild (bldr dev) or rollup (bldr build)
   },
-  images: {
+  // Images are no longer optimized but will still be copied
+  // images: {
     // processes image files with imagemin (via imagemin-mozjpeg, imagemin-pngquant, and imagemin-svgo)
-  }
+  // }
 }
 ```
 
@@ -556,15 +557,20 @@ module.exports = {
 ```
 
 ### Sass
+
+🚨 **Sass is now limited to `sass` - `node-sass` is no longer supported.** 🚨
+
+As a result, sass options are removed from `processSettings`
+
 ```js
 
 module.exports = {
   processSettings: {
-    sass: {
-      sassProcessor: null, // defaults to node sass. You can require dart-sass here if preferred
-      importer: null,      // defaults to node-sass-magic-importer
-      importerOpts: {},    // options for the importer, defaults to empty object
-    },
+    // sass: {
+    //   sassProcessor: null, // defaults to node sass. You can require dart-sass here if preferred
+    //   importers: null,      // defaults to node-sass-magic-importer
+    //   importerOpts: {},    // options for the importer, defaults to empty object
+    // },
   }
 }
 ```
