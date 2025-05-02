@@ -33,7 +33,7 @@ async function handleSassFile(file, configObject, rootConfig) {
     const processStart  = new Date().getTime();
     const mapOpts    = rootConfig.settings.env === 'dev' ? true : false;
     const sassResult = sassSettings.processor.renderSync({
-      importer: sassSettings.importer(sassSettings.importerOpts),
+      // importer: sassSettings.importer(sassSettings.importerOpts),
       file: file,
       sourceMap: mapOpts,
     });
@@ -86,15 +86,15 @@ export const processSass = async (config) => {
 
   sassSettings.processor = config?.processSettings?.sass?.sassProcessor
                              ? config.processSettings.sass.sassProcessor
-                             : require('node-sass');
+                             : require('sass');
 
-  sassSettings.importer  = config?.processSettings?.sass?.importer
-                             ? config.processSettings.sass.importer
-                             : require('node-sass-magic-importer');
+  // sassSettings.importer  = config?.processSettings?.sass?.importer
+  //                            ? config.processSettings.sass.importer
+  //                            : require('node-sass-magic-importer');
 
-  sassSettings.importerOpts = config?.processSettings?.sass?.importerOpts
-                                ? config.processSettings.sass.importerOpts
-                                : {};
+  // sassSettings.importerOpts = config?.processSettings?.sass?.importerOpts
+  //                               ? config.processSettings.sass.importerOpts
+  //                               : {};
 
   for await (const configObject of config.processes.sass) {
 

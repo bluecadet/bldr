@@ -7,7 +7,13 @@ import { RunInit } from './commands/init.js';
 import { Bldr_Settings } from './lib/Bldr_Settings.js';
 import { Bldr_Config } from './lib/Bldr_Config.js';
 
+import { ConfigSettings } from './lib/@types/types.js';
+
 const bldrCLI = new Command();
+
+export function bldrConfig(config: ConfigSettings): ConfigSettings {
+  return config;
+}
 
 const commandSettings = {
   bldrEnv: '',
@@ -34,7 +40,7 @@ const handleInit = async () => {
   await RunInit();
 };
 
-const handleCommands = async () => {
+const handleCommands = () => {
   bldrCLI
     .description('Configurable build tool for css, sass, js and images')
     .option('-e, --env <name>', 'env key name from config');
@@ -55,13 +61,14 @@ const handleCommands = async () => {
       'run all `dev` processes once without starting local enviornment'
     )
     .action((options) => {
-      commandSettings.bldrEnv = 'dev';
-      commandSettings.settings = {
-        ...{ watch: true },
-        ...options,
-        ...bldrCLI.opts(),
-      };
-      handleDev(commandSettings);
+      console.log('HELLO')
+      // commandSettings.bldrEnv = 'dev';
+      // commandSettings.settings = {
+      //   ...{ watch: true },
+      //   ...options,
+      //   ...bldrCLI.opts(),
+      // };
+      // handleDev(commandSettings);
     });
 
   bldrCLI
@@ -87,4 +94,4 @@ const handleCommands = async () => {
   bldrCLI.parse(process.argv);
 };
 
-await handleCommands();
+handleCommands();
