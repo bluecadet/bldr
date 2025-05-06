@@ -7,13 +7,9 @@ import { RunInit } from './commands/init.js';
 import { Bldr_Settings } from './lib/Bldr_Settings.js';
 import { Bldr_Config } from './lib/Bldr_Config.js';
 
-import { ConfigSettings } from './lib/@types/types.js';
+import { ConfigSettings } from '../../src/lib/@types/configTypes.js';
 
 const bldrCLI = new Command();
-
-export function bldrConfig(config: ConfigSettings): ConfigSettings {
-  return config;
-}
 
 const commandSettings = {
   bldrEnv: '',

@@ -1,0 +1,1 @@
+{"version":3,"file":"flattenProcesses.js","sourceRoot":"","sources":["../../../src/lib/utils/flattenProcesses.ts"],"names":[],"mappings":"AAAA,MAAM,UAAU,gBAAgB,CAAC,aAAkB,EAAE,WAAqB;IACxE,MAAM,YAAY,GAAU,EAAE,CAAC;IAC/B,MAAM,UAAU,GAAa,EAAE,CAAC;IAGhC,OAAO,EAAE,YAAY,EAAE,UAAU,EAAE,CAAC;AACtC,CAAC"}

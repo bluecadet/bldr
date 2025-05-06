@@ -1,20 +1,21 @@
 #! /usr/bin/env node
 
 import { Command } from 'commander';
+import { CommandSettings } from './lib/@types/commandSettings.js';
 
 
-const handleDev = async (commandOptions: any) => {
-  let run = await import('./commands/dev.js');
+const handleDev = async (commandOptions: CommandSettings) => {
+  let run = await import('./lib/commands/dev.js');
   run.default(commandOptions);
 }
 
-const handleBuild = async (commandOptions: any) => {
-  let run = await import('./commands/build.js');
+const handleBuild = async (commandOptions: CommandSettings) => {
+  let run = await import('./lib/commands/build.js');
   run.default(commandOptions);
 }
 
-const handleInit = async (commandOptions: any) => {
-  let run = await import('./commands/init.js');
+const handleInit = async (commandOptions: CommandSettings) => {
+  let run = await import('./lib/commands/init.js');
   run.default(commandOptions);
 }
 
@@ -22,10 +23,8 @@ const bldrCLI = new Command();
 
 bldrCLI
   .description('Configurable build tool for css, sass, js and images')
-  .option('-e, --env <name>', 'env key name from config');
-// .configureHelp({
-//   showGlobalOptions: true,
-// });
+  .option('-e, --env <name>', 'env key name from config')
+  .option('-l, --lintOnly', 'only run linting processes');
 
 bldrCLI
   .command('dev')
@@ -39,15 +38,15 @@ bldrCLI
     '-o, --once',
     'run all `dev` processes once without starting local enviornment'
   )
-  .action((commandOptions) => {
-    handleDev(commandOptions);
+  .action((options, cmd) => {
+    handleDev(cmd.optsWithGlobals());
   });
 
 bldrCLI
   .command('build')
   .description('create a production build')
-  .action((commandOptions) => {
-    handleBuild(commandOptions);
+  .action((options, cmd) => {
+    handleBuild(cmd.optsWithGlobals());
   });
 
 bldrCLI
