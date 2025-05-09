@@ -62,11 +62,6 @@ export class BldrConfig {
          */
         this.sdcProcessAssetGroups = {};
         /**
-         * @property null|function
-         * Fast-glob function
-         */
-        _BldrConfig_fg.set(this, null);
-        /**
          * @property boolean
          * If Single Directory Component actions should be ran
          */
@@ -76,6 +71,13 @@ export class BldrConfig {
          * Settings for Single Directory Component actions
          */
         this.sdcConfig = null;
+        this.sdcLocalPath = null;
+        this.sdcLocalPathTest = null;
+        /**
+         * @property null|function
+         * Fast-glob function
+         */
+        _BldrConfig_fg.set(this, null);
         if (BldrConfig._instance) {
             return BldrConfig._instance;
         }
@@ -118,7 +120,7 @@ export class BldrConfig {
                 this.processAssetGroups[key] = {};
             }
             const localFile = file.replace(process.cwd() + '/', '');
-            this.processAssetGroups[key][localFile] = this.createSrcDestObject(localFile, dest);
+            this.processAssetGroups[key][localFile] = this.createSrcDestObject(file, path.join(process.cwd(), dest));
         });
     }
     /**
@@ -152,8 +154,8 @@ export class BldrConfig {
                 this.sdcProcessAssetGroups[key] = {};
             }
             const localFile = file.replace(process.cwd() + '/', '');
-            const dest = path.dirname(localFile);
-            this.sdcProcessAssetGroups[key][localFile] = this.createSrcDestObject(localFile, dest);
+            const dest = path.dirname(file);
+            this.sdcProcessAssetGroups[key][localFile] = this.createSrcDestObject(file, path.dirname(dest));
         });
     }
 }
@@ -173,8 +175,8 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
         // Load Local User Config
         const localConfigFile = path.join(process.cwd(), this.bldrSettings.localConfigFileName);
         try {
-            const config = yield import(localConfigFile);
-            this.localConfig = config.default;
+            const localConfig = yield import(localConfigFile);
+            this.localConfig = localConfig.default;
         }
         catch (error) {
             if (this.isDev && !((_a = this.userConfig.browsersync) === null || _a === void 0 ? void 0 : _a.disable)) {
@@ -247,14 +249,15 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
             logError('BldrConfig', 'No directory key found for `sdc`', { throwError: true, exit: true });
             return;
         }
-        this.extPrefix = ((_b = this.userConfig.sdc) === null || _b === void 0 ? void 0 : _b.fileExtensionPrefix) || '.bldr';
         this.sdcPath = path.join(process.cwd(), this.userConfig.sdc.directory);
         this.sdcLocalPath = this.userConfig.sdc.directory;
+        this.sdcLocalPathTest = this.userConfig.sdc.directory.startsWith('./') ? this.userConfig.sdc.directory.replace('./', '') : this.userConfig.sdc.directory;
+        this.sdcAssetSubDirectory = ((_b = this.userConfig.sdc) === null || _b === void 0 ? void 0 : _b.assetSubDirectory) || 'assets';
         this.isSDC = true;
         if ((_c = this.userConfig) === null || _c === void 0 ? void 0 : _c.watchPaths) {
-            this.chokidarWatchArray.push(this.sdcLocalPath);
+            this.chokidarWatchArray.push(this.userConfig.sdc.directory);
         }
-        Promise.all([
+        yield Promise.all([
             __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'css', 'css'),
             __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'sass', 'sass'),
             __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'scss', 'sass'),
@@ -264,7 +267,7 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
     });
 }, _BldrConfig_handleSDCType = function _BldrConfig_handleSDCType(ext, key) {
     return __awaiter(this, void 0, void 0, function* () {
-        const files = yield __classPrivateFieldGet(this, _BldrConfig_fg, "f").sync([`${this.sdcPath}/**/*${this.extPrefix}.${ext}`]);
+        const files = yield __classPrivateFieldGet(this, _BldrConfig_fg, "f").sync([`${this.sdcPath}/**/**/${this.sdcAssetSubDirectory}/*.${ext}`]);
         if (files && files.length > 0) {
             for (const file of files) {
                 yield this.addSDCAsset(file, key);

@@ -1,3 +1,4 @@
+import { ProcessAsset } from '../@types/configTypes.js';
 import { BldrConfig } from '../BldrConfig.js';
 
 export class PostcssProvider {
@@ -31,6 +32,20 @@ export class PostcssProvider {
   async initialize() {
     this.bldrConfig = BldrConfig._instance;
     this.notice = 'PostcssProvider initialized';
+  }
+
+
+  async buildFile(filepath: string) {
+    if ( this.bldrConfig.processAssetGroups?.css?.[filepath]) {
+      console.log(this.bldrConfig.processAssetGroups?.css?.[filepath]);
+    } else {
+      console.warn(`Postcss`, `No css process found for ${filepath}`);
+    }
+
+  }
+
+  async buildAssetGroup(assetGroup: ProcessAsset) {
+    console.log(assetGroup);
   }
 
 }

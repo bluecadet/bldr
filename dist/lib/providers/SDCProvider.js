@@ -29,7 +29,7 @@ export class SDCProvider {
                 console.log(this.bldrConfig.sdcProcessAssetGroups[type][filepath]);
             }
             else {
-                logWarn(`SDC`, `No SDC process found for ${filepath}`);
+                logWarn(`SDC`, `No file found for ${filepath}`);
             }
         });
     }

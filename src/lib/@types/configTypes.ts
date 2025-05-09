@@ -159,12 +159,16 @@ export interface BldrSDCSettings {
   /**
    * @description Path to single directory components
    */
-  directory?: string;
+  directory: string;
+
+  assetSubDirectory: string;
 
   /**
    * @description File prefix for SDC files. Default is `.bldr`, which, for example will process `file.bldr.css` to `file.css`
    */
-  fileExtensionPrefix?: string;
+  // fileExtensionPrefix?: string;
+
+
 }
 
 
@@ -173,6 +177,11 @@ export interface browsersyncSettings {
    * @description set to false if browsersync should not be ran. Default: true
    */
   disable?: boolean;
+
+  /**
+   * @description browsersync instance name
+   */
+  instanceName?: string;
 }
 
 
@@ -186,16 +195,17 @@ export interface LocalConfigSettings {
 
 
 
+
 // export interface ProcessAssetGroup {
 //   css?: ProcessAsset[];
 //   js?: ProcessAsset[];
 //   sass?: ProcessAsset[];
 // }
 
-// export interface ProcessAsset {
-//   src: string;
-//   dest: string;
-// }
+export interface ProcessAsset {
+  src: string;
+  dest: string;
+}
 
 
 

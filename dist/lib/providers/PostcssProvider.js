@@ -21,5 +21,21 @@ export class PostcssProvider {
             this.notice = 'PostcssProvider initialized';
         });
     }
+    buildFile(filepath) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b, _c, _d;
+            if ((_b = (_a = this.bldrConfig.processAssetGroups) === null || _a === void 0 ? void 0 : _a.css) === null || _b === void 0 ? void 0 : _b[filepath]) {
+                console.log((_d = (_c = this.bldrConfig.processAssetGroups) === null || _c === void 0 ? void 0 : _c.css) === null || _d === void 0 ? void 0 : _d[filepath]);
+            }
+            else {
+                console.warn(`Postcss`, `No css process found for ${filepath}`);
+            }
+        });
+    }
+    buildAssetGroup(assetGroup) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log(assetGroup);
+        });
+    }
 }
 //# sourceMappingURL=PostcssProvider.js.map

@@ -1,9 +1,8 @@
 import { CommandSettings } from "./@types/commandSettings";
-import { AssetObject, ConfigSettings } from "./@types/configTypes";
+import { AssetObject, ConfigSettings, LocalConfigSettings, ProcessAsset } from "./@types/configTypes";
 import { BldrSettings } from "./BldrSettings.js";
 import * as path from "path"
 import { logError, logWarn } from "./utils/loggers.js";
-import { minimatch } from "minimatch";
 
 import { createRequire } from 'node:module';
 import { unglobPath } from "./utils/unglobPath.js";
@@ -43,7 +42,7 @@ export class BldrConfig {
    * @property null|object
    * Config from projects bldrConfigLocal.js
    */
-  public localConfig = null;
+  public localConfig: null | LocalConfigSettings = null;
 
   /**
    * @property object
@@ -86,7 +85,7 @@ export class BldrConfig {
    * @property null|object
    * SDC extension prefix
    */
-  public extPrefix!: string;
+  // public extPrefix!: string;
 
   /**
    * @property null|string
@@ -99,14 +98,7 @@ export class BldrConfig {
    * @property null|string
    * Path to the SDC directory
    */
-  public sdcLocalPath!: string;
-
-  /**
-   * @property null|function
-   * Fast-glob function
-   */
-  #fg: any = null;
-
+  public sdcAssetSubDirectory!: string;
   
 
   /**
@@ -120,6 +112,16 @@ export class BldrConfig {
    * Settings for Single Directory Component actions
    */
   public sdcConfig: any = null;
+
+
+  public sdcLocalPath: string | null = null;
+  public sdcLocalPathTest: string | null = null;
+
+  /**
+   * @property null|function
+   * Fast-glob function
+   */
+  #fg: any = null;
 
 
   /**
@@ -186,8 +188,8 @@ export class BldrConfig {
     // Load Local User Config
     const localConfigFile = path.join(process.cwd(), this.bldrSettings.localConfigFileName);
     try {
-      const config = await import(localConfigFile);  
-      this.localConfig = config.default;
+      const localConfig = await import(localConfigFile);  
+      this.localConfig = localConfig.default;
     } catch (error) {
       if ( this.isDev && !this.userConfig.browsersync?.disable ) {
         logWarn('browsersync', `Missing ${this.bldrSettings.configFileName} file, using defaults`);
@@ -292,7 +294,7 @@ export class BldrConfig {
       this.processAssetGroups[key] = {};
     }
     const localFile = file.replace(process.cwd() + '/', '');
-    this.processAssetGroups[key][localFile] = this.createSrcDestObject(localFile, dest);
+    this.processAssetGroups[key][localFile] = this.createSrcDestObject(file, path.join(process.cwd(), dest));
   }
 
 
@@ -300,7 +302,7 @@ export class BldrConfig {
   /**
    * @description Create a src/dest object for a file to be processed
    */
-  createSrcDestObject(src: string, dest: string) {
+  createSrcDestObject(src: string, dest: string): ProcessAsset {
     return {
       src: src, //path.join(process.cwd(), src),
       dest: dest, // path.join(process.cwd(), dest),
@@ -332,16 +334,17 @@ export class BldrConfig {
       return;
     }
 
-    this.extPrefix    = this.userConfig.sdc?.fileExtensionPrefix || '.bldr';
-    this.sdcPath      = path.join(process.cwd(), this.userConfig.sdc.directory);
-    this.sdcLocalPath = this.userConfig.sdc.directory;
-    this.isSDC        = true;
+    this.sdcPath              = path.join(process.cwd(), this.userConfig.sdc.directory);
+    this.sdcLocalPath         = this.userConfig.sdc.directory;
+    this.sdcLocalPathTest     = this.userConfig.sdc.directory.startsWith('./') ? this.userConfig.sdc.directory.replace('./', '') : this.userConfig.sdc.directory;
+    this.sdcAssetSubDirectory = this.userConfig.sdc?.assetSubDirectory || 'assets';
+    this.isSDC                = true;
 
     if ( this.userConfig?.watchPaths ) {
-      this.chokidarWatchArray.push(this.sdcLocalPath);
+      this.chokidarWatchArray.push(this.userConfig.sdc.directory);
     }
 
-    Promise.all([
+    await Promise.all([
       this.#handleSDCType('css', 'css'),
       this.#handleSDCType('sass', 'sass'),
       this.#handleSDCType('scss', 'sass'),
@@ -357,7 +360,7 @@ export class BldrConfig {
    * @description add sdc file based on given extension key
    */
   async #handleSDCType(ext: string, key: string) {
-    const files = await this.#fg.sync([`${this.sdcPath}/**/*${this.extPrefix}.${ext}`]);
+    const files = await this.#fg.sync([`${this.sdcPath}/**/**/${this.sdcAssetSubDirectory}/*.${ext}`]);
     if ( files && files.length > 0 ) {
       for (const file of files) {
         await this.addSDCAsset(file, key);
@@ -375,8 +378,8 @@ export class BldrConfig {
       this.sdcProcessAssetGroups[key] = {};
     }
     const localFile = file.replace(process.cwd() + '/', '');
-    const dest = path.dirname(localFile);
-    this.sdcProcessAssetGroups[key][localFile] = this.createSrcDestObject(localFile, dest);
+    const dest = path.dirname(file);
+    this.sdcProcessAssetGroups[key][localFile] = this.createSrcDestObject(file, path.dirname(dest));
   }
 
 
