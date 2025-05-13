@@ -6,96 +6,165 @@ import { PostcssProvider } from "./providers/PostcssProvider.js";
 import { SassProvider } from "./providers/SassProvider.js";
 import { EsBuildProvider } from "./providers/EsBuildProvider.js";
 import { RollupProvider } from "./providers/RollupProvider.js";
-import { SDCProvider } from "./providers/SDCProvider.js";
+import { logAction, logSuccess } from "./utils/loggers.js";
+import { EslintProvider } from "./providers/EslintProvider.js";
 
 export class Bldr {
 
-  #commandSettings: CommandSettings;
-  #settings: BldrSettings;
-  #config: BldrConfig;
-  #isDev: boolean;
-  private SDCProvider: any;
-  private EsBuildProvider: any;
-  private RollupProvider: any;
-  private PostcssProvider: any;
-  private SassProvider: any;
+  public bldrConfig: BldrConfig;
+  private commandSettings: CommandSettings;
+  private isDev: boolean;
+
+  private EsBuildProvider: EsBuildProvider;
+  private RollupProvider: RollupProvider;
+  private PostcssProvider: PostcssProvider;
+  private SassProvider: SassProvider;
+  private EslintProvider: EslintProvider;
 
   constructor(commandSettings: CommandSettings, isDev: boolean = false, isInit: boolean = false) {
     
-    this.#commandSettings = commandSettings;
-    this.#isDev = isDev;
+    this.commandSettings = commandSettings;
+    this.isDev = isDev;
+    this.bldrConfig = new BldrConfig(commandSettings, isDev);
     
-    this.#settings = new BldrSettings();
-    this.#config = new BldrConfig(commandSettings, isDev);
-    
-    this.SDCProvider = new SDCProvider();
     this.EsBuildProvider = new EsBuildProvider();
     this.RollupProvider = new RollupProvider();
     this.PostcssProvider = new PostcssProvider();
     this.SassProvider = new SassProvider();
+    this.EslintProvider = new EslintProvider();
     
     this.#initialize();
 
   }
 
   async #initialize() {
-    await this.#config.initialize();
-    await this.SDCProvider.initialize();
-    await this.EsBuildProvider.initialize();
-    await this.RollupProvider.initialize();
-    await this.PostcssProvider.initialize();
-    await this.SassProvider.initialize();
-
-
-    // if ( this.#config.isSDC ) {
-    //   const SDC = await import('./providers/SDCProvider.js');
-    //   this.SDCProvider = new SDC.SDCProvider();
-      
-    // }
-
-    // if ( this.#config.processAssetGroups?.js ) {
-    //   if ( this.#config.isDev ) {
-    //     const EsBuild = await import('./providers/EsBuildProvider.js');
-    //     this.EsBuildProvider = new EsBuild.EsBuildProvider();
-        
-    //   } else {
-    //     const Rollup = await import('./providers/RollupProvider.js');
-    //     this.RollupProvider = new Rollup.RollupProvider();
-    //     await this.RollupProvider.initialize();
-    //   }
-    // }
-
-    // if ( this.#config.processAssetGroups?.postcss ) {
-    //   const Postcss = await import('./providers/PostcssProvider.js');
-    //   this.PostcssProvider = new Postcss.PostcssProvider();
-    //   await this.PostcssProvider.initialize();
-    // }
-
-    // if ( this.#config.processAssetGroups?.sass ) {
-    //   const Sass = await import('./providers/SassProvider.js');
-    //   this.SassProvider = new Sass.SassProvider();
-    //   await this.SassProvider.initialize();
-    // }
 
     // Initialize the Bldr instance with command settings
-    console.log('Initializing Bldr');
+    logAction('bldr', '...initializing providers...');
 
-    if ( this.#isDev ) {
-      this.dev();
+    await this.bldrConfig.initialize();
+
+    await Promise.all([
+      this.EsBuildProvider.initialize(),
+      this.RollupProvider.initialize(),
+      this.PostcssProvider.initialize(),
+      this.SassProvider.initialize(),
+      this.EslintProvider.initialize(),
+    ]);
+    
+    if ( this.isDev ) {
+      await this.#dev();
     } else {
-      this.build();
+      await this.#production();
     }
   }
 
-  async dev() {
-    console.log('Running in dev mode');
 
+
+  /**
+   * @description Build development assets
+   * @returns {Promise<void>}
+   * @memberof Bldr
+   * @private
+   */
+  async #dev() {
+
+    // The once command was sent, run dev build and bail
+    if ( this.commandSettings?.once ) {
+      const processStart = new Date().getTime();
+
+      if (this.bldrConfig?.envKey) {
+        logAction('bldr', `Running single dev build using ${this.bldrConfig.envKey} env configuration...`);
+      } else {
+        logAction('bldr', 'Running single dev build...');
+      }
+
+      await this.#runOnce();
+
+      const processEnd = new Date().getTime();
+
+      // All Done
+      logAction('bldr', '✨ Build complete ✨', `${(processEnd - processStart) / 1000}`);
+
+      return;
+    }
+
+    // The start command was sent, run dev build before proceeding
+    if ( this.commandSettings?.start ) {
+      logAction('bldr', 'Running single dev build before starting server...');
+      await this.#runOnce();
+    }
+
+    // Fire up chokidar
     const chok = new ChokidarProvider();
     await chok.initialize();
+
   }
 
 
-  async build() {
-    console.log('Running in build mode');
+  /**
+   * @description Build production assets
+   * @returns {Promise<void>}
+   * @memberof Bldr
+   * @private
+   */
+  async #production() {
+
+    const processStart = new Date().getTime();
+
+    console.log(``);
+    console.log(`----------------------------------------`);
+    if (this.bldrConfig?.envKey) {
+      logAction(
+        'bldr',
+        '💪 Starting production build using ${this.bldrConfig?.envKey} env configuration...'
+      );
+    } else {
+      logAction('bldr', '💪 Starting production build...');
+    }
+    console.log(`----------------------------------------`);
+    console.log(``);
+    
+    await this.#runOnce();
+    
+    const processEnd = new Date().getTime();
+
+    // All Done
+    logAction('bldr', '✨ Build complete ✨', `${(processEnd - processStart) / 1000}`);
   }
+
+
+  /**
+   * @description Run the build process once
+   * @returns {Promise<void>}
+   * @memberof Bldr
+   * @private
+   */
+  async #runOnce() {
+
+    // Lint the things
+    await Promise.all([
+      this.EslintProvider.lintAll(),
+    ]);
+
+    // Build the things
+    if ( this.isDev ) {
+
+      await Promise.all([
+        this.EsBuildProvider.buildProcessBundle(),
+        this.PostcssProvider.buildProcessBundle(),
+        this.SassProvider.buildProcessBundle(),
+      ]);
+
+    } else {
+      
+      await Promise.all([
+        this.RollupProvider.buildProcessBundle(),
+        this.PostcssProvider.buildProcessBundle(),
+        this.SassProvider.buildProcessBundle(),
+      ]);
+    }
+    
+  }
+
 }

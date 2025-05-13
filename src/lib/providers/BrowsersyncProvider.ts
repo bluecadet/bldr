@@ -1,5 +1,6 @@
 import { BldrConfig } from '../BldrConfig.js';
 import { createRequire } from 'node:module';
+import { logAction } from '../utils/loggers.js';
 
 export class BrowsersyncProvider {
 
@@ -38,6 +39,7 @@ export class BrowsersyncProvider {
       return;
     }
 
+    logAction('bldr', '...starting local server...');
 
     const require = createRequire(import.meta.url);
     const bsName = this.bldrConfig.userConfig?.browsersync?.instanceName || `bldr-${Math.floor(Math.random() * 1000)}`;
@@ -61,15 +63,20 @@ export class BrowsersyncProvider {
   }
 
 
+  reload() {
+    if ( !this.browsersyncInstance ) return;
+    this.browsersyncInstance.reload();
+  }
+
 
   reloadJS() {
-    if ( this.bldrConfig.userConfig?.browsersync?.disable ) return;
+    if ( !this.browsersyncInstance ) return;
     this.browsersyncInstance.reload(['*.js']);
   }
 
 
   reloadCSS() {
-    if ( this.bldrConfig.userConfig?.browsersync?.disable ) return;
+    if ( !this.browsersyncInstance ) return;
     this.browsersyncInstance.reload(['*.css']);
   }
 

@@ -37,4 +37,14 @@ export function logBadNews(consoleMessage) {
 export function logIffyNews(consoleMessage) {
     console.log(`${colors.yellow(consoleMessage)}`);
 }
+// PostCss Error Message
+export function logPostCssErrorMessage(err, errOpts) {
+    const errMessage = `${colors.red(`Error proccessing file ./${err.file}`)}
+${colors.white('reason:')} ${colors.red(err.reason)}${(err === null || err === void 0 ? void 0 : err.line) ? `
+${colors.white('line:')} ${colors.red(err.line)}` : ''}${(err === null || err === void 0 ? void 0 : err.columns) ? `
+${colors.white('columns:')} ${colors.red(err.columns)}` : ''}
+${colors.white('error:')} ${err}
+`;
+    logError(`postcss`, errMessage, errOpts);
+}
 //# sourceMappingURL=loggers.js.map

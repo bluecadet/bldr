@@ -18,10 +18,10 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _BldrConfig_instances, _BldrConfig_fg, _BldrConfig_loadConfig, _BldrConfig_buildProcessConfig, _BldrConfig_setProcessSrc, _BldrConfig_handleProcessGroup, _BldrConfig_handleSDC, _BldrConfig_handleSDCType, _BldrConfig_buildProviderConfig;
+var _BldrConfig_instances, _BldrConfig_fg, _BldrConfig_loadConfig, _BldrConfig_createProcessConfig, _BldrConfig_setProcessSrc, _BldrConfig_handleProcessGroup, _BldrConfig_handleSDC, _BldrConfig_handleSDCType, _BldrConfig_buildProviderConfig, _BldrConfig_setEsBuildConfig, _BldrConfig_setRollupConfig, _BldrConfig_setEslintConfig, _BldrConfig_setSassConfig;
 import { BldrSettings } from "./BldrSettings.js";
 import * as path from "path";
-import { logError, logWarn } from "./utils/loggers.js";
+import { logAction, logError, logWarn } from "./utils/loggers.js";
 import { createRequire } from 'node:module';
 import { unglobPath } from "./utils/unglobPath.js";
 export class BldrConfig {
@@ -50,6 +50,11 @@ export class BldrConfig {
          * @property null|array
          * Files for chokidar to watch
          */
+        this.chokidarIgnorePathsArray = [];
+        /**
+         * @property null|array
+         * Files for chokidar to watch
+         */
         this.watchAssetArray = [];
         /**
          * @property null|array
@@ -73,6 +78,11 @@ export class BldrConfig {
         this.sdcConfig = null;
         this.sdcLocalPath = null;
         this.sdcLocalPathTest = null;
+        this.envKey = null;
+        this.sassConfig = null;
+        this.esBuildConfig = null;
+        this.rollupConfig = null;
+        this.eslintConfig = null;
         /**
          * @property null|function
          * Fast-glob function
@@ -104,23 +114,26 @@ export class BldrConfig {
             // Get local user config
             yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_loadConfig).call(this);
             // Define process & asset config
-            yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_buildProcessConfig).call(this);
+            yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_createProcessConfig).call(this);
             // Define provider config
             yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_buildProviderConfig).call(this);
         });
     }
     /**
-     * @method addProcessAsset
-     * @description Add a file to the process asset groups
+     * @method addFileToAssetGroup
+     * @description add a file an asset group
      */
-    addProcessAsset(file, dest, key) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            if (!((_a = this.processAssetGroups) === null || _a === void 0 ? void 0 : _a[key])) {
-                this.processAssetGroups[key] = {};
-            }
+    addFileToAssetGroup(file_1, key_1) {
+        return __awaiter(this, arguments, void 0, function* (file, key, isSDC = false, dest = null) {
+            const group = isSDC ? this.sdcProcessAssetGroups : this.processAssetGroups;
             const localFile = file.replace(process.cwd() + '/', '');
-            this.processAssetGroups[key][localFile] = this.createSrcDestObject(file, path.join(process.cwd(), dest));
+            if (!(group === null || group === void 0 ? void 0 : group[key])) {
+                group[key] = {};
+            }
+            if (!dest) {
+                dest = path.dirname(file);
+            }
+            group[key][localFile] = this.createSrcDestObject(file, dest);
         });
     }
     /**
@@ -144,18 +157,19 @@ export class BldrConfig {
             }
         });
     }
-    /**
-     * @method addSDCAsset
-     * @description Add a file to the sdc process asset groups
-     */
-    addSDCAsset(file, key) {
+    rebuildConfig() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!this.sdcProcessAssetGroups[key]) {
-                this.sdcProcessAssetGroups[key] = {};
-            }
-            const localFile = file.replace(process.cwd() + '/', '');
-            const dest = path.dirname(file);
-            this.sdcProcessAssetGroups[key][localFile] = this.createSrcDestObject(file, path.dirname(dest));
+            const start = Date.now();
+            logAction('bldr', '...rebuilding configuration...');
+            // Reset asset group config
+            this.processAssetGroups = {};
+            this.sdcProcessAssetGroups = {};
+            // Get local user config
+            yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_loadConfig).call(this);
+            // Define process & asset config
+            yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_createProcessConfig).call(this);
+            const stop = Date.now();
+            logAction('bldr', 'Configuration rebuild complete', ((stop - start) / 1000));
         });
     }
 }
@@ -170,7 +184,7 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
         }
         catch (error) {
             console.log(error);
-            process.exit(1);
+            logError('bldr', `Missing required ${this.bldrSettings.configFileName} file`, { throwError: true, exit: true });
         }
         // Load Local User Config
         const localConfigFile = path.join(process.cwd(), this.bldrSettings.localConfigFileName);
@@ -180,18 +194,20 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
         }
         catch (error) {
             if (this.isDev && !((_a = this.userConfig.browsersync) === null || _a === void 0 ? void 0 : _a.disable)) {
-                logWarn('browsersync', `Missing ${this.bldrSettings.configFileName} file, using defaults`);
+                logWarn('bldr', `Missing ${this.bldrSettings.localConfigFileName} file, using defaults`);
             }
             this.localConfig = null;
         }
     });
-}, _BldrConfig_buildProcessConfig = function _BldrConfig_buildProcessConfig() {
+}, _BldrConfig_createProcessConfig = function _BldrConfig_createProcessConfig() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c;
         yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_setProcessSrc).call(this);
-        yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleProcessGroup).call(this, 'css');
-        yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleProcessGroup).call(this, 'js');
-        yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleProcessGroup).call(this, 'sass');
+        yield Promise.all([
+            __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleProcessGroup).call(this, 'css'),
+            __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleProcessGroup).call(this, 'js'),
+            __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleProcessGroup).call(this, 'sass'),
+        ]);
         if ((_a = this.userConfig) === null || _a === void 0 ? void 0 : _a.sdc) {
             yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDC).call(this);
         }
@@ -204,7 +220,7 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
         else {
             this.chokidarWatchArray.push('.');
         }
-        // Dedup chokidar watch array
+        // Dedupe chokidar watch array
         this.chokidarWatchArray = this.chokidarWatchArray.filter((elem, pos) => this.chokidarWatchArray.indexOf(elem) == pos);
     });
 }, _BldrConfig_setProcessSrc = function _BldrConfig_setProcessSrc() {
@@ -212,6 +228,7 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
         var _a, _b, _c;
         if ((_a = this.cliArgs) === null || _a === void 0 ? void 0 : _a.env) {
             if ((_c = (_b = this.userConfig) === null || _b === void 0 ? void 0 : _b.env) === null || _c === void 0 ? void 0 : _c[this.cliArgs.env]) {
+                this.envKey = this.cliArgs.env;
                 this.processSrc = this.userConfig.env[this.cliArgs.env];
             }
             else {
@@ -232,14 +249,10 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
             const files = __classPrivateFieldGet(this, _BldrConfig_fg, "f").sync([`${path.join(process.cwd(), p.src)}`]);
             if (files && files.length > 0) {
                 for (const file of files) {
-                    this.addProcessAsset(file, p.dest, key);
+                    this.chokidarIgnorePathsArray.push(path.resolve(p.dest));
+                    this.addFileToAssetGroup(file, key, false, p.dest);
                 }
             }
-            // if ( p.watch ) {
-            //   p.watch.forEach((w: string) => {
-            //     this.addChokidarWatchFile(w);
-            //   });
-            // }
         });
     });
 }, _BldrConfig_handleSDC = function _BldrConfig_handleSDC() {
@@ -259,6 +272,7 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
         }
         yield Promise.all([
             __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'css', 'css'),
+            __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'pcss', 'css'),
             __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'sass', 'sass'),
             __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'scss', 'sass'),
             __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'js', 'js'),
@@ -270,30 +284,87 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
         const files = yield __classPrivateFieldGet(this, _BldrConfig_fg, "f").sync([`${this.sdcPath}/**/**/${this.sdcAssetSubDirectory}/*.${ext}`]);
         if (files && files.length > 0) {
             for (const file of files) {
-                yield this.addSDCAsset(file, key);
+                let dest = path.normalize(path.join(path.dirname(file), '..'));
+                this.addFileToAssetGroup(file, key, true, dest);
             }
         }
     });
 }, _BldrConfig_buildProviderConfig = function _BldrConfig_buildProviderConfig() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f;
-        if (((_a = this.processAssetGroups) === null || _a === void 0 ? void 0 : _a.css) || ((_b = this.sdcProcessAssetGroups) === null || _b === void 0 ? void 0 : _b.css)) {
-            console.log('TODO: postcss');
-        }
-        if (((_c = this.processAssetGroups) === null || _c === void 0 ? void 0 : _c.js) || ((_d = this.sdcProcessAssetGroups) === null || _d === void 0 ? void 0 : _d.js)) {
+        var _a, _b, _c, _d;
+        if (((_a = this.processAssetGroups) === null || _a === void 0 ? void 0 : _a.js) || ((_b = this.sdcProcessAssetGroups) === null || _b === void 0 ? void 0 : _b.js)) {
             if (this.isDev) {
-                console.log('TODO: esBuild');
+                yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_setEsBuildConfig).call(this);
             }
             else {
-                console.log('TODO: rollup');
+                yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_setRollupConfig).call(this);
             }
+            yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_setEslintConfig).call(this);
         }
-        if (((_e = this.processAssetGroups) === null || _e === void 0 ? void 0 : _e.sass) || ((_f = this.sdcProcessAssetGroups) === null || _f === void 0 ? void 0 : _f.sass)) {
-            console.log('TODO: sass');
+        if (((_c = this.processAssetGroups) === null || _c === void 0 ? void 0 : _c.sass) || ((_d = this.sdcProcessAssetGroups) === null || _d === void 0 ? void 0 : _d.sass)) {
+            yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_setSassConfig).call(this);
         }
-        // if ( this.userConfig?.env?.[this.cliArgs.env]?.sdc ) {
-        //   this.sdcConfig = this.userConfig.env[this.cliArgs.env].sdc;
-        // }
+    });
+}, _BldrConfig_setEsBuildConfig = function _BldrConfig_setEsBuildConfig() {
+    return __awaiter(this, void 0, void 0, function* () {
+        var _a;
+        // EsBuild Config
+        this.esBuildConfig = {
+            plugins: [],
+            overridePlugins: false,
+        };
+        if ((_a = this.userConfig) === null || _a === void 0 ? void 0 : _a.esBuild) {
+            this.esBuildConfig = Object.assign(Object.assign({}, this.esBuildConfig), this.userConfig.esBuild);
+        }
+    });
+}, _BldrConfig_setRollupConfig = function _BldrConfig_setRollupConfig() {
+    return __awaiter(this, void 0, void 0, function* () {
+        var _a;
+        this.rollupConfig = {
+            useBabel: true,
+            babelPluginOptions: { babelHelpers: 'bundled' },
+            useSWC: false,
+            swcPluginOptions: null,
+            useTerser: true,
+            terserOptions: {},
+            inputOptions: null,
+            inputPlugins: null,
+            overrideInputPlugins: false,
+            outputOptions: { format: 'iife', },
+            outputPlugins: null,
+            overrideOutputPlugins: false,
+            sdcOptions: {
+                minify: true,
+                bundle: true,
+                format: 'es',
+            },
+        };
+        if ((_a = this.userConfig) === null || _a === void 0 ? void 0 : _a.rollup) {
+            this.rollupConfig = Object.assign(Object.assign({}, this.rollupConfig), this.userConfig.rollup);
+        }
+    });
+}, _BldrConfig_setEslintConfig = function _BldrConfig_setEslintConfig() {
+    return __awaiter(this, void 0, void 0, function* () {
+        var _a;
+        this.eslintConfig = {
+            useEslint: true,
+            options: {},
+            forceBuildIfError: false,
+            lintPathOverrides: null,
+        };
+        if ((_a = this.userConfig) === null || _a === void 0 ? void 0 : _a.eslint) {
+            this.eslintConfig = Object.assign(Object.assign({}, this.eslintConfig), this.userConfig.eslint);
+        }
+    });
+}, _BldrConfig_setSassConfig = function _BldrConfig_setSassConfig() {
+    return __awaiter(this, void 0, void 0, function* () {
+        var _a;
+        this.sassConfig = {
+            useLegacy: false,
+        };
+        if ((_a = this.userConfig) === null || _a === void 0 ? void 0 : _a.sass) {
+            this.sassConfig = Object.assign(Object.assign({}, this.sassConfig), this.userConfig.sass);
+        }
     });
 };
 //# sourceMappingURL=BldrConfig.js.map

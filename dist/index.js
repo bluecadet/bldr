@@ -9,14 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { Command } from 'commander';
-const handleDev = (commandOptions) => __awaiter(void 0, void 0, void 0, function* () {
-    let run = yield import('./lib/commands/dev.js');
-    run.default(commandOptions);
-});
-const handleBuild = (commandOptions) => __awaiter(void 0, void 0, void 0, function* () {
-    let run = yield import('./lib/commands/build.js');
-    run.default(commandOptions);
-});
+import { Bldr } from './lib/Bldr.js';
 const handleInit = (commandOptions) => __awaiter(void 0, void 0, void 0, function* () {
     let run = yield import('./lib/commands/init.js');
     run.default(commandOptions);
@@ -33,13 +26,13 @@ bldrCLI
     .option('-s, --start', 'run all `dev` processes before starting local enviornment')
     .option('-o, --once', 'run all `dev` processes once without starting local enviornment')
     .action((options, cmd) => {
-    handleDev(cmd.optsWithGlobals());
+    new Bldr(cmd.optsWithGlobals(), true);
 });
 bldrCLI
     .command('build')
     .description('create a production build')
     .action((options, cmd) => {
-    handleBuild(cmd.optsWithGlobals());
+    new Bldr(cmd.optsWithGlobals(), false);
 });
 bldrCLI
     .command('init')

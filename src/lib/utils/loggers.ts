@@ -28,12 +28,12 @@ export function logWarn( processName: string, consoleMessage: string ) {
 }
 
 // Log Success!!
-export function logSuccess(processName: string, consoleMessage: string, time = false) {
+export function logSuccess(processName: string, consoleMessage: string, time: any = false) {
   console.log(`${processString(processName)} ${colors.cyan(consoleMessage)}${time ? colors.gray(` ${time}s`) : ''}`);
 }
 
 // Log Activity
-export function logAction(processName: string, consoleMessage: string, time = false) {
+export function logAction(processName: string, consoleMessage: string, time: any = false) {
   console.log(`${processString(processName)} ${colors.green(consoleMessage)}${time ? colors.gray(` ${time}s`) : ''}`);
 }
 
@@ -50,4 +50,18 @@ export function logBadNews(consoleMessage: string) {
 // Iffy News Message :(
 export function logIffyNews(consoleMessage: string) {
   console.log(`${colors.yellow(consoleMessage)}`);
+}
+
+
+
+// PostCss Error Message
+export function logPostCssErrorMessage(err: any, errOpts: any) {
+  const errMessage = `${colors.red(`Error proccessing file ./${err.file}`)}
+${colors.white('reason:')} ${colors.red(err.reason)}${err?.line ? `
+${colors.white('line:')} ${colors.red(err.line)}` : ''}${err?.columns ? `
+${colors.white('columns:')} ${colors.red(err.columns)}` : ''}
+${colors.white('error:')} ${err}
+`;
+
+  logError(`postcss`, errMessage, errOpts);
 }

@@ -1,6 +1,6 @@
 import type { InputOptions, OutputOptions } from "rollup";
 import { RollupBabelInputPluginOptions } from "@rollup/plugin-babel";
-
+import type { Options as SWCOptions } from '@swc/core';
 
 export interface ConfigSettings {
   css?: AssetObjects;
@@ -83,14 +83,9 @@ export interface BldrEsBuildSettings {
   plugins?: [string, any][];
 
   /**
-   * @description Override EsBuild native to bldr
+   * @description Override EsBuild plugins native to bldr
    */
   overridePlugins?: boolean;
-
-  /**
-   * @description Override the version of EsBuild being used
-   */
-  esBuild?: any;
 }
 
 
@@ -98,36 +93,71 @@ export interface BldrEsBuildSettings {
 export interface BldrRollupSettings {
   
   /**
-   * @description set to false if babel should not be ran. Default: true
+   * @description set to true if babel should be used. Default: true unless `useSWC` is set to true
    */
-  useBabel?: boolean; 
+  useBabel?: null | boolean; 
   
-  /**
-   * @description set to false if terser should not be ran. Default: true
-   */
-  useTerser?: boolean;
 
   /**
    * @description see @rollup/plugin-babel options at https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers)
    * default: { babelHelpers: 'bundled' }
    */
-  babelPluginOptions?: RollupBabelInputPluginOptions;
+  babelPluginOptions?: null | RollupBabelInputPluginOptions;
+
+
+  /**
+   * @description set to true if SWC should be used. Default: false
+   */
+  useSWC?: null | boolean;
+
+  /**
+   * @description override bldr SWC options
+   */
+  swcPluginOptions?: null | SWCOptions;
+
+  /**
+   * @description set to false if terser should not be ran. Default: true
+   */
+  useTerser?: null | boolean;
+
+  /**
+   * @description set to false if terser should not be ran. Default: true
+   */
+  terserOptions?: null | any;
+
+  sdcOptions?: BldrSDCRollupSettings
 
   /**
    * @description see rollups inputOptions object at https://rollupjs.org/guide/en/#inputoptions-object
    * `file` will automatically be added, so no need to add here
    * default: { external: [/@babel\/runtime/] }
    */
-  inputOptions?: InputOptions;
-  inputPlugins?: any[],
-  overrideInputPlugins?: boolean;
+  inputOptions?: null | InputOptions;
+  inputPlugins?: null | any[],
+  overrideInputPlugins?: null | boolean;
   
   
-  outputOptions?: OutputOptions;
-  outputPlugins?: any[];
-  overrideOutputPlugins?: boolean;
-  
-  rollup?: any;
+  outputOptions?: null | OutputOptions;
+  outputPlugins?: null | any[];
+  overrideOutputPlugins?: null | boolean;
+}
+
+
+export interface BldrSDCRollupSettings {
+  /**
+   * @description set to false if SDC files should not be bundled. Default: true
+   */
+  bundle?: null | boolean;
+
+  /**
+   * @description set to false if SDC files should not be minified. Default: true
+   */
+  minify?: null | boolean;
+
+  /**
+   * @description set to false if SDC files should not be transpiled. Default: true
+   */
+  format?: null | 'amd' | 'cjs' | 'es' | 'iife' | 'umd' | 'system';
 }
   
 
@@ -139,7 +169,9 @@ export interface BldrEsLintSettings {
    * set to false if eslint should not be ran. Default: true
    */
   useEslint?: boolean;
+  options?: any;
   forceBuildIfError?: boolean;
+  lintPathOverrides?: null | string[];
 }
 
 
@@ -150,7 +182,12 @@ export interface BldrStyleLintSettings {
 
 
 export interface BldrSassSettings {
-  sass?: any;
+
+  /**
+   * @description set to true if dart sass should use legacy api. Default: false
+   */
+  useLegacy?: boolean;
+
 }
 
 
@@ -194,13 +231,16 @@ export interface LocalConfigSettings {
 }
 
 
+export type ProcessKey = 'css' | 'js' | 'sass';
 
 
-// export interface ProcessAssetGroup {
-//   css?: ProcessAsset[];
-//   js?: ProcessAsset[];
-//   sass?: ProcessAsset[];
-// }
+
+
+export interface ProcessAssetGroup {
+  css?: {[key: string]:ProcessAsset};
+  js?: {[key: string]:ProcessAsset};
+  sass?: {[key: string]:ProcessAsset};
+}
 
 export interface ProcessAsset {
   src: string;

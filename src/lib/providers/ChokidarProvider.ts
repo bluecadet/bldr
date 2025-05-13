@@ -1,13 +1,12 @@
 import chokidar from 'chokidar';
 import { BldrConfig } from '../BldrConfig.js';
 import path from 'node:path';
-import { SDCProvider } from './SDCProvider.js';
 import { EsBuildProvider } from './EsBuildProvider.js';
 import { PostcssProvider } from './PostcssProvider.js';
 import { SassProvider } from './SassProvider.js';
 import { BrowsersyncProvider } from './BrowsersyncProvider.js';
 import { logAction, logWarn } from '../utils/loggers.js';
-import { ProcessAsset } from '../@types/configTypes.js';
+import { EslintProvider } from './EslintProvider.js';
 
 export class ChokidarProvider {
 
@@ -17,24 +16,30 @@ export class ChokidarProvider {
    */
   public watcher: any = null;
   private bldrConfig: BldrConfig;
-  private SDC: SDCProvider;
   private EsBuild: EsBuildProvider;
   private Postcss: PostcssProvider;
   private Sass: SassProvider;
   private Browsersync: BrowsersyncProvider;
+  private EsLint: EslintProvider;
+  private isSDCFile: boolean = false;
 
 
   constructor() {
-
     this.Browsersync = new BrowsersyncProvider();
-    this.bldrConfig = BldrConfig._instance;
-    this.SDC = SDCProvider._instance;
-    this.Postcss = PostcssProvider._instance;
-    this.Sass = SassProvider._instance;
-    this.EsBuild = EsBuildProvider._instance;
-
+    this.bldrConfig  = BldrConfig._instance;
+    this.Postcss     = PostcssProvider._instance;
+    this.Sass        = SassProvider._instance;
+    this.EsBuild     = EsBuildProvider._instance;
+    this.EsLint      = EslintProvider._instance;
   }
 
+
+  /**
+   * @method initialize
+   * @description Initializes the ChokidarProvider
+   * @returns {Promise<void>}
+   * @memberof ChokidarProvider
+   */
   async initialize() {
 
     await this.Browsersync.initialize();
@@ -42,7 +47,20 @@ export class ChokidarProvider {
     // Initialize the watcher
     this.watcher = chokidar.watch(this.bldrConfig.chokidarWatchArray, {
       ignored: (path) => {
-        return path.endsWith('.map') || path.includes('node_modules') || path.includes('dist') || path.includes('build') || path.includes('out') || path.includes('coverage');
+        if ( path.endsWith('.map') || path.includes('node_modules') ) {
+          return true;
+        }
+
+        // Ignore dest files
+        let isDestPath = false;
+
+        this.bldrConfig.chokidarIgnorePathsArray.forEach((destPath) => {
+          if (this.#isChildOfDir(path, destPath)) {
+            isDestPath = true;
+          }
+        });
+
+        return isDestPath;
       },
       ignoreInitial: true,
     });
@@ -61,8 +79,8 @@ export class ChokidarProvider {
       this.#addFile(filepath);
     });
 
-    this.watcher.on('unlink', (filepath: string) => {
-      this.#unlinkFile(filepath);
+    this.watcher.on('unlink', () => {
+      this.#unlinkFile();
     });
 
     this.watcher.on('change', (filepath: string) => {
@@ -71,49 +89,77 @@ export class ChokidarProvider {
       
   }
 
+  /**
+   * @method #changeFile
+   * @description Handles file changes in Chokidar
+   * @param {string} filepath - The path to the file that changed
+   * @returns {Promise<void>}
+   * @memberof ChokidarProvider
+   */
+  async #changeFile(filepath: string) {
+    this.#checkIsSDCFile(filepath);
 
-  #changeFile(filepath: string) {
     const ext = path.extname(filepath).replace('.', '');
 
-    console.log(ext);
-
+    // Reload if extension is in the reloadExtensions array
     if ( this.bldrConfig.reloadExtensions.includes(ext) ) {
-      console.log('TODO: RELOAD');
+      this.Browsersync.reload();
       return;
     }
 
-    // if ( this.SDC && this.#isChildOfDir(filepath, this.bldrConfig.sdcPath)) {
-    //   if ( ['css', 'sass', 'js', 'ts'].includes(ext) ) {
-    //     console.log('TODO: SDC');
-    //     console.log(this.SDC.notice);
-    //     this.SDC.buildFile(filepath, ext as 'css' | 'sass' | 'js');
-    //   }
-    //   return;
-    // }
+    // Ignore files that are SDC files but are not in the SDC asset subdirectory
+    if ( this.isSDCFile && !path.dirname(filepath).endsWith(this.bldrConfig.sdcAssetSubDirectory) ) {
+      return;
+    }
 
-    if ( (ext === 'css') ) {
-      console.log(this.Postcss.notice);
-      console.log('TODO: CSS');
-      
-      const fileAsset = this.#getFileAsset(filepath, ext);
-      if (fileAsset) {
-        this.Postcss.buildAssetGroup(fileAsset);
+    // Process css files
+    if ( (ext === 'css') || (ext === 'pcss') ) {
+      if ( this.isSDCFile && this.bldrConfig.sdcProcessAssetGroups.css?.[filepath] ) {
+        await this.Postcss.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.css[filepath]);
+        this.Browsersync.reloadCSS();
+        return;
+      } else if ( this.bldrConfig.processAssetGroups.css?.[filepath] ) {
+        await this.Postcss.buildProcessBundle();
+        this.Browsersync.reloadCSS();
         return;
       }
 
-      logWarn('bldr', `No file found for ${filepath}`);
+      logWarn('bldr', `No css file found for ${filepath}`);
       return;
     }
 
+    // Process sass files
     if ( (ext === 'sass' || ext === 'scss') && this.Sass ) {
-      console.log(this.Sass.notice);
-      console.log('TODO: SASS');
+      if ( this.isSDCFile && this.bldrConfig.sdcProcessAssetGroups.css?.[filepath] ) {
+        await this.Sass.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.css[filepath]);
+        this.Browsersync.reloadCSS();
+        return;
+      } else if ( this.bldrConfig.processAssetGroups.sass?.[filepath] ) {
+        await this.Sass.buildProcessBundle();
+        this.Browsersync.reloadCSS();
+        return;
+      }
+      
+      logWarn('bldr', `No sass file found for ${filepath}`);
       return;
     }
 
+    // Process js files
     if ( (ext === 'js' || ext === 'ts') && this.EsBuild ) {
-      console.log(this.EsBuild.notice);
-      console.log('TODO: JS');
+
+      await this.EsLint.lintFile(filepath);
+
+      if ( this.isSDCFile && this.bldrConfig.sdcProcessAssetGroups.js?.[filepath] ) {
+        await this.EsBuild.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.js[filepath]);
+        this.Browsersync.reloadJS();
+        return;
+      } else if ( this.bldrConfig.processAssetGroups.js?.[filepath] ) {
+        await this.EsBuild.buildProcessBundle();
+        this.Browsersync.reloadJS();
+        return;  
+      }
+      
+      logWarn('bldr', `No js file found for ${filepath}`);
       return;
     }
 
@@ -121,40 +167,52 @@ export class ChokidarProvider {
   }
 
 
-  #addFile(filepath: string) {
-    if (this.bldrConfig.isSDC && filepath.includes(this.bldrConfig.sdcLocalPathTest as any)) {
-      console.log('TODO: ADD SDC FILE');
-    } else {
-      console.log('TODO: ADD SOME OTHER FILE');
-    }
+  /**
+   * @method #addFile
+   * @description Handles file additions in Chokidar
+   * @param {string} filepath - The path to the file that was added
+   * @returns {Promise<void>}
+   * @memberof ChokidarProvider
+   */
+  async #addFile(filepath: string) {
+    await this.bldrConfig.rebuildConfig();
+    await this.#changeFile(filepath);
   }
 
 
-  #unlinkFile(filepath: string) {
-    if (this.bldrConfig.isSDC && filepath.includes(this.bldrConfig.sdcLocalPathTest as any)) {
-      console.log('TODO: UNLINK SDC FILE');
-    } else {
-      console.log('TODO: UNLINK SOME OTHER FILE');
-    }
+  /**
+   * @method #unlinkFile
+   * @description Handles file deletions in Chokidar
+   * @param {string} filepath - The path to the file that was deleted
+   * @returns {Promise<void>}
+   * @memberof ChokidarProvider
+   */
+  async #unlinkFile() {
+    await this.bldrConfig.rebuildConfig();
   }
 
 
-  #getFileAsset(filepath: string, key: string): ProcessAsset | null {
-    let assetGroup = this.bldrConfig.processAssetGroups;
-
-    if ( this.SDC && this.#isChildOfDir(filepath, this.bldrConfig.sdcPath)) {
-      assetGroup = this.bldrConfig.sdcProcessAssetGroups;
-    }
-
-    if (assetGroup?.[key]?.[filepath]) {
-      return assetGroup[key][filepath];
-    }
-
-    return null;
+  /**
+   * @method #checkIsSDCFile
+   * @description Checks if the file is an SDC file
+   * @param {string} filepath - The path to the file
+   * @returns {boolean}
+   * @memberof ChokidarProvider
+   */
+  #checkIsSDCFile(filepath: string): boolean {
+    this.isSDCFile = this.#isChildOfDir(filepath, this.bldrConfig.sdcPath);
+    return this.isSDCFile;
   }
 
 
-
+  /**
+   * @method #isChildOfDir
+   * @description Checks if the file is a child of the directory
+   * @param {string} filepath - The path to the file
+   * @param {string} dir - The directory to check against
+   * @returns {boolean}
+   * @memberof ChokidarProvider
+   */
   #isChildOfDir(filepath: string, dir: string): boolean {
     const relativePath = path.relative(dir, filepath);
     return (relativePath && !relativePath.startsWith('..') && !path.isAbsolute(relativePath)) ? true : false;

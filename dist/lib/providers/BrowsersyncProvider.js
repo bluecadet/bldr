@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { BldrConfig } from '../BldrConfig.js';
 import { createRequire } from 'node:module';
+import { logAction } from '../utils/loggers.js';
 export class BrowsersyncProvider {
     constructor() {
         this.browsersyncInstance = null;
@@ -24,6 +25,7 @@ export class BrowsersyncProvider {
             if ((_b = (_a = this.bldrConfig.userConfig) === null || _a === void 0 ? void 0 : _a.browsersync) === null || _b === void 0 ? void 0 : _b.disable) {
                 return;
             }
+            logAction('bldr', '...starting local server...');
             const require = createRequire(import.meta.url);
             const bsName = ((_d = (_c = this.bldrConfig.userConfig) === null || _c === void 0 ? void 0 : _c.browsersync) === null || _d === void 0 ? void 0 : _d.instanceName) || `bldr-${Math.floor(Math.random() * 1000)}`;
             this.browsersyncInstance = require('browser-sync').create(bsName);
@@ -43,15 +45,18 @@ export class BrowsersyncProvider {
         }
         this.browsersyncInstance.init(bsOptions);
     }
+    reload() {
+        if (!this.browsersyncInstance)
+            return;
+        this.browsersyncInstance.reload();
+    }
     reloadJS() {
-        var _a, _b;
-        if ((_b = (_a = this.bldrConfig.userConfig) === null || _a === void 0 ? void 0 : _a.browsersync) === null || _b === void 0 ? void 0 : _b.disable)
+        if (!this.browsersyncInstance)
             return;
         this.browsersyncInstance.reload(['*.js']);
     }
     reloadCSS() {
-        var _a, _b;
-        if ((_b = (_a = this.bldrConfig.userConfig) === null || _a === void 0 ? void 0 : _a.browsersync) === null || _b === void 0 ? void 0 : _b.disable)
+        if (!this.browsersyncInstance)
             return;
         this.browsersyncInstance.reload(['*.css']);
     }

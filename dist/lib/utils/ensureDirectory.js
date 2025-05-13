@@ -7,19 +7,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { BldrConfig } from '../BldrConfig.js';
-export class SDC {
-    constructor() {
-        if (SDC._instance) {
-            return SDC._instance;
+import { existsSync, mkdirSync } from 'node:fs';
+export function ensureDirectory(directory) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // Check if directory exists, make it if not
+        if (!existsSync(directory)) {
+            mkdirSync(directory, { recursive: true });
         }
-        SDC._instance = this;
-    }
-    initialize() {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.bldrConfig = BldrConfig._instance;
-            this.notice = 'SDC initialized';
-        });
-    }
+    });
 }
-//# sourceMappingURL=sdc.js.map
+//# sourceMappingURL=ensureDirectory.js.map

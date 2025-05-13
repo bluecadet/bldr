@@ -2,17 +2,7 @@
 
 import { Command } from 'commander';
 import { CommandSettings } from './lib/@types/commandSettings.js';
-
-
-const handleDev = async (commandOptions: CommandSettings) => {
-  let run = await import('./lib/commands/dev.js');
-  run.default(commandOptions);
-}
-
-const handleBuild = async (commandOptions: CommandSettings) => {
-  let run = await import('./lib/commands/build.js');
-  run.default(commandOptions);
-}
+import { Bldr } from './lib/Bldr.js';
 
 const handleInit = async (commandOptions: CommandSettings) => {
   let run = await import('./lib/commands/init.js');
@@ -39,14 +29,14 @@ bldrCLI
     'run all `dev` processes once without starting local enviornment'
   )
   .action((options, cmd) => {
-    handleDev(cmd.optsWithGlobals());
+    new Bldr(cmd.optsWithGlobals(), true);
   });
 
 bldrCLI
   .command('build')
   .description('create a production build')
   .action((options, cmd) => {
-    handleBuild(cmd.optsWithGlobals());
+    new Bldr(cmd.optsWithGlobals(), false);
   });
 
 bldrCLI

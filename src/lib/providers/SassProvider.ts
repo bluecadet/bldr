@@ -1,4 +1,10 @@
+import { ProcessAsset } from '../@types/configTypes.js';
 import { BldrConfig } from '../BldrConfig.js';
+import { createRequire } from 'node:module';
+import fs from 'node:fs';
+import path from 'node:path';
+import { logSuccess, logError } from '../utils/loggers.js';
+import { ensureDirectory } from '../utils/ensureDirectory.js';
 
 export class SassProvider {
 
@@ -14,8 +20,17 @@ export class SassProvider {
    */
   public static _instance: SassProvider;
 
+  /**
+   * @property string
+   * SassProvider notice
+   */
   public notice!: string;
 
+  /**
+   * @property null|object
+   * Dart Sass instance
+   */
+  private sass: any;
 
   constructor() {
 
@@ -28,9 +43,121 @@ export class SassProvider {
   }
 
 
+  /**
+   * @method initialize
+   * @description Initializes the SassProvider
+   * @returns {Promise<void>}
+   * @memberof SassProvider
+   */
   async initialize() {
+    const require = createRequire(import.meta.url);
     this.bldrConfig = BldrConfig._instance;
+    this.sass = require('sass');
     this.notice = 'SassProvider initialized';
   }
+
+  async buildProcessBundle() {
+    if ( !this.bldrConfig.processAssetGroups?.sass) {
+      return;
+    }
+
+    for (const asset of Object.keys(this.bldrConfig.processAssetGroups.sass)) {
+      await this.buildAssetGroup(this.bldrConfig.processAssetGroups.sass[asset]);
+    }
+  }
+
+
+  /**
+   * @method buildAssetGroup
+   * @description Builds the process bundle for sass
+   * @param {ProcessAsset} assetGroup - The asset group to build
+   * @returns {Promise<void>}
+   * @memberof SassProvider
+   */
+  async buildAssetGroup(assetGroup: ProcessAsset) {
+
+    const start       = Date.now();
+    const {src, dest} = assetGroup;
+    const filename    = path.basename(src);
+    const ext         = path.extname(src);
+    const cleanName   = filename.replace(ext, '');
+
+
+    try {
+    
+      let result;
+
+      await ensureDirectory(dest);
+      
+      if ( this.bldrConfig?.sassConfig?.useLegacy ) {
+        result = await this.#legacy(src, dest);
+      } else {
+        result = await this.#build(src, dest);
+      }
+
+      if ( !result?.css || !result.css.toString() ) {
+        logError('sass', `no css found in ${src}`);
+        return;
+      }
+
+      let cssString = result.css.toString();
+
+      if ( result?.sourceMap ) {
+        cssString += '\n'.repeat(2) + '/*# sourceMappingURL=' + `${cleanName}.css.map` + ' */';
+        fs.writeFileSync(path.join(dest, `${cleanName}.css.map`), JSON.stringify(result.sourceMap));
+      }
+
+      fs.writeFileSync(path.join(dest, `${cleanName}.css`), cssString);
+
+      // Clock the time it took to process     
+      const stop = Date.now();
+
+      // Log success message
+      logSuccess('sass', `${filename} processed`, ((stop - start) / 1000));
+
+    } catch (error) {
+      // General error caught
+      const toBailOrNotToBail = this.bldrConfig.isDev ? {} : { throwError: true, exit: true };
+      logError(`sass`, `General error:`, {});
+      logError(`sass`, `${error}`, toBailOrNotToBail);
+    }
+    
+  }
+
+
+  /**
+   * @method #legacy
+   * @description Builds the process bundle for sass using the legacy method
+   * @param {string} src - The source file
+   * @param {string} dest - The destination directory
+   * @returns {Promise<void>}
+   * @memberof SassProvider
+   */
+  async #legacy(src: string, dest: string) {
+    return this.sass.renderSync({
+      file: src,
+      sourceMap: this.bldrConfig.isDev,
+      sourceMapContents: true,
+      style: this.bldrConfig.isDev ? 'expanded' : 'compressed',
+    });
+  }
+
+
+  /**
+   * @method #build
+   * @description Builds the process bundle for sass using the new method
+   * @param {string} src - The source file
+   * @param {string} dest - The destination directory
+   * @returns {Promise<void>}
+   * @memberof SassProvider
+   */
+  async #build(src: string, dest: string) {
+    return this.sass.compile(src, {
+      sourceMap: this.bldrConfig.isDev,
+      sourceMapContents: true,
+      style: this.bldrConfig.isDev ? 'expanded' : 'compressed',
+    });
+  }
+
 
 }

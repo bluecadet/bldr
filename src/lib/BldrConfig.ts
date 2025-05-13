@@ -1,8 +1,8 @@
 import { CommandSettings } from "./@types/commandSettings";
-import { AssetObject, ConfigSettings, LocalConfigSettings, ProcessAsset } from "./@types/configTypes";
+import { AssetObject, BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, ConfigSettings, LocalConfigSettings, ProcessAsset, ProcessKey } from "./@types/configTypes";
 import { BldrSettings } from "./BldrSettings.js";
 import * as path from "path"
-import { logError, logWarn } from "./utils/loggers.js";
+import { logAction, logError, logWarn } from "./utils/loggers.js";
 
 import { createRequire } from 'node:module';
 import { unglobPath } from "./utils/unglobPath.js";
@@ -67,6 +67,12 @@ export class BldrConfig {
    * @property null|array
    * Files for chokidar to watch
    */
+  public chokidarIgnorePathsArray: string[] = [];
+
+  /**
+   * @property null|array
+   * Files for chokidar to watch
+   */
   public watchAssetArray: string[] = [];
 
   /**
@@ -116,6 +122,13 @@ export class BldrConfig {
 
   public sdcLocalPath: string | null = null;
   public sdcLocalPathTest: string | null = null;
+  public envKey: string | null = null;
+
+
+  public sassConfig: BldrSassSettings | null = null;
+  public esBuildConfig: BldrEsBuildSettings | null = null;
+  public rollupConfig: BldrRollupSettings | null = null;
+  public eslintConfig: BldrEsLintSettings | null = null;
 
   /**
    * @property null|function
@@ -162,7 +175,7 @@ export class BldrConfig {
     await this.#loadConfig();
 
     // Define process & asset config
-    await this.#buildProcessConfig();
+    await this.#createProcessConfig();
 
     // Define provider config
     await this.#buildProviderConfig();
@@ -182,7 +195,7 @@ export class BldrConfig {
       this.userConfig = config.default;
     } catch (error) {
       console.log(error);
-      process.exit(1);
+      logError('bldr', `Missing required ${this.bldrSettings.configFileName} file`, {throwError: true, exit: true});
     }
 
     // Load Local User Config
@@ -192,7 +205,7 @@ export class BldrConfig {
       this.localConfig = localConfig.default;
     } catch (error) {
       if ( this.isDev && !this.userConfig.browsersync?.disable ) {
-        logWarn('browsersync', `Missing ${this.bldrSettings.configFileName} file, using defaults`);
+        logWarn('bldr', `Missing ${this.bldrSettings.localConfigFileName} file, using defaults`);
       }
       this.localConfig = null;
     }
@@ -201,16 +214,18 @@ export class BldrConfig {
 
 
   /**
-   * @method buildProcessConfig
+   * @method createProcessConfig
    * @description Build the process asset config based on the user config
    */
-  async #buildProcessConfig() {
+  async #createProcessConfig() {
 
     await this.#setProcessSrc();
-
-      await this.#handleProcessGroup('css');
-      await this.#handleProcessGroup('js');
-      await this.#handleProcessGroup('sass');
+    
+    await Promise.all([
+      this.#handleProcessGroup('css'),
+      this.#handleProcessGroup('js'),
+      this.#handleProcessGroup('sass'),
+    ]);
 
     if ( this.userConfig?.sdc ) {
       await this.#handleSDC();
@@ -226,10 +241,9 @@ export class BldrConfig {
       this.chokidarWatchArray.push('.');
     }
 
-    // Dedup chokidar watch array
+    // Dedupe chokidar watch array
     this.chokidarWatchArray = this.chokidarWatchArray.filter((elem, pos) => this.chokidarWatchArray.indexOf(elem) == pos);
 
-    
   }
 
 
@@ -243,11 +257,12 @@ export class BldrConfig {
 
     if ( this.cliArgs?.env ) {
       if ( this.userConfig?.env?.[this.cliArgs.env] ) {
+        this.envKey = this.cliArgs.env;
         this.processSrc = this.userConfig.env[this.cliArgs.env];
       } else {
         logError('BldrConfig', `No env found for ${this.cliArgs.env}`, {throwError: true, exit: true});
       }
-    } else {  
+    } else {
       this.processSrc = this.userConfig;
     }
 
@@ -259,42 +274,43 @@ export class BldrConfig {
    * @method handleProcessGroup
    * @description Handle the process group based on the user config
    */
-  async #handleProcessGroup(key: string) {
+  async #handleProcessGroup(key: ProcessKey) {
     
     if ( !this.processSrc?.[key] ) {
       return;
     }
 
     this.processSrc[key].forEach((p: AssetObject) => {
-
       const files = this.#fg.sync([`${path.join(process.cwd(), p.src)}`]);
 
       if ( files && files.length > 0 ) {
         for (const file of files) {
-          this.addProcessAsset(file, p.dest, key);
+          this.chokidarIgnorePathsArray.push(path.resolve(p.dest));
+          this.addFileToAssetGroup(file, key as ProcessKey, false, p.dest);
         }
       }
-      
-      // if ( p.watch ) {
-      //   p.watch.forEach((w: string) => {
-      //     this.addChokidarWatchFile(w);
-      //   });
-      // }
     });
   }
 
-  
+
 
   /**
-   * @method addProcessAsset
-   * @description Add a file to the process asset groups
+   * @method addFileToAssetGroup
+   * @description add a file an asset group
    */
-  async addProcessAsset(file: string, dest: string, key: string) {
-    if ( !this.processAssetGroups?.[key] ) {
-      this.processAssetGroups[key] = {};
-    }
+  async addFileToAssetGroup(file: string, key: ProcessKey, isSDC: boolean = false, dest: string | null = null) {
+    const group = isSDC ? this.sdcProcessAssetGroups : this.processAssetGroups;
     const localFile = file.replace(process.cwd() + '/', '');
-    this.processAssetGroups[key][localFile] = this.createSrcDestObject(file, path.join(process.cwd(), dest));
+
+    if ( !group?.[key] ) {
+      group[key] = {};
+    }
+    
+    if ( !dest ) {
+      dest = path.dirname(file);
+    }
+
+    group[key][localFile] = this.createSrcDestObject(file, dest);
   }
 
 
@@ -346,6 +362,7 @@ export class BldrConfig {
 
     await Promise.all([
       this.#handleSDCType('css', 'css'),
+      this.#handleSDCType('pcss', 'css'),
       this.#handleSDCType('sass', 'sass'),
       this.#handleSDCType('scss', 'sass'),
       this.#handleSDCType('js', 'js'),
@@ -359,27 +376,14 @@ export class BldrConfig {
    * @method handleSDCType
    * @description add sdc file based on given extension key
    */
-  async #handleSDCType(ext: string, key: string) {
+  async #handleSDCType(ext: string, key: ProcessKey) {
     const files = await this.#fg.sync([`${this.sdcPath}/**/**/${this.sdcAssetSubDirectory}/*.${ext}`]);
     if ( files && files.length > 0 ) {
       for (const file of files) {
-        await this.addSDCAsset(file, key);
+        let dest = path.normalize(path.join(path.dirname(file), '..'));
+        this.addFileToAssetGroup(file, key, true, dest);
       }
     }
-  }
-
-
-  /**
-   * @method addSDCAsset
-   * @description Add a file to the sdc process asset groups
-   */
-  async addSDCAsset(file: string, key: string) {
-    if ( !this.sdcProcessAssetGroups[key] ) {
-      this.sdcProcessAssetGroups[key] = {};
-    }
-    const localFile = file.replace(process.cwd() + '/', '');
-    const dest = path.dirname(file);
-    this.sdcProcessAssetGroups[key][localFile] = this.createSrcDestObject(file, path.dirname(dest));
   }
 
 
@@ -389,25 +393,104 @@ export class BldrConfig {
    * @description Build the provider config based on the user config
    */
   async #buildProviderConfig() {
-    if ( this.processAssetGroups?.css || this.sdcProcessAssetGroups?.css ) {
-      console.log('TODO: postcss');
-    }
 
     if ( this.processAssetGroups?.js || this.sdcProcessAssetGroups?.js ) {
       if ( this.isDev ) {
-        console.log('TODO: esBuild');
+        await this.#setEsBuildConfig();
       } else {
-        console.log('TODO: rollup');
+        await this.#setRollupConfig();
       }
+
+      await this.#setEslintConfig();
     }
 
     if ( this.processAssetGroups?.sass || this.sdcProcessAssetGroups?.sass ) {
-      console.log('TODO: sass');
+      await this.#setSassConfig();
     }
+  }
 
-    // if ( this.userConfig?.env?.[this.cliArgs.env]?.sdc ) {
-    //   this.sdcConfig = this.userConfig.env[this.cliArgs.env].sdc;
-    // }
+
+  async #setEsBuildConfig() {
+    // EsBuild Config
+    this.esBuildConfig = {
+      plugins: [],
+      overridePlugins: false,
+    };
+
+    if ( this.userConfig?.esBuild ) {
+      this.esBuildConfig = {...this.esBuildConfig, ...this.userConfig.esBuild};
+    }
+  }
+
+
+  async #setRollupConfig() {
+    this.rollupConfig = {
+      useBabel: true,
+      babelPluginOptions: { babelHelpers: 'bundled' },
+      useSWC: false,
+      swcPluginOptions: null,
+      useTerser: true,
+      terserOptions: {},
+      inputOptions: null,
+      inputPlugins: null,
+      overrideInputPlugins: false,
+      outputOptions: { format: 'iife',},
+      outputPlugins: null,
+      overrideOutputPlugins: false,
+      sdcOptions: {
+        minify: true,
+        bundle: true,
+        format: 'es',
+      },     
+    };
+
+    if ( this.userConfig?.rollup ) {
+      this.rollupConfig = {...this.rollupConfig, ...this.userConfig.rollup};
+    }
+  }
+
+
+  async #setEslintConfig() {
+    this.eslintConfig = {
+      useEslint: true,
+      options: {},
+      forceBuildIfError: false,
+      lintPathOverrides: null,
+    };
+
+    if ( this.userConfig?.eslint ) {
+      this.eslintConfig = {...this.eslintConfig, ...this.userConfig.eslint};
+    }
+  }
+
+
+  async #setSassConfig() {
+    this.sassConfig = {
+      useLegacy: false,
+    };
+
+    if ( this.userConfig?.sass ) {
+      this.sassConfig = {...this.sassConfig, ...this.userConfig.sass};
+    }
+  }
+
+
+  async rebuildConfig() {
+    const start = Date.now();
+    logAction('bldr', '...rebuilding configuration...');
+    
+    // Reset asset group config
+    this.processAssetGroups = {};
+    this.sdcProcessAssetGroups = {};
+
+    // Get local user config
+    await this.#loadConfig();
+
+    // Define process & asset config
+    await this.#createProcessConfig();
+    const stop = Date.now();
+
+    logAction('bldr', 'Configuration rebuild complete', ((stop - start) / 1000));
   }
 
 
