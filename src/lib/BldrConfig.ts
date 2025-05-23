@@ -459,8 +459,7 @@ export class BldrConfig {
     this.eslintConfig = {
       useEslint: true,
       options: {},
-      forceBuildIfError: false,
-      lintPathOverrides: null,
+      forceBuildIfError: true,
     };
 
     if ( this.userConfig?.eslint ) {
@@ -483,7 +482,7 @@ export class BldrConfig {
   async #setStylelintConfig() {
     this.stylelintConfig = {
       useStyleLint: true,
-      forceBuildIfError: false,
+      forceBuildIfError: true,
     };
 
     if ( this.userConfig?.sass ) {

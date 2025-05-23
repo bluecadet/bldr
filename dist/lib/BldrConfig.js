@@ -353,8 +353,7 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
         this.eslintConfig = {
             useEslint: true,
             options: {},
-            forceBuildIfError: false,
-            lintPathOverrides: null,
+            forceBuildIfError: true,
         };
         if ((_a = this.userConfig) === null || _a === void 0 ? void 0 : _a.eslint) {
             this.eslintConfig = Object.assign(Object.assign({}, this.eslintConfig), this.userConfig.eslint);
@@ -375,7 +374,7 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
         var _a;
         this.stylelintConfig = {
             useStyleLint: true,
-            forceBuildIfError: false,
+            forceBuildIfError: true,
         };
         if ((_a = this.userConfig) === null || _a === void 0 ? void 0 : _a.sass) {
             this.stylelintConfig = Object.assign(Object.assign({}, this.stylelintConfig), this.userConfig.stylelint);

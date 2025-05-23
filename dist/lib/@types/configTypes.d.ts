@@ -4,6 +4,7 @@ import type { Options as SWCOptions } from '@swc/core';
 export interface ConfigSettings {
     css?: AssetObjects;
     js?: AssetObjects;
+    sass?: AssetObjects;
     watchPaths?: string[];
     reloadExtensions?: string[];
     env?: EnvObject;
@@ -12,7 +13,7 @@ export interface ConfigSettings {
     rollup?: BldrRollupSettings;
     eslint?: BldrEsLintSettings;
     stylelint?: BldrStyleLintSettings;
-    sass?: BldrSassSettings;
+    sassConfig?: BldrSassSettings;
     sdc?: BldrSDCSettings;
     browsersync?: browsersyncSettings;
 }
@@ -128,7 +129,6 @@ export interface BldrEsLintSettings {
     useEslint?: boolean;
     options?: any;
     forceBuildIfError?: boolean;
-    lintPathOverrides?: null | string[];
 }
 export interface BldrStyleLintSettings {
     useStyleLint?: boolean;
