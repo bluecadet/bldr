@@ -5,7 +5,12 @@ import { CommandSettings } from './lib/@types/commandSettings.js';
 import { Bldr } from './lib/Bldr.js';
 
 const handleInit = async (commandOptions: CommandSettings) => {
-  let run = await import('./lib/commands/init.js');
+  let run = await import('./commands/init.js');
+  run.default(commandOptions);
+}
+
+const handleLint = async (commandOptions: CommandSettings) => {
+  let run = await import('./commands/lint.js');
   run.default(commandOptions);
 }
 
@@ -14,7 +19,7 @@ const bldrCLI = new Command();
 bldrCLI
   .description('Configurable build tool for css, sass, js and images')
   .option('-e, --env <name>', 'env key name from config')
-  .option('-l, --lintOnly', 'only run linting processes');
+  // .option('-l, --lintOnly', 'only run linting processes');
 
 bldrCLI
   .command('dev')
@@ -37,6 +42,13 @@ bldrCLI
   .description('create a production build')
   .action((options, cmd) => {
     new Bldr(cmd.optsWithGlobals(), false);
+  });
+
+bldrCLI
+  .command('lint')
+  .description('lint files')
+  .action((options, cmd) => {
+    handleLint(cmd.optsWithGlobals());
   });
 
 bldrCLI

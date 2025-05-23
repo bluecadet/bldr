@@ -1,6 +1,6 @@
 import { BldrConfig } from '../BldrConfig.js';
 import { ESLint } from 'eslint';
-import { logAction, logError } from '../utils/loggers.js';
+import { dashPadFromString, logAction, logError } from '../utils/loggers.js';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { ProcessAsset } from '../@types/configTypes.js';
@@ -217,9 +217,13 @@ export class EslintProvider {
       results.forEach((res: any) => {
 
         if ( res.errorCount > 0 ) {
+          const dashes = dashPadFromString(this.resultMessage);
+          logError(`eslint`, dashes, {});
           logError(`eslint`, this.resultMessage, {});
+          logError(`eslint`, dashes, {});
           console.log(resultText);
-          logError(`eslint`, `--------------------------------------------------`, this.bailOnError);
+          logError(`eslint`, dashes, this.bailOnError);
+          console.log('');
         }
 
       });

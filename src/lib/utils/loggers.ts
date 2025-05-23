@@ -2,7 +2,7 @@ import colors from 'colors';
 
 const processString = (processName: string) => {
   const pName   = processName;
-  const addPad  = pName.padEnd(7, ' ');
+  const addPad  = pName.padEnd(10, ' ');
   const onlyPad = addPad.replace(processName, '');
 
   return `${colors.white('[')}${colors.blue(processName)}${colors.white(']')}${onlyPad}`;
@@ -64,4 +64,11 @@ ${colors.white('error:')} ${err}
 `;
 
   logError(`postcss`, errMessage, errOpts);
+}
+
+
+
+export function dashPadFromString(string: string) {
+  const str = '';
+  return str.padEnd(string.length, '-');
 }

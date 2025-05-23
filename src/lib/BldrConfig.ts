@@ -1,5 +1,5 @@
 import { CommandSettings } from "./@types/commandSettings";
-import { AssetObject, BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, ConfigSettings, LocalConfigSettings, ProcessAsset, ProcessKey } from "./@types/configTypes";
+import { AssetObject, BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, ConfigSettings, LocalConfigSettings, ProcessAsset, ProcessKey } from "./@types/configTypes";
 import { BldrSettings } from "./BldrSettings.js";
 import * as path from "path"
 import { logAction, logError, logWarn } from "./utils/loggers.js";
@@ -129,6 +129,7 @@ export class BldrConfig {
   public esBuildConfig: BldrEsBuildSettings | null = null;
   public rollupConfig: BldrRollupSettings | null = null;
   public eslintConfig: BldrEsLintSettings | null = null;
+  public stylelintConfig: BldrStyleLintSettings | null = null;
 
   /**
    * @property null|function
@@ -407,6 +408,10 @@ export class BldrConfig {
     if ( this.processAssetGroups?.sass || this.sdcProcessAssetGroups?.sass ) {
       await this.#setSassConfig();
     }
+
+    if ( this.processAssetGroups?.css || this.sdcProcessAssetGroups?.css || this.processAssetGroups?.sass || this.sdcProcessAssetGroups?.sass ) {
+      await this.#setStylelintConfig(); 
+    }
   }
 
 
@@ -471,6 +476,18 @@ export class BldrConfig {
 
     if ( this.userConfig?.sass ) {
       this.sassConfig = {...this.sassConfig, ...this.userConfig.sass};
+    }
+  }
+
+
+  async #setStylelintConfig() {
+    this.stylelintConfig = {
+      useStyleLint: true,
+      forceBuildIfError: false,
+    };
+
+    if ( this.userConfig?.sass ) {
+      this.stylelintConfig = {...this.stylelintConfig, ...this.userConfig.stylelint};
     }
   }
 

@@ -11,14 +11,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { Command } from 'commander';
 import { Bldr } from './lib/Bldr.js';
 const handleInit = (commandOptions) => __awaiter(void 0, void 0, void 0, function* () {
-    let run = yield import('./lib/commands/init.js');
+    let run = yield import('./commands/init.js');
+    run.default(commandOptions);
+});
+const handleLint = (commandOptions) => __awaiter(void 0, void 0, void 0, function* () {
+    let run = yield import('./commands/lint.js');
     run.default(commandOptions);
 });
 const bldrCLI = new Command();
 bldrCLI
     .description('Configurable build tool for css, sass, js and images')
-    .option('-e, --env <name>', 'env key name from config')
-    .option('-l, --lintOnly', 'only run linting processes');
+    .option('-e, --env <name>', 'env key name from config');
+// .option('-l, --lintOnly', 'only run linting processes');
 bldrCLI
     .command('dev')
     .description('create a local dev environment with live reloading')
@@ -33,6 +37,12 @@ bldrCLI
     .description('create a production build')
     .action((options, cmd) => {
     new Bldr(cmd.optsWithGlobals(), false);
+});
+bldrCLI
+    .command('lint')
+    .description('lint files')
+    .action((options, cmd) => {
+    handleLint(cmd.optsWithGlobals());
 });
 bldrCLI
     .command('init')

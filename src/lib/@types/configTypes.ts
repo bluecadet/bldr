@@ -12,7 +12,7 @@ export interface ConfigSettings {
   esBuild?: BldrEsBuildSettings;
   rollup?: BldrRollupSettings;
   eslint?: BldrEsLintSettings;
-  styleLint?: BldrStyleLintSettings;
+  stylelint?: BldrStyleLintSettings;
   sass?: BldrSassSettings;
   sdc?: BldrSDCSettings;
   browsersync?: browsersyncSettings;

@@ -1,0 +1,1 @@
+{"version":3,"file":"EsBuildProvider.d.ts","sourceRoot":"","sources":["../../../src/lib/providers/EsBuildProvider.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,YAAY,EAAE,MAAM,0BAA0B,CAAC;AAOxD,qBAAa,eAAe;IAE1B;;;OAGG;IACH,OAAO,CAAC,UAAU,CAAc;IAEhC;;;OAGG;IACH,OAAc,SAAS,EAAE,eAAe,CAAC;IAElC,MAAM,EAAG,MAAM,CAAC;;IAcjB,UAAU;IAKV,kBAAkB;IAkBlB,eAAe,CAAC,UAAU,EAAE,YAAY;CAiC/C"}

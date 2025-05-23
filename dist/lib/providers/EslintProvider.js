@@ -15,7 +15,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 var _EslintProvider_instances, _EslintProvider_setEsLintPaths, _EslintProvider_runLint, _EslintProvider_compileFinalConfig;
 import { BldrConfig } from '../BldrConfig.js';
 import { ESLint } from 'eslint';
-import { logAction, logError } from '../utils/loggers.js';
+import { dashPadFromString, logAction, logError } from '../utils/loggers.js';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
@@ -147,9 +147,13 @@ _EslintProvider_instances = new WeakSet(), _EslintProvider_setEsLintPaths = func
             const resultText = this.formatter.format(results);
             results.forEach((res) => {
                 if (res.errorCount > 0) {
+                    const dashes = dashPadFromString(this.resultMessage);
+                    logError(`eslint`, dashes, {});
                     logError(`eslint`, this.resultMessage, {});
+                    logError(`eslint`, dashes, {});
                     console.log(resultText);
-                    logError(`eslint`, `--------------------------------------------------`, this.bailOnError);
+                    logError(`eslint`, dashes, this.bailOnError);
+                    console.log('');
                 }
             });
         }

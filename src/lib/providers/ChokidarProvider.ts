@@ -7,6 +7,7 @@ import { SassProvider } from './SassProvider.js';
 import { BrowsersyncProvider } from './BrowsersyncProvider.js';
 import { logAction, logWarn } from '../utils/loggers.js';
 import { EslintProvider } from './EslintProvider.js';
+import { StylelintProvider } from './StylelintProvider.js';
 
 export class ChokidarProvider {
 
@@ -21,6 +22,7 @@ export class ChokidarProvider {
   private Sass: SassProvider;
   private Browsersync: BrowsersyncProvider;
   private EsLint: EslintProvider;
+  private Stylelint: StylelintProvider;
   private isSDCFile: boolean = false;
 
 
@@ -31,6 +33,7 @@ export class ChokidarProvider {
     this.Sass        = SassProvider._instance;
     this.EsBuild     = EsBuildProvider._instance;
     this.EsLint      = EslintProvider._instance;
+    this.Stylelint   = StylelintProvider._instance;
   }
 
 
@@ -114,6 +117,8 @@ export class ChokidarProvider {
 
     // Process css files
     if ( (ext === 'css') || (ext === 'pcss') ) {
+      await this.Stylelint.lintFile(filepath);
+
       if ( this.isSDCFile && this.bldrConfig.sdcProcessAssetGroups.css?.[filepath] ) {
         await this.Postcss.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.css[filepath]);
         this.Browsersync.reloadCSS();
@@ -130,6 +135,8 @@ export class ChokidarProvider {
 
     // Process sass files
     if ( (ext === 'sass' || ext === 'scss') && this.Sass ) {
+      await this.Stylelint.lintFile(filepath);
+      
       if ( this.isSDCFile && this.bldrConfig.sdcProcessAssetGroups.css?.[filepath] ) {
         await this.Sass.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.css[filepath]);
         this.Browsersync.reloadCSS();

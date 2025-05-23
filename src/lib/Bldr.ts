@@ -8,6 +8,7 @@ import { EsBuildProvider } from "./providers/EsBuildProvider.js";
 import { RollupProvider } from "./providers/RollupProvider.js";
 import { logAction, logSuccess } from "./utils/loggers.js";
 import { EslintProvider } from "./providers/EslintProvider.js";
+import { StylelintProvider } from "./providers/StylelintProvider.js";
 
 export class Bldr {
 
@@ -20,6 +21,7 @@ export class Bldr {
   private PostcssProvider: PostcssProvider;
   private SassProvider: SassProvider;
   private EslintProvider: EslintProvider;
+  private StylelintProvider: StylelintProvider;
 
   constructor(commandSettings: CommandSettings, isDev: boolean = false, isInit: boolean = false) {
     
@@ -32,6 +34,7 @@ export class Bldr {
     this.PostcssProvider = new PostcssProvider();
     this.SassProvider = new SassProvider();
     this.EslintProvider = new EslintProvider();
+    this.StylelintProvider = new StylelintProvider();
     
     this.#initialize();
 
@@ -50,6 +53,7 @@ export class Bldr {
       this.PostcssProvider.initialize(),
       this.SassProvider.initialize(),
       this.EslintProvider.initialize(),
+      this.StylelintProvider.initialize(),
     ]);
     
     if ( this.isDev ) {

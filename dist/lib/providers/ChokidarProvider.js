@@ -22,6 +22,7 @@ import { SassProvider } from './SassProvider.js';
 import { BrowsersyncProvider } from './BrowsersyncProvider.js';
 import { logAction, logWarn } from '../utils/loggers.js';
 import { EslintProvider } from './EslintProvider.js';
+import { StylelintProvider } from './StylelintProvider.js';
 export class ChokidarProvider {
     constructor() {
         _ChokidarProvider_instances.add(this);
@@ -37,6 +38,7 @@ export class ChokidarProvider {
         this.Sass = SassProvider._instance;
         this.EsBuild = EsBuildProvider._instance;
         this.EsLint = EslintProvider._instance;
+        this.Stylelint = StylelintProvider._instance;
     }
     /**
      * @method initialize
@@ -100,6 +102,7 @@ _ChokidarProvider_instances = new WeakSet(), _ChokidarProvider_changeFile = func
         }
         // Process css files
         if ((ext === 'css') || (ext === 'pcss')) {
+            yield this.Stylelint.lintFile(filepath);
             if (this.isSDCFile && ((_a = this.bldrConfig.sdcProcessAssetGroups.css) === null || _a === void 0 ? void 0 : _a[filepath])) {
                 yield this.Postcss.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.css[filepath]);
                 this.Browsersync.reloadCSS();
@@ -115,6 +118,7 @@ _ChokidarProvider_instances = new WeakSet(), _ChokidarProvider_changeFile = func
         }
         // Process sass files
         if ((ext === 'sass' || ext === 'scss') && this.Sass) {
+            yield this.Stylelint.lintFile(filepath);
             if (this.isSDCFile && ((_c = this.bldrConfig.sdcProcessAssetGroups.css) === null || _c === void 0 ? void 0 : _c[filepath])) {
                 yield this.Sass.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.css[filepath]);
                 this.Browsersync.reloadCSS();
