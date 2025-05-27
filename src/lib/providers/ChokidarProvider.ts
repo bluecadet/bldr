@@ -129,7 +129,7 @@ export class ChokidarProvider {
         return;
       }
 
-      logWarn('bldr', `No css file found for ${filepath}`);
+      // logWarn('bldr', `No css file found for ${filepath}`);
       return;
     }
 
@@ -146,8 +146,8 @@ export class ChokidarProvider {
         this.Browsersync.reloadCSS();
         return;
       }
-      
-      logWarn('bldr', `No sass file found for ${filepath}`);
+
+      // logWarn('bldr', `No sass file found for ${filepath}`);
       return;
     }
 
@@ -166,7 +166,7 @@ export class ChokidarProvider {
         return;  
       }
       
-      logWarn('bldr', `No js file found for ${filepath}`);
+      this.Browsersync.reloadJS();
       return;
     }
 

@@ -55,8 +55,8 @@ export class BrowsersyncProvider {
       logFileChanges: false,
     };
 
-    if ( this.bldrConfig?.localConfig?.browserSync ) {
-      bsOptions = {...this.bldrConfig.localConfig.browserSync, ...bsOptions};
+    if ( this.bldrConfig?.localConfig?.browsersync ) {
+      bsOptions = {...this.bldrConfig.localConfig.browsersync, ...bsOptions};
     }
     
     this.browsersyncInstance.init(bsOptions);

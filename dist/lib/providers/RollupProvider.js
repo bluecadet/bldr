@@ -172,7 +172,7 @@ export class RollupProvider {
                 this.rollupFinalConfig.outputOptions.plugins = [];
             }
             if (!this.rollupFinalConfig.outputOptions.format) {
-                this.rollupFinalConfig.outputOptions.format = 'iife';
+                this.rollupFinalConfig.outputOptions.format = 'es';
             }
         });
     }
