@@ -222,7 +222,7 @@ export class RollupProvider {
     }
 
     if ( !this.rollupFinalConfig.outputOptions.format ) {
-      this.rollupFinalConfig.outputOptions.format = 'iife';
+      this.rollupFinalConfig.outputOptions.format = 'es';
     }
 
   }

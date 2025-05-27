@@ -166,9 +166,9 @@ export interface browsersyncSettings {
 }
 export interface LocalConfigSettings {
     /**
-     * @description browserSync options
+     * @description browsersync options
      */
-    browserSync?: any;
+    browsersync?: any;
 }
 export type ProcessKey = 'css' | 'js' | 'sass';
 export interface ProcessAssetGroup {

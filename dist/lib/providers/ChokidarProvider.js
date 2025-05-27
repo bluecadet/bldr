@@ -20,7 +20,7 @@ import { EsBuildProvider } from './EsBuildProvider.js';
 import { PostcssProvider } from './PostcssProvider.js';
 import { SassProvider } from './SassProvider.js';
 import { BrowsersyncProvider } from './BrowsersyncProvider.js';
-import { logAction, logWarn } from '../utils/loggers.js';
+import { logAction } from '../utils/loggers.js';
 import { EslintProvider } from './EslintProvider.js';
 import { StylelintProvider } from './StylelintProvider.js';
 export class ChokidarProvider {
@@ -113,7 +113,7 @@ _ChokidarProvider_instances = new WeakSet(), _ChokidarProvider_changeFile = func
                 this.Browsersync.reloadCSS();
                 return;
             }
-            logWarn('bldr', `No css file found for ${filepath}`);
+            // logWarn('bldr', `No css file found for ${filepath}`);
             return;
         }
         // Process sass files
@@ -129,7 +129,7 @@ _ChokidarProvider_instances = new WeakSet(), _ChokidarProvider_changeFile = func
                 this.Browsersync.reloadCSS();
                 return;
             }
-            logWarn('bldr', `No sass file found for ${filepath}`);
+            // logWarn('bldr', `No sass file found for ${filepath}`);
             return;
         }
         // Process js files
@@ -145,7 +145,7 @@ _ChokidarProvider_instances = new WeakSet(), _ChokidarProvider_changeFile = func
                 this.Browsersync.reloadJS();
                 return;
             }
-            logWarn('bldr', `No js file found for ${filepath}`);
+            this.Browsersync.reloadJS();
             return;
         }
         return;

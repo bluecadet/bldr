@@ -64,13 +64,13 @@ const createBldrLocalConfig = () => __awaiter(void 0, void 0, void 0, function* 
         }
     ]);
     const config = {
-        browserSync: {}
+        browsersync: {}
     };
     if (localPrompt.port !== '') {
-        config.browserSync.port = localPrompt.port;
+        config.browsersync.port = localPrompt.port;
     }
     if (localPrompt.proxyUrl !== '') {
-        config.browserSync.proxy = localPrompt.proxyUrl;
+        config.browsersync.proxy = localPrompt.proxyUrl;
     }
     const content = `import { bldrLocalConfig } from "@bluecadet/bldr";
 

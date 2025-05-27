@@ -230,9 +230,9 @@ export interface browsersyncSettings {
 
 export interface LocalConfigSettings {
   /**
-   * @description browserSync options
+   * @description browsersync options
    */
-  browserSync?: any;
+  browsersync?: any;
 }
 
 

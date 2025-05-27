@@ -40,8 +40,8 @@ export class BrowsersyncProvider {
             logPrefix: 'bldr',
             logFileChanges: false,
         };
-        if ((_d = (_c = this.bldrConfig) === null || _c === void 0 ? void 0 : _c.localConfig) === null || _d === void 0 ? void 0 : _d.browserSync) {
-            bsOptions = Object.assign(Object.assign({}, this.bldrConfig.localConfig.browserSync), bsOptions);
+        if ((_d = (_c = this.bldrConfig) === null || _c === void 0 ? void 0 : _c.localConfig) === null || _d === void 0 ? void 0 : _d.browsersync) {
+            bsOptions = Object.assign(Object.assign({}, this.bldrConfig.localConfig.browsersync), bsOptions);
         }
         this.browsersyncInstance.init(bsOptions);
     }
