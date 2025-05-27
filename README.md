@@ -1,5 +1,5 @@
 <h1 style="text-align: center;">Bldr 💪</h1>
-<p style="text-align: center">TL;DR: Bldr is a (very opinionated) configuration based task runner for css, js, sass, and image.</p>
+<p style="text-align: center">TL;DR: Bldr is a (very opinionated) configuration based task runner for css, js, and sass with a local development server</p>
 
 
 ## Installation
@@ -15,15 +15,13 @@ You can then add scripts to package.json to run commands:
     'devOnce': 'bldr dev --once'
   }
 ```
-
-but you can also install it globally:
-`npm i -g @bluecadet/bldr`
-
-
 Then run `npm run dev`, which will run `bldr dev`, etc.
 
 If you need to pass parameters to a script, add `--` between the command and the parameter:
 `npm run dev -- env=SampleEnv`
+
+You can also install it globally:
+`npm i -g @bluecadet/bldr`
 
 
 ## Documentation
@@ -53,6 +51,15 @@ $ bldr init
 ```
 
 Running `init` will run a simple interactive config setup.
+
+
+### `lint`
+
+```bash
+$ bldr lint
+```
+
+Running `lint` will run EsLint and Stylelint, given that each provider should be ran (see config below).
 
 
 ### `dev`
@@ -109,128 +116,95 @@ Bldr can handle processing css, js, sass, and image files. Each of these process
 
 ## Basic Configuration
 
-Bldr configuration determines the processes that are ran. At minimum, `bldrConfig.js` should export an object:
+Bldr configuration determines the processes that are ran. 
+
+1. Create a `bldr.config.js` file (or a `bldrConfig.js` file)
+2. Import `bldrConfig` from `@bluecadet/bldr` and export the function with your configuration:
 
 ```js
-module.exports = {
-  // file configuration
-}
+import {bldrConfig} from '@bluecadet/bldr/config';
+
+export default bldrConfig({
+  // Your Config Here
+});
 ```
-
-The following processes can be added:
-
-```js
-module.exports = {
-  css: {
-    // processes .css files with postcss
-  },
-  sass: {
-    // processes .sass files with node-sass and then postcss
-  },
-  js: {
-    // processes .js files with esbuild (bldr dev) or rollup (bldr build)
-  },
-  images: {
-    // processes image files with imagemin (via imagemin-mozjpeg, imagemin-pngquant, and imagemin-svgo)
-  }
-}
-```
-
-Each process can also accept and array of config object if multiple file locations should be processed:
-
-```js
-module.exports = {
-  css: [
-    {
-      // process config
-    },
-    {
-      // process config
-    },
-  ]
-}
-```
-
-If an array of config objects is present, each config object will be ran as its own process. In other words, if `css` is an array, two seperate postcss processes will be ran, one for each configuration object.
 
 ### Process Configuration Objects
 
-For each process, the following config is required:
-
+Bldr can process js (via esbuild/rollup), css (via postcss), and sass (via dart sass):
 ```js
-{
-  src: './path/to/src/files/**/*.[ext]',
-  dest: './path/to/destination/directory/',
-  watch: [
-    './path/to/files/to/watch/**/*.[ext]',
-  ]
-}
-```
+import {bldrConfig} from '@bluecadet/bldr/config';
 
-### `src`, `dest`, `watch` configuration
-
-- `src` config expects a path (string). This path is the 'incoming' path for processing, and should include a file extension as needed for the process. Glob patterns can be used.
-
-- `dest` config expects a path (string). This path is the 'destination' for processing. This is the directory where builds will be created.
-
-- `watch` config is only used in the `dev` process, and expects an array of paths (array of strings). These paths will be 'watched' by chokidar.
-
-**Example js config:**
-
-```js
-module.exports = {
-  js: {
-    src: './path/to/src/js/**/*.js',
-    dest: './path/to/destination/js/',
-    watch: [
-      '../path/to/other/js/moldules/**/*.js',
-    ]
-  },
-}
-```
-
-**Example js config with multiple build locations:**
-
-```js
-module.exports = {
-  js: [
-    {
-      src: './path/to/theme/src/js/**/*.js',
-      dest: './path/to/theme/dest/js/',
-      watch: [
-        '../path/to/theme/js/moldules/**/*.js',
-      ]
-    },
-    {
-      src: './path/to/child-theme/src/js/*.js',
-      dest: './path/to/child-theme/dest/js/',
-      watch: [
-        '../path/to/child-theme/src/js/moldules/**/*.js',
-      ]
-    },
+export default bldrConfig({
+  css: [
+    // processes .css files with postcss
   ],
-}
+  sass: [
+    // processes .sass files with node-sass and then postcss
+  ],
+  js: [
+    // processes .js files with esbuild (bldr dev) or rollup (bldr build)
+  ],
+});
 ```
 
-### `watchReload` config
+For each filetype, add an array of objects containing `src` and `dest` keys:
+```js
+import {bldrConfig} from '@bluecadet/bldr/config';
 
-When running `bldr dev` you may want additional files or file types to trigger an automatic reload. To do this, add a `watchReload` key with a value of an array to config:
+export default bldrConfig({
+  css: [
+    {
+      src: './web/theme/assets/src/css/*.css', 
+      dest: './web/theme/assets/dist/css',
+    }
+    {
+      src: './web/admin/assets/src/css/admin.css', 
+      dest: './web/admin/assets/dist/css',
+    }
+  ],
+});
+```
+
+- `src` config expects a path (string). This path is the 'incoming' path for processing, and should include a file extension as needed for the process. Glob patterns can be used (see [fast-glob](https://github.com/mrmlnc/fast-glob#pattern-syntax) pattern syntax).
+
+- `dest` config expects a path (string). This path is the 'destination' for processing. This is the directory where builds will be created. File names will be copied to the `dest` when writing the file (`assets/src/main.css` will go to `assets/dist/main.css`).
+
+### `watchPaths` config
+
+By default, bldr will watch all files within the directory where `bldr.config.js` is located. To better tune what files should be watched, add a `watchPaths` key with an array of file paths. When added, only files within these paths will trigger reload or processing:
+
+```js
+import {bldrConfig} from '@bluecadet/bldr/config';
+
+export default bldrConfig({
+  css: [],
+  js: [],
+  watchPaths: [
+    './web/theme',
+    './web/admin',
+  ]
+})
+```
+
+
+### `reloadExtensions` config
+
+When running `bldr dev` you may want additional files or file types to trigger an automatic reload. To do this, add a `reloadExtensions` key as an array of extensions that should trigger a reload. Extension names should be text only (and omit the `.`):
 
 ##### Example basic config:
 ```js
-module.exports = {
-  css: {
-    ...
-  },
-  js: {
-    ...
-  },
-  watchReload: [
-    './**/*.twig',
-    './**/*.html',
-    './**/*.php'
+import {bldrConfig} from '@bluecadet/bldr/config';
+
+export default bldrConfig({
+  css: [],
+  js: [],
+  reloadExtensions: [
+    'twig',
+    'html',
+    'php'
   ]
-}
+})
 ```
 
 ### `env` config
@@ -238,85 +212,84 @@ module.exports = {
 Projects can have many parts. Some may have just one source for assets, some may have multiple. For example, you may be working on a theme for a CMS, but also need bldr to process assets for a plugin. With `env` configuration, you can setup 'environments' with their own process configurations:
 
 ```js
-module.exports = {
+import {bldrConfig} from '@bluecadet/bldr/config';
+
+export default bldrConfig({
   css: [
     {
       src: './path/to/theme/css/**/*.css',
       dest: './path/to/public/css/',
-      watch: [
-        './path/to/theme/css/**/*.css',
-        './path/to/other/css/**/*.css'
-      ]
     },
     {
       src: './path/to/plugin/src/css/**/*.css',
       dest: './path/to/plugin/build/css/',
-      watch: [
-        './path/to/plugin/src/css/**/*.css',
-        './path/to/plugin/style-guide/css/**/*.css'
-      ]
     },
   ],
-  js: {
-    ...
-  },
+  js: [
+    {
+      src: './path/to/theme/js/**/*.js',
+      dest: './path/to/public/js/',
+    },
+    {
+      src: './path/to/plugin/src/js/**/*.js',
+      dest: './path/to/plugin/build/js/',
+    },
+  ],
   env: {
     'themeOnly': {
-      css: {
-        src: './path/to/theme/css/**/*.css',
-        dest: './path/to/public/css/',
-        watch: [
-          './path/to/theme/css/**/*.css',
-          './path/to/other/css/**/*.css'
-        ]
-      },
-      js: {
-        ...
-      },
+      css: [
+        {
+          src: './path/to/theme/css/**/*.css',
+          dest: './path/to/public/css/',
+        }
+      ],
+      js: [
+        {
+          src: './path/to/theme/js/**/*.js',
+          dest: './path/to/public/js/',
+        },
+      ]
     },
     'pluginOnly': {
-      css: {
-        src: './path/to/plugin/src/css/**/*.css',
-        dest: './path/to/plugin/build/css/',
-        watch: [
-          './path/to/plugin/src/css/**/*.css',
-          './path/to/plugin/style-guide/css/**/*.css'
-        ]
-      },
-      js: {
-        ...
-      },
+      css: [
+        {
+          src: './path/to/theme/css/**/*.css',
+          dest: './path/to/public/css/',
+        }
+      ],
+      js: [
+        {
+          src: './path/to/plugin/src/js/**/*.js',
+          dest: './path/to/plugin/build/js/',
+        },
+      ],
     }
   }
-}
+})
 ```
 
 **IMPORTANT NOTE ABOUT ENVIRONMENTS**
 
 Each environment key is treated as its own set of configuration. Configuration for each environment **_is not_** inherited, or other wise read, from the basic configuration. In other words, each environment needs its own processes defined as needed. This allows you to, for example, run _just_ css in an environment if desired.
 
-If similar config is required in both basic and environment, its best to setup config in variables before the `module.exports = {}` in the config file:
+If similar config is required in both basic and environment, its best to setup config in variables before exporting `bldrConfig`:
 
 ```js
-const themeCSS = {
-  src: './path/to/theme/css/**/*.css',
-  dest: './path/to/public/css/',
-  watch: [
-    './path/to/theme/css/**/*.css',
-    './path/to/other/css/**/*.css'
-  ]
-};
+import {bldrConfig} from '@bluecadet/bldr/config';
 
-module.exports = {
+const themeCSS = [
+  {
+    src: './path/to/theme/css/**/*.css',
+    dest: './path/to/public/css/',
+  }
+];
+
+export default bldrConfig({
   css: [
     themeCSS,
     {
       src: './path/to/plugin/src/css/**/*.css',
       dest: './path/to/plugin/build/css/',
-      watch: [
-        './path/to/plugin/src/css/**/*.css',
-        './path/to/plugin/style-guide/css/**/*.css'
-      ]
     },
   ],
   js: {
@@ -327,102 +300,71 @@ module.exports = {
       css: themeCSS,
     }
   }
-}
+})
 ```
 
-### CLI commands and `env`
+#### CLI commands and `env`
 
 To use configuration from an `env` key, add the `env=` (or `-e=`) param with a value equal to the key of the `env` object you want to run.
 
-**Example**
-
-```js
-// bldrConfig.js
-const themeCSS = {
-  src: './path/to/theme/css/**/*.css',
-  dest: './path/to/public/css/',
-  watch: [
-    './path/to/theme/css/**/*.css',
-    './path/to/other/css/**/*.css'
-  ]
-};
-
-module.exports = {
-  css: [
-    themeCSS,
-    {
-      // some other config
-    },
-  ],
-  env: {
-    'themeCssOnly': {
-      css: themeCSS,
-    },
-    'whateverNameYouWant': {
-      js: {
-        // some other config
-      },
-    }
-  }
-}
-```
-
-In command line, to use the `themeCssOnly` env config, you would run:
+In command line, to use the `themeCssOnly` env config in the example above, you would run:
 
 ```bash
 $ bldr dev env=themeCssOnly # or bldr dev -e=themeCssOnly
 ```
 
-In command line, to use the `whateverNameYouWant` env config, you would run:
+## Single Directory Component (SDC) Config
 
-```bash
-$ bldr dev env=whateverNameYouWant
-```
-
-
-## Advanced Configuration
-
-Bldr supports `dev` and `build` configuration keys at the root of the config object. Think of them as bldr command environments.
-
-This allows `bldr dev` and `bldr build:dev` to have a seperate set of process configurations (via the `dev` key) from the process configurations used in `bldr build` (via the `build` key):
+To process SDC files, add the `sdc` key to the config:
 
 ```js
-module.exports = {
-  dev: {
-    css: {
-      src: './path/to/src/css/**/*.css',
-      dest: './path/to/public/css/',
-      watch: [
-        './path/to/src/css/**/*.css',
-        './path/to/other/css/**/*.css'
-      ]
-    }
-  },
-  build: {
-    css: [
-      {
-        src: './path/to/src/css/**/*.css',
-        dest: './path/to/public/css/',
-        watch: [
-          './path/to/src/css/**/*.css',
-          './path/to/other/css/**/*.css'
-        ]
-      },
-      {
-        src: './path/to/some-plugin/src/css/**/*.css',
-        dest: './path/to/some-plugin/build/css/',
-        watch: [
-          './path/to/some-plugin/src/css/**/*.css',
-          './path/to/some-plugin/style-guide/css/**/*.css'
-        ]
-      },
-    ]
+import {bldrConfig} from '@bluecadet/bldr/config';
+
+const themeCSS = [
+  {
+    src: './path/to/theme/css/**/*.css',
+    dest: './path/to/public/css/',
   }
-}
+];
+
+export default bldrConfig({
+  css: [themeCSS,],
+  sdc: {
+    directory: '.path/to/sdc/folders',
+    assetSubDirectory: 'assets'
+  }
+})
 ```
 
-The `dev` key can take all settings in the Basic Configuration section. The `build` key can as well, but the `watchReload` and `env` keys aren't needed, as they will not be relevant in the `bldr build` processing.
+- `directory` key should point to the 'parent' folder of all components.
+- `assetSubDirectory` key should be the name of a folder within an SDC directory that holds assets to be processed. A subdirectory is required as SDC auto-loads css and js files at the same directory level as the component.yml file. This value defaults to `assets`.
+- Files withing `assetSubDirectory` will be processed and added to the parent component directory.
 
+Example directory stucture:
+```
+theme
+- components
+  - child_component_1
+    - child_component_1.component.yml
+    - child_component_1.twig
+    - assets
+      - child_component_1.css
+      - child_component_1.js
+```
+
+When assets are processed, this will compile to:
+```
+theme
+- components
+  - child_component_1
+    - child_component_1.component.yml
+    - child_component_1.twig
+    - child_component_1.css
+    - child_component_1.js
+    - assets
+      - child_component_1.css
+      - child_component_1.js
+```
 
 
 
@@ -441,145 +383,127 @@ In addition to processes, you can also add config to override or add to the defa
 
 The following configuration options are available:
 
-```js
+### Rollup:
 
-module.exports = {
-  processSettings: {
-    esBuild: {
-      plugins: [
-        // Array of esbuild plugins to add (install in your root package.json)
-        // if `esBuild.overridePlugins` is set to true, this array will replace the default bldr array.
-        // if not, then these will be added after bldrs default plugin set. See Processing documentation below
-      ],
-      overridePlugins: false, // set to true to override default bldr plugins
-      esBuild: require('esbuild'), // overrides bldr version of esbuild. Default: null
+```js
+import {bldrConfig} from '@bluecadet/bldr/config';
+
+export default bldrConfig({
+  rollup: {
+    useBabel: false, // set to true if babel should be ran (default: true)
+    babelPluginOptions: {
+      // see @rollup/plugin-babel options at https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers)
+      // default: { babelHelpers: 'bundled' }
     },
-    rollup: {
-      useBabel: false, // set to true if babel should be ran (default: false)
-      useTerser: true,  // set to false if terser should not be ran (default: true)
-      babelPluginOptions: {
-        // see @rollup/plugin-babel options at https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers)
-        // default: { babelHelpers: 'bundled' }
-      },
-      useSWC: false, // set to true if SWC should not be ran (default: false)
-      swcOptions: {
-        // see SWC Configuration at https://swc.rs/docs/configuration/swcrc
-        // default: {}
-      }
-      inputOptions: {
-        // see rollups inputOptions object at https://rollupjs.org/guide/en/#inputoptions-object
-        // `file` will automatically be added, so no need to add here
-        // default: {}
-        // if using babel, set to { external: [/@babel\/runtime/] }
-      },
-      inputPlugins: [
-        // array of rollup input plugins.
-        // if `rollup.overrideInputPlugins` is set to true, this array will replace the default bldr array.
-        // if not, then these will be added after bldrs default input plugin set. See Processing documentation below
-      ],
-      overrideInputPlugins: false, // set to true to override default bldr plugins
-      outputOptions: {
-        // see rollups outputOptions object at https://rollupjs.org/guide/en/#outputoptions-object
-        // `file` will automatically be added, so no need to add here
-      },
-      outputPlugins: [
-        // array of rollup output plugins.
-        // if `rollup.overrideOutputPlugins` is set to true, this array will replace the default bldr array.
-        // if not, then these will be added after bldrs default plugin set. See Processing documentation below
-      ],
-      overrideOutputPlugins: false, // set to true to override default bldr plugins
-      rollup: require('rollup') // if you wish to use a specific version of rollup, you can require it here. Default: null
-    }
-  }
-}
-```
-
-### EsBuild
-```js
-
-module.exports = {
-  processSettings: {
-    esBuild: {
-      plugins: [
-        // Array of esbuild plugins to add (install in your root package.json)
-        // if `esBuild.overridePlugins` is set to true, this array will replace the default bldr array.
-        // if not, then these will be added after bldrs default plugin set. See Processing documentation below
-      ],
-      overridePlugins: false, // set to true to override default bldr plugins
-    }
-  }
-}
-```
-
-### Rollup
-```js
-
-module.exports = {
-  processSettings: {
-    rollup: {
-      useBabel: false, // set to true if babel should be ran (default: false)
-      useTerser: true,  // set to false if terser should not be ran (default: true)
-      babelPluginOptions: {
-        // see @rollup/plugin-babel options at https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers)
-        // default: { babelHelpers: 'bundled' }
-      },
-      useSWC: false, // set to true if SWC should not be ran (default: false)
-      swcOptions: {
-        // see SWC Configuration at https://swc.rs/docs/configuration/swcrc
-        // default: {}
-      }
-      inputOptions: {
-        // see rollups inputOptions object at https://rollupjs.org/guide/en/#inputoptions-object
-        // `file` will automatically be added, so no need to add here
-        // default: {}
-        // if using babel, set to { external: [/@babel\/runtime/] }
-      },
-      inputPlugins: [
-        // array of rollup input plugins.
-        // if `rollup.overrideInputPlugins` is set to true, this array will replace the default bldr array.
-        // if not, then these will be added after bldrs default input plugin set. See Processing documentation below
-      ],
-      overrideInputPlugins: false, // set to true to override default bldr plugins
-      outputOptions: {
-        // see rollups outputOptions object at https://rollupjs.org/guide/en/#outputoptions-object
-        // `file` will automatically be added, so no need to add here
-      },
-      outputPlugins: [
-        // array of rollup output plugins.
-        // if `rollup.overrideOutputPlugins` is set to true, this array will replace the default bldr array.
-        // if not, then these will be added after bldrs default plugin set. See Processing documentation below
-      ],
-      overrideOutputPlugins: false, // set to true to override default bldr plugins
-      rollup: require('rollup') // if you wish to use a specific version of rollup, you can require it here. Default: null
-    }
-  }
-}
-```
-
-### Browsersync
-```js
-
-module.exports = {
-  processSettings: {
-    browsersync: {
-      disable: false, // set to true to prevent browsersync from instatiating in watch env. Default: true
+    useSWC: false, // set to true if SWC should not be ran (default: false)
+    swcPluginOptions: {
+      // see SWC Configuration at https://swc.rs/docs/configuration/swcrc
+      // default: {}
     },
+    useTerser: true,  // set to false if terser should not be ran (default: true)
+    terserOptions: {} // Options to pass to terser
+    sdcOptions: {
+      bundle: true, // set to false to prevent rollup from processing SDC files
+      minify: true, // set to false to prevent js files from minifying (default: value of `useTerser`)
+      format: 'es' // customize the format of the processed files
+    }
+    inputOptions: {
+      // see rollups inputOptions object at https://rollupjs.org/guide/en/#inputoptions-object
+      // `file` will automatically be added, so no need to add here
+      // default: {}
+      // if using babel, set to { external: [/@babel\/runtime/] }
+    },
+    inputPlugins: [
+      // array of rollup input plugins.
+      // if `rollup.overrideInputPlugins` is set to true, this array will replace the default bldr array.
+      // if not, then these will be added after bldrs default input plugin set. See Processing documentation below
+    ],
+    overrideInputPlugins: false, // set to true to override default bldr plugins
+    outputOptions: {
+      // see rollups outputOptions object at https://rollupjs.org/guide/en/#outputoptions-object
+      // `file` will automatically be added, so no need to add here
+    },
+    outputPlugins: [
+      // array of rollup output plugins.
+      // if `rollup.overrideOutputPlugins` is set to true, this array will replace the default bldr array.
+      // if not, then these will be added after bldrs default plugin set. See Processing documentation below
+    ],
+    overrideOutputPlugins: false, // set to true to override default bldr plugins
   }
-}
+});
+```
+
+### EsBuild:
+
+```js
+import {bldrConfig} from '@bluecadet/bldr/config';
+
+export default bldrConfig({
+  esBuild: {
+    plugins: [
+      // Array of esbuild plugins to add (install in your root package.json)
+    ],
+    overridePlugins: false, // set to true to override default bldr plugins (bldr does not currently use any esbuild plugins)
+  },
+})
+```
+
+### EsLint
+```js
+import {bldrConfig} from '@bluecadet/bldr/config';
+
+export default bldrConfig({
+  eslint: {
+    useEslint: true, // whether or not to run eslint
+    options: {}, // [eslint options](https://eslint.org/docs/latest/integrate/nodejs-api#-new-eslintoptions)
+    forceBuildIfError: true, // if set to false, an error will be thrown and process will exit if lint encounters an error
+  },
+})
+```
+
+**NOTE:** To keep eslint versions inline with bldr, you can create a `eslint.config.js` file and import/export defineConfig from bldr's eslint version:
+
+```js
+import { defineConfig } from "@bluecadet/bldr/providers/eslint/config";
+
+export default defineConfig([
+  ...
+]);
+```
+
+### StyleLint
+```js
+import {bldrConfig} from '@bluecadet/bldr/config';
+
+export default bldrConfig({
+  stylelint: {
+    useStyleLint: true, // whether or not to run stylelint
+    forceBuildIfError: true, // if set to false, an error will be thrown and process will exit if lint encounters an error
+  },
+})
 ```
 
 ### Sass
 ```js
+import {bldrConfig} from '@bluecadet/bldr/config';
 
-module.exports = {
-  processSettings: {
-    sass: {
-      sassProcessor: null, // defaults to node sass. You can require dart-sass here if preferred
-      importer: null,      // defaults to node-sass-magic-importer
-      importerOpts: {},    // options for the importer, defaults to empty object
-    },
-  }
-}
+export default bldrConfig({
+  sassConfig: {
+    useLegacy: false // whether or not to use the legacy api
+  },
+})
+```
+
+### Browsersync
+```js
+import {bldrConfig} from '@bluecadet/bldr/config';
+
+export default bldrConfig({
+  browsersync: {
+    disable: false, // set to true to prevent browsersync from instatiating in watch env. Default: true
+    instanceName: 'string' // useful if you ever need to access the browsersync access externally
+  },
+})
 ```
 
 
@@ -619,14 +543,11 @@ npm i --save-dev @babel/preset-env core-js
 ```
 
 
-### Browsersync Config
-
-If you would like to run watch mode without browsersync, you can disable broswersync by adding `processSettings: {browsersync: {disable: true}}` to your bldrConfig.js file.
 
 
 ### Local Config
 
-Create a local config file by running `bldr init` or creating a file in root named `bldrConfigLocal.js`.
+Create a local config file by running `bldr init` or creating a file in root named `bldr.local.config.js`.
 
 Local config is primarily used to store browsersync settings. As such, it is not a file that needs to be tracked.
 
@@ -653,181 +574,16 @@ Default Rollup output plugins:
 - none
 
 
-## Complete Config Example:
-
-```js
-
-
-module.exports = {
-  // ----------------------- BASIC CONFIG ----------------------- //
-  css: {
-    src: 'path/to/css/files/**/*.css',
-    dist: 'path/to/css/destination',
-    watch: ['paths/to/watch/css/files/**/*.css'],
-  },
-  // !-- OR IF MULTIPLE SOURCES
-  // css: [
-  //   {
-  //     src: 'path/to/css/files/**/*.css',
-  //     dist: 'path/to/css/destination',
-  //     watch: ['paths/to/watch/css/files/**/*.css'],
-  //   },
-  //   {
-  //     src: 'path/to/css/files/2/**/*.css',
-  //     dist: 'path/to/css/destination/2',
-  //     watch: ['paths/to/watch/css/files/2/**/*.css'],
-  //   }
-  // ],
-  // --!
-  sass: {
-    src: 'path/to/sass/files/**/*.scss',
-    dist: 'path/to/sass/destination',
-    watch: ['paths/to/watch/sass/files/**/*.scss'],
-  },
-  // !-- OR IF MULTIPLE SOURCES
-  // sass: [
-  //   {
-  //     src: 'path/to/sass/files/**/*.scss',
-  //     dist: 'path/to/sass/destination',
-  //     watch: ['paths/to/watch/sass/files/**/*.scss'],
-  //   },
-  //   {
-  //     src: 'path/to/sass/files/2/**/*.scss',
-  //     dist: 'path/to/sass/destination/2',
-  //     watch: ['paths/to/watch/sass/files/2/**/*.scss'],
-  //   }
-  // ],
-  // --!
-  js: {
-    src: 'path/to/js/files/**/*.js',
-    dist: 'path/to/js/destination',
-    watch: ['paths/to/watch/js/files/**/*.js'],
-  },
-  // !-- OR IF MULTIPLE SOURCES
-  // js: [
-  //   {
-  //     src: 'path/to/js/files/**/*.js',
-  //     dist: 'path/to/js/destination',
-  //     watch: ['paths/to/watch/js/files/**/*.js'],
-  //   },
-  //   {
-  //     src: 'path/to/js/files/2',
-  //     dist: 'path/to/js/destination/2',
-  //     watch: ['paths/to/watch/js/files/2/**/*.js'],
-  //   }
-  // ],
-  // --!
-  images: {
-    src: 'path/to/image/files/*.{jpg,JPG,jpeg,JPEG,gif,png,svg}',
-    dist: 'path/to/image/files/destination',
-    watch: ['paths/to/watch/image/files/**/*'],
-  },
-  // !-- OR IF MULTIPLE SOURCES
-  // images: [
-  //   {
-  //     src: 'path/to/image/files/*.{jpg,JPG,jpeg,JPEG,gif,png,svg}',
-  //     dist: 'path/to/image/files/destination',
-  //     watch: ['paths/to/watch/image/files/**/*'],
-  //   },
-  //   {
-  //     src: 'path/to/image/files/2/*.{jpg,JPG,jpeg,JPEG,gif,png,svg}',
-  //     dist: 'path/to/image/files/destination/2',
-  //     watch: ['paths/to/watch/image/files/2/**/*'],
-  //   },
-  // ],
-  // --!
-  watchReload: [
-    'some/path/to/watch/**/*.php',
-    'some/path/to/watch/**/*.cjs',
-    'some/path/to/watch/**/*.twig',
-    'some/path/to/watch/**/*.html',
-  ],
-  env: { // Optional - add custom enviornments (run with `-e=SampleEnv` or `env=SampleEnv)
-    SampleEnv: { // name of env in cli `env=` parameter
-      css: { ... },    // Can also be array. Same as basic css config above.
-      js: { ... },     // Can also be array. Same as basic js config above.
-      images: { ... }, // Can also be array. Same as basic image config above.
-      watchReload: []  // Same as basic watchReload config above.
-    }
-  },
-  // --------------------- END BASIC CONFIG --------------------- //
+Default EsBuild Plugins:
+- none
 
 
-  // ---------- SEPERATE DEV/BUILD ENVIRORNMENT CONFIG ---------- //
-  // ---- IF USING DEV/BUILD CONFIG, DO NOT USE BASIC CONFIG ---- //
-  dev: {
-    // see basic config above
-  },
-  build: {
-    // see basic config above
-  },
-  // -------- END SEPERATE DEV/BUILD ENVIRORNMENT CONFIG -------- //
 
-  // -------------------- PROCESS CONFIG -------------------- //
-  processSettings: {
-
-    // -------------------- BROWSERSYNC CONFIG -------------------- //
-    browsersync: {
-      disable: false, // set to true to prevent browsersync from instatiating in watch env. Default: true
-    },
-
-
-    // ---------------------- ESBUILD CONFIG --------------------- //
-    esBuild: {
-      plugins: [
-        // Array of esbuild plugins to add (install in your root package.json)
-        // if `esBuild.overridePlugins` is set to true, this array will replace the default bldr array.
-        // if not, then these will be added after bldrs default plugin set. See Processing documentation below
-      ],
-      overridePlugins: false, // set to true to override default bldr plugins
-      esBuild: require('esbuild'), // overrides bldr version of esbuild. Default: null
-    },
-
-
-    // ---------------------- ROLLUP CONFIG --------------------- //
-    rollup: {
-      useBabel: true, // set to false if babel should not be ran. Default: true
-      useTerser: true,  // set to false if terser should not be ran. Default: true
-      babelPluginOptions: {
-        // see @rollup/plugin-babel options at https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers)
-        // default: { babelHelpers: 'bundled' }
-      },
-      inputOptions: {
-        // see rollups inputOptions object at https://rollupjs.org/guide/en/#inputoptions-object
-        // `file` will automatically be added, so no need to add here
-        // default: { external: [/@babel\/runtime/] }
-      },
-      inputPlugins: [
-        // array of rollup input plugins.
-        // if `rollup.overrideInputPlugins` is set to true, this array will replace the default bldr array.
-        // if not, then these will be added after bldrs default input plugin set. See Processing documentation below
-      ],
-      overrideInputPlugins: false, // set to true to override default bldr plugins
-      outputOptions: {
-        // see rollups outputOptions object at https://rollupjs.org/guide/en/#outputoptions-object
-        // `file` will automatically be added, so no need to add here
-      },
-      outputPlugins: [
-        // array of rollup output plugins.
-        // if `rollup.overrideOutputPlugins` is set to true, this array will replace the default bldr array.
-        // if not, then these will be added after bldrs default plugin set. See Processing documentation below
-      ],
-      overrideOutputPlugins: false, // set to true to override default bldr plugins
-      rollup: require('rollup') // if you wish to use a specific version of rollup, you can require it here. Default: null
-    },
-
-    // ---------------------- ESLint CONFIG --------------------- //
-    eslint: {
-      omit: null,              // set to true to skip eslint
-      forceBuildIfError: null, // set to true to force builds to run if linting errors are found
-    },
-
-    // ---------------------- SASS CONFIG --------------------- //
-    sass: {
-      sassProcessor: null, // defaults to node sass. You can require [dart-sass](https://www.npmjs.com/package/sass) here if preferred
-      importer: null,      // defaults to [node-sass-magic-importer](https://www.npmjs.com/package/node-sass-magic-importer)
-      importerOpts: {},    // options for the importer, defaults to empty object
-    },
-  }
-}
-```
+## Providers
+- rollup
+- esbuild
+- eslint
+- postcss
+- sass
+- stylelint
+- browsersync

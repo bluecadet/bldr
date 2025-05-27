@@ -1,5 +1,5 @@
 import { CommandSettings } from "./@types/commandSettings";
-import { BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, ConfigSettings, LocalConfigSettings, ProcessAsset, ProcessKey } from "./@types/configTypes";
+import { BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, ConfigSettings, LocalConfigSettings, ProcessKey } from "./@types/configTypes";
 import { BldrSettings } from "./BldrSettings.js";
 export declare class BldrConfig {
     #private;
@@ -19,7 +19,7 @@ export declare class BldrConfig {
     bldrSettings: BldrSettings;
     /**
      * @property boolean
-     * Settings from CLI input
+     * If running in `dev` mode
      */
     isDev: boolean;
     /**
@@ -29,7 +29,7 @@ export declare class BldrConfig {
     userConfig: ConfigSettings;
     /**
      * @property null|object
-     * Config from projects bldrConfigLocal.js
+     * Local config
      */
     localConfig: null | LocalConfigSettings;
     /**
@@ -54,33 +54,9 @@ export declare class BldrConfig {
     chokidarIgnorePathsArray: string[];
     /**
      * @property null|array
-     * Files for chokidar to watch
-     */
-    watchAssetArray: string[];
-    /**
-     * @property null|array
-     * Files for chokidar to watch
+     * File extensions for chokidar to reload
      */
     reloadExtensions: string[];
-    /**
-     * @property null|object
-     * Src/Dest/Watch for each process
-     */
-    sdcProcessAssetGroups: any;
-    /**
-     * @property null|object
-     * SDC extension prefix
-     */
-    /**
-     * @property null|string
-     * Path to the SDC directory
-     */
-    sdcPath: string;
-    /**
-     * @property null|string
-     * Path to the SDC directory
-     */
-    sdcAssetSubDirectory: string;
     /**
      * @property boolean
      * If Single Directory Component actions should be ran
@@ -88,25 +64,67 @@ export declare class BldrConfig {
     isSDC: boolean;
     /**
      * @property null|object
-     * Settings for Single Directory Component actions
+     * Settings for single component directory processes
      */
-    sdcConfig: any;
-    sdcLocalPath: string | null;
-    sdcLocalPathTest: string | null;
+    sdcProcessAssetGroups: any;
+    /**
+     * @property null|string
+     * Path to the SDC directory
+     */
+    sdcPath: string;
+    /**
+     * @property null|string
+     * Path to the SDC subdirectory
+     */
+    sdcAssetSubDirectory: string;
+    /**
+     * @property null|string
+     * Environment key from CLI args
+     */
     envKey: string | null;
+    /**
+     * @property null|object
+     * User defined config for Sass processing
+     */
     sassConfig: BldrSassSettings | null;
+    /**
+     * @property null|object
+     * User defined config for EsBuild processing
+     */
     esBuildConfig: BldrEsBuildSettings | null;
+    /**
+     * @property null|object
+     * User defined config for Rollup processing
+     */
     rollupConfig: BldrRollupSettings | null;
+    /**
+     * @property null|object
+     * User defined config for EsLint processing
+     */
     eslintConfig: BldrEsLintSettings | null;
+    /**
+     * @property null|object
+     * User defined config for StyleLint processing
+     */
     stylelintConfig: BldrStyleLintSettings | null;
     /**
+     * @description BldrConfig constructor
+     *
+     * This class is a singleton and should only be instantiated once.
+     * It is used to load the user config file and create the process asset config.
+     * It also builds the provider config based on the user config.
+     *
      * @param commandSettings {CommandSettings} options from the cli
      * @param isDev {boolean} if the command is run in dev mode
+     *
+     * @example
+     * const bldrConfig = new BldrConfig(commandSettings);
      */
     constructor(commandSettings: CommandSettings, isDev?: boolean);
-    getInstance(): BldrConfig;
     /**
-     * @description Initialize the config class
+     * @method initialize
+     * @description Initialize the BldrConfig class
+     * @returns {Promise<void>}
      */
     initialize(): Promise<void>;
     /**
@@ -115,14 +133,14 @@ export declare class BldrConfig {
      */
     addFileToAssetGroup(file: string, key: ProcessKey, isSDC?: boolean, dest?: string | null): Promise<void>;
     /**
-     * @description Create a src/dest object for a file to be processed
+     * @method rebuildConfig
+     * @description Rebuild the configuration based on the user config file
+     *
+     * This method will reset the asset groups, reload the user config,
+     * and rebuild the process and provider configurations.
+     *
+     * @returns {Promise<void>}
      */
-    createSrcDestObject(src: string, dest: string): ProcessAsset;
-    /**
-     * @method addChokidarWatchFile
-     * @description add a file to the watch path array
-     */
-    addChokidarWatchFile(watchPath: string): Promise<void>;
     rebuildConfig(): Promise<void>;
 }
 //# sourceMappingURL=BldrConfig.d.ts.map

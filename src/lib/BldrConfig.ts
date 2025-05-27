@@ -1,11 +1,9 @@
 import { CommandSettings } from "./@types/commandSettings";
 import { AssetObject, BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, ConfigSettings, LocalConfigSettings, ProcessAsset, ProcessKey } from "./@types/configTypes";
 import { BldrSettings } from "./BldrSettings.js";
-import * as path from "path"
+import path from "node:path";
 import { logAction, logError, logWarn } from "./utils/loggers.js";
-
 import { createRequire } from 'node:module';
-import { unglobPath } from "./utils/unglobPath.js";
 
 export class BldrConfig {
   
@@ -28,7 +26,7 @@ export class BldrConfig {
 
   /**
    * @property boolean
-   * Settings from CLI input
+   * If running in `dev` mode
    */
   public isDev!: boolean;
 
@@ -40,7 +38,7 @@ export class BldrConfig {
 
   /**
    * @property null|object
-   * Config from projects bldrConfigLocal.js
+   * Local config
    */
   public localConfig: null | LocalConfigSettings = null;
 
@@ -56,7 +54,6 @@ export class BldrConfig {
    */
   public processAssetGroups:any = {};
 
-
   /**
    * @property null|array
    * Files for chokidar to watch
@@ -71,41 +68,9 @@ export class BldrConfig {
 
   /**
    * @property null|array
-   * Files for chokidar to watch
-   */
-  public watchAssetArray: string[] = [];
-
-  /**
-   * @property null|array
-   * Files for chokidar to watch
+   * File extensions for chokidar to reload
    */
   public reloadExtensions: string[] = [];
-
-  /**
-   * @property null|object
-   * Src/Dest/Watch for each process
-   */
-  public sdcProcessAssetGroups: any = {};
-
-  /**
-   * @property null|object
-   * SDC extension prefix
-   */
-  // public extPrefix!: string;
-
-  /**
-   * @property null|string
-   * Path to the SDC directory
-   */
-  public sdcPath!: string;
-
-
-  /**
-   * @property null|string
-   * Path to the SDC directory
-   */
-  public sdcAssetSubDirectory!: string;
-  
 
   /**
    * @property boolean
@@ -115,20 +80,56 @@ export class BldrConfig {
 
   /**
    * @property null|object
-   * Settings for Single Directory Component actions
+   * Settings for single component directory processes
    */
-  public sdcConfig: any = null;
+  public sdcProcessAssetGroups: any = {};
 
+  /**
+   * @property null|string
+   * Path to the SDC directory
+   */
+  public sdcPath!: string;
 
-  public sdcLocalPath: string | null = null;
-  public sdcLocalPathTest: string | null = null;
+  /**
+   * @property null|string
+   * Path to the SDC subdirectory
+   */
+  public sdcAssetSubDirectory!: string;
+  
+  /**
+   * @property null|string
+   * Environment key from CLI args
+   */
   public envKey: string | null = null;
 
-
+  /**
+   * @property null|object
+   * User defined config for Sass processing
+   */
   public sassConfig: BldrSassSettings | null = null;
+  
+  /**
+   * @property null|object
+   * User defined config for EsBuild processing
+   */
   public esBuildConfig: BldrEsBuildSettings | null = null;
+  
+  /**
+   * @property null|object
+   * User defined config for Rollup processing
+   */
   public rollupConfig: BldrRollupSettings | null = null;
+  
+  /**
+   * @property null|object
+   * User defined config for EsLint processing
+   */
   public eslintConfig: BldrEsLintSettings | null = null;
+  
+  /**
+   * @property null|object
+   * User defined config for StyleLint processing
+   */
   public stylelintConfig: BldrStyleLintSettings | null = null;
 
   /**
@@ -138,9 +139,19 @@ export class BldrConfig {
   #fg: any = null;
 
 
+
   /**
+   * @description BldrConfig constructor
+   * 
+   * This class is a singleton and should only be instantiated once.
+   * It is used to load the user config file and create the process asset config.
+   * It also builds the provider config based on the user config.
+   * 
    * @param commandSettings {CommandSettings} options from the cli
    * @param isDev {boolean} if the command is run in dev mode
+   * 
+   * @example
+   * const bldrConfig = new BldrConfig(commandSettings);
    */
   constructor(commandSettings: CommandSettings, isDev: boolean = false) {
     if (BldrConfig._instance) {
@@ -149,29 +160,21 @@ export class BldrConfig {
 
     BldrConfig._instance = this;
 
+    const require     = createRequire(import.meta.url);
+
     this.bldrSettings = new BldrSettings();
-    this.cliArgs = commandSettings;
-    this.isDev = isDev;
-
-    const require = createRequire(import.meta.url);
-    this.#fg      = require('fast-glob');
+    this.cliArgs      = commandSettings;
+    this.isDev        = isDev;
+    this.#fg          = require('fast-glob');
   }
-
-
-  getInstance() {
-    if (BldrConfig._instance) {
-      return BldrConfig._instance;
-    } else {
-      throw new Error("BldrConfig instance not initialized");
-    }
-  }
-
 
 
   /**
-   * @description Initialize the config class
+   * @method initialize
+   * @description Initialize the BldrConfig class
+   * @returns {Promise<void>}
    */
-  async initialize() {
+  async initialize(): Promise<void> {
     // Get local user config
     await this.#loadConfig();
 
@@ -185,14 +188,15 @@ export class BldrConfig {
 
 
   /**
+   * @method loadConfig
    * @description Load the user config file and local config file
+   * @returns {Promise<void>}
+   * @private
    */
-  async #loadConfig() {
-
-    // Load User Config
-    const configFile = path.join(process.cwd(), this.bldrSettings.configFileName);
+  async #loadConfig(): Promise<void> {
+    // Load bldr config file
     try {
-      const config = await import(configFile);  
+      const config = await import(this.bldrSettings.configFilePath);  
       this.userConfig = config.default;
     } catch (error) {
       console.log(error);
@@ -200,9 +204,8 @@ export class BldrConfig {
     }
 
     // Load Local User Config
-    const localConfigFile = path.join(process.cwd(), this.bldrSettings.localConfigFileName);
     try {
-      const localConfig = await import(localConfigFile);  
+      const localConfig = await import(this.bldrSettings.localConfigFilePath);  
       this.localConfig = localConfig.default;
     } catch (error) {
       if ( this.isDev && !this.userConfig.browsersync?.disable ) {
@@ -217,8 +220,10 @@ export class BldrConfig {
   /**
    * @method createProcessConfig
    * @description Build the process asset config based on the user config
+   * @return {Promise<void>}
+   * @private
    */
-  async #createProcessConfig() {
+  async #createProcessConfig(): Promise<void> {
 
     await this.#setProcessSrc();
     
@@ -253,8 +258,10 @@ export class BldrConfig {
   /**
    * @method setProcessSrc
    * @description Set the process source based on the CLI args
+   * @return {Promise<void>}
+   * @private
    */
-  async #setProcessSrc() {
+  async #setProcessSrc(): Promise<void> {
 
     if ( this.cliArgs?.env ) {
       if ( this.userConfig?.env?.[this.cliArgs.env] ) {
@@ -274,8 +281,11 @@ export class BldrConfig {
   /**
    * @method handleProcessGroup
    * @description Handle the process group based on the user config
+   * @param key {ProcessKey} process key to handle
+   * @return {Promise<void>}
+   * @private
    */
-  async #handleProcessGroup(key: ProcessKey) {
+  async #handleProcessGroup(key: ProcessKey): Promise<void> {
     
     if ( !this.processSrc?.[key] ) {
       return;
@@ -311,32 +321,24 @@ export class BldrConfig {
       dest = path.dirname(file);
     }
 
-    group[key][localFile] = this.createSrcDestObject(file, dest);
+    group[key][localFile] = this.#createSrcDestObject(file, dest);
   }
 
 
 
   /**
+   * @method createSrcDestObject
    * @description Create a src/dest object for a file to be processed
+   * @param src {string} source file path
+   * @param dest {string} destination file path
+   * @return {ProcessAsset} object with src and dest properties
+   * @private
    */
-  createSrcDestObject(src: string, dest: string): ProcessAsset {
+  #createSrcDestObject(src: string, dest: string): ProcessAsset {
     return {
       src: src, //path.join(process.cwd(), src),
       dest: dest, // path.join(process.cwd(), dest),
     };
-  }
-
-
-
-  /**
-   * @method addChokidarWatchFile
-   * @description add a file to the watch path array
-   */
-  async addChokidarWatchFile(watchPath: string) {
-    const unglobbedPath = unglobPath(watchPath);
-    if ( !this.chokidarWatchArray.includes(unglobbedPath) ) {
-      this.chokidarWatchArray.push(unglobbedPath);
-    }
   }
   
 
@@ -344,16 +346,16 @@ export class BldrConfig {
   /**
    * @method handleSDC
    * @description Handle the Single Directory Component process based on the user config
+   * @return {Promise<void>}
+   * @private
    */
-  async #handleSDC() {
+  async #handleSDC(): Promise<void> {
     if ( !this.userConfig.sdc?.directory ) {
       logError('BldrConfig', 'No directory key found for `sdc`', {throwError: true, exit: true});
       return;
     }
 
     this.sdcPath              = path.join(process.cwd(), this.userConfig.sdc.directory);
-    this.sdcLocalPath         = this.userConfig.sdc.directory;
-    this.sdcLocalPathTest     = this.userConfig.sdc.directory.startsWith('./') ? this.userConfig.sdc.directory.replace('./', '') : this.userConfig.sdc.directory;
     this.sdcAssetSubDirectory = this.userConfig.sdc?.assetSubDirectory || 'assets';
     this.isSDC                = true;
 
@@ -376,8 +378,12 @@ export class BldrConfig {
   /**
    * @method handleSDCType
    * @description add sdc file based on given extension key
+   * @param ext {string} file extension to look for
+   * @param key {ProcessKey} process key to add the file to
+   * @return {Promise<void>}
+   * @private
    */
-  async #handleSDCType(ext: string, key: ProcessKey) {
+  async #handleSDCType(ext: string, key: ProcessKey): Promise<void> {
     const files = await this.#fg.sync([`${this.sdcPath}/**/**/${this.sdcAssetSubDirectory}/*.${ext}`]);
     if ( files && files.length > 0 ) {
       for (const file of files) {
@@ -392,8 +398,11 @@ export class BldrConfig {
   /**
    * @method buildProviderConfig
    * @description Build the provider config based on the user config
+   * @param {void}
+   * @return {Promise<void>}
+   * @private
    */
-  async #buildProviderConfig() {
+  async #buildProviderConfig(): Promise<void> {
 
     if ( this.processAssetGroups?.js || this.sdcProcessAssetGroups?.js ) {
       if ( this.isDev ) {
@@ -415,7 +424,13 @@ export class BldrConfig {
   }
 
 
-  async #setEsBuildConfig() {
+  /**
+   * @method setEsBuildConfig
+   * @description Set the EsBuild config based on the user config and bldr defaults
+   * @return {Promise<void>}
+   * @private
+   */
+  async #setEsBuildConfig(): Promise<void> {
     // EsBuild Config
     this.esBuildConfig = {
       plugins: [],
@@ -428,7 +443,14 @@ export class BldrConfig {
   }
 
 
-  async #setRollupConfig() {
+
+  /**
+   * @method setRollupConfig
+   * @description Set the Rollup config based on the user config and bldr defaults
+   * @return {Promise<void>}
+   * @private
+   */
+  async #setRollupConfig(): Promise<void> {
     this.rollupConfig = {
       useBabel: true,
       babelPluginOptions: { babelHelpers: 'bundled' },
@@ -455,7 +477,14 @@ export class BldrConfig {
   }
 
 
-  async #setEslintConfig() {
+
+  /**
+   * @method setEslintConfig
+   * @description Set the EsLint config based on the user config and bldr defaults
+   * @return {Promise<void>}
+   * @private
+   */
+  async #setEslintConfig(): Promise<void> {
     this.eslintConfig = {
       useEslint: true,
       options: {},
@@ -468,18 +497,32 @@ export class BldrConfig {
   }
 
 
-  async #setSassConfig() {
+
+  /**
+   * @method setSassConfig
+   * @description Set the Sass config based on the user config and bldr defaults
+   * @return {Promise<void>}
+   * @private
+   */
+  async #setSassConfig(): Promise<void> {
     this.sassConfig = {
       useLegacy: false,
     };
 
-    if ( this.userConfig?.sass ) {
-      this.sassConfig = {...this.sassConfig, ...this.userConfig.sass};
+    if ( this.userConfig?.sassConfig ) {
+      this.sassConfig = {...this.sassConfig, ...this.userConfig.sassConfig};
     }
   }
 
 
-  async #setStylelintConfig() {
+
+  /**
+   * @method setStylelintConfig
+   * @description Set the StyleLint config based on the user config and bldr defaults
+   * @return {Promise<void>}
+   * @private
+   */
+  async #setStylelintConfig(): Promise<void> {
     this.stylelintConfig = {
       useStyleLint: true,
       forceBuildIfError: true,
@@ -491,7 +534,17 @@ export class BldrConfig {
   }
 
 
-  async rebuildConfig() {
+
+  /**
+   * @method rebuildConfig
+   * @description Rebuild the configuration based on the user config file
+   * 
+   * This method will reset the asset groups, reload the user config,
+   * and rebuild the process and provider configurations.
+   * 
+   * @returns {Promise<void>}
+   */
+  async rebuildConfig(): Promise<void> {
     const start = Date.now();
     logAction('bldr', '...rebuilding configuration...');
     

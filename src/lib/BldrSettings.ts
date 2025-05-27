@@ -6,16 +6,65 @@ import { CommandSettings } from './@types/commandSettings';
 
 
 export class BldrSettings {
-  // Define the properties of the BldrSettings class
+  /**
+   * @description Singleton instance of BldrSettings
+   */
   public static _instance: BldrSettings;
+
+  /**
+   * @description Version of the bldr package
+   */
   public version!: string;
+
+  /**
+   * @description Root directory of the bldr package
+   */
   public bldrRoot!: string;
+
+  /**
+   * @description Name of the user config file
+   */
   public configFileName!: string;
+
+  /**
+   * @description Path to the user config file
+   */
+  public configFilePath!: string;
+
+  /**
+   * @description Name of the user local config file
+   */
   public localConfigFileName!: string;
+
+  /**
+   * @description Path to the user local config file
+   */
+  public localConfigFilePath!: string;
+
+  /**
+   * @description Root directory of the project
+   */
   public root!: string;
+
+  /**
+   * @description List of allowed process keys
+   * @default ['css', 'sass', 'js']
+   */
   public allowedProcessKeys!: string[];
+  
+  /**
+   * @description Settings for the command line interface
+   */
   public commandSettings!: CommandSettings;
+  
+  /**
+   * @description Flag indicating if the current environment is development
+   */
   public isDev!: boolean;
+  
+  /**
+   * @description Syntax rules for postcss
+   */
   public syntax!: {
     rules: { test: RegExp; extract?: string; lang?: string }[];
     css: any;
@@ -36,12 +85,32 @@ export class BldrSettings {
     const bldrPackagePath = path.join(bldrRoot, 'package.json');
     const bldrPackageJson = require(bldrPackagePath);
 
-    this.version = bldrPackageJson.version;
-    this.bldrRoot = bldrRoot;
-    this.configFileName = 'bldrConfig.js';
-    this.localConfigFileName = 'bldrConfigLocal.js';
-    this.root = process.cwd();
-    this.allowedProcessKeys = ['css', 'sass', 'js'];
+    // Determine User Config File
+    let configFileName = 'bldrConfig.js';
+    let configFilePath = path.join(process.cwd(), configFileName);
+
+    if ( !fs.existsSync(configFilePath) ) {
+      configFileName = 'bldr.config.js';
+      configFilePath = path.join(process.cwd(), configFileName);
+    }
+
+    // Determine User Local Config File
+    let localConfigFileName = 'bldrConfigLocal.js';
+    let localConfigFilePath = path.join(process.cwd(), localConfigFileName);
+
+    if ( !fs.existsSync(localConfigFilePath) ) {
+      localConfigFileName = 'bldr.local.config.js';
+      localConfigFilePath = path.join(process.cwd(), localConfigFileName);
+    }
+
+    this.version             = bldrPackageJson.version;
+    this.bldrRoot            = bldrRoot;
+    this.configFileName      = configFileName;
+    this.configFilePath      = configFilePath;
+    this.localConfigFileName = localConfigFileName;
+    this.localConfigFilePath = localConfigFilePath;
+    this.root                = process.cwd();
+    this.allowedProcessKeys  = ['css', 'sass', 'js'];
     
     this.syntax = require('postcss-syntax')({
       rules: [

@@ -18,22 +18,30 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _BldrConfig_instances, _BldrConfig_fg, _BldrConfig_loadConfig, _BldrConfig_createProcessConfig, _BldrConfig_setProcessSrc, _BldrConfig_handleProcessGroup, _BldrConfig_handleSDC, _BldrConfig_handleSDCType, _BldrConfig_buildProviderConfig, _BldrConfig_setEsBuildConfig, _BldrConfig_setRollupConfig, _BldrConfig_setEslintConfig, _BldrConfig_setSassConfig, _BldrConfig_setStylelintConfig;
+var _BldrConfig_instances, _BldrConfig_fg, _BldrConfig_loadConfig, _BldrConfig_createProcessConfig, _BldrConfig_setProcessSrc, _BldrConfig_handleProcessGroup, _BldrConfig_createSrcDestObject, _BldrConfig_handleSDC, _BldrConfig_handleSDCType, _BldrConfig_buildProviderConfig, _BldrConfig_setEsBuildConfig, _BldrConfig_setRollupConfig, _BldrConfig_setEslintConfig, _BldrConfig_setSassConfig, _BldrConfig_setStylelintConfig;
 import { BldrSettings } from "./BldrSettings.js";
-import * as path from "path";
+import path from "node:path";
 import { logAction, logError, logWarn } from "./utils/loggers.js";
 import { createRequire } from 'node:module';
-import { unglobPath } from "./utils/unglobPath.js";
 export class BldrConfig {
     /**
+     * @description BldrConfig constructor
+     *
+     * This class is a singleton and should only be instantiated once.
+     * It is used to load the user config file and create the process asset config.
+     * It also builds the provider config based on the user config.
+     *
      * @param commandSettings {CommandSettings} options from the cli
      * @param isDev {boolean} if the command is run in dev mode
+     *
+     * @example
+     * const bldrConfig = new BldrConfig(commandSettings);
      */
     constructor(commandSettings, isDev = false) {
         _BldrConfig_instances.add(this);
         /**
          * @property null|object
-         * Config from projects bldrConfigLocal.js
+         * Local config
          */
         this.localConfig = null;
         /**
@@ -53,19 +61,9 @@ export class BldrConfig {
         this.chokidarIgnorePathsArray = [];
         /**
          * @property null|array
-         * Files for chokidar to watch
-         */
-        this.watchAssetArray = [];
-        /**
-         * @property null|array
-         * Files for chokidar to watch
+         * File extensions for chokidar to reload
          */
         this.reloadExtensions = [];
-        /**
-         * @property null|object
-         * Src/Dest/Watch for each process
-         */
-        this.sdcProcessAssetGroups = {};
         /**
          * @property boolean
          * If Single Directory Component actions should be ran
@@ -73,16 +71,38 @@ export class BldrConfig {
         this.isSDC = false;
         /**
          * @property null|object
-         * Settings for Single Directory Component actions
+         * Settings for single component directory processes
          */
-        this.sdcConfig = null;
-        this.sdcLocalPath = null;
-        this.sdcLocalPathTest = null;
+        this.sdcProcessAssetGroups = {};
+        /**
+         * @property null|string
+         * Environment key from CLI args
+         */
         this.envKey = null;
+        /**
+         * @property null|object
+         * User defined config for Sass processing
+         */
         this.sassConfig = null;
+        /**
+         * @property null|object
+         * User defined config for EsBuild processing
+         */
         this.esBuildConfig = null;
+        /**
+         * @property null|object
+         * User defined config for Rollup processing
+         */
         this.rollupConfig = null;
+        /**
+         * @property null|object
+         * User defined config for EsLint processing
+         */
         this.eslintConfig = null;
+        /**
+         * @property null|object
+         * User defined config for StyleLint processing
+         */
         this.stylelintConfig = null;
         /**
          * @property null|function
@@ -93,22 +113,16 @@ export class BldrConfig {
             return BldrConfig._instance;
         }
         BldrConfig._instance = this;
+        const require = createRequire(import.meta.url);
         this.bldrSettings = new BldrSettings();
         this.cliArgs = commandSettings;
         this.isDev = isDev;
-        const require = createRequire(import.meta.url);
         __classPrivateFieldSet(this, _BldrConfig_fg, require('fast-glob'), "f");
     }
-    getInstance() {
-        if (BldrConfig._instance) {
-            return BldrConfig._instance;
-        }
-        else {
-            throw new Error("BldrConfig instance not initialized");
-        }
-    }
     /**
-     * @description Initialize the config class
+     * @method initialize
+     * @description Initialize the BldrConfig class
+     * @returns {Promise<void>}
      */
     initialize() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -134,30 +148,18 @@ export class BldrConfig {
             if (!dest) {
                 dest = path.dirname(file);
             }
-            group[key][localFile] = this.createSrcDestObject(file, dest);
+            group[key][localFile] = __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_createSrcDestObject).call(this, file, dest);
         });
     }
     /**
-     * @description Create a src/dest object for a file to be processed
+     * @method rebuildConfig
+     * @description Rebuild the configuration based on the user config file
+     *
+     * This method will reset the asset groups, reload the user config,
+     * and rebuild the process and provider configurations.
+     *
+     * @returns {Promise<void>}
      */
-    createSrcDestObject(src, dest) {
-        return {
-            src: src, //path.join(process.cwd(), src),
-            dest: dest, // path.join(process.cwd(), dest),
-        };
-    }
-    /**
-     * @method addChokidarWatchFile
-     * @description add a file to the watch path array
-     */
-    addChokidarWatchFile(watchPath) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const unglobbedPath = unglobPath(watchPath);
-            if (!this.chokidarWatchArray.includes(unglobbedPath)) {
-                this.chokidarWatchArray.push(unglobbedPath);
-            }
-        });
-    }
     rebuildConfig() {
         return __awaiter(this, void 0, void 0, function* () {
             const start = Date.now();
@@ -177,10 +179,9 @@ export class BldrConfig {
 _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConfig_loadConfig = function _BldrConfig_loadConfig() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
-        // Load User Config
-        const configFile = path.join(process.cwd(), this.bldrSettings.configFileName);
+        // Load bldr config file
         try {
-            const config = yield import(configFile);
+            const config = yield import(this.bldrSettings.configFilePath);
             this.userConfig = config.default;
         }
         catch (error) {
@@ -188,9 +189,8 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
             logError('bldr', `Missing required ${this.bldrSettings.configFileName} file`, { throwError: true, exit: true });
         }
         // Load Local User Config
-        const localConfigFile = path.join(process.cwd(), this.bldrSettings.localConfigFileName);
         try {
-            const localConfig = yield import(localConfigFile);
+            const localConfig = yield import(this.bldrSettings.localConfigFilePath);
             this.localConfig = localConfig.default;
         }
         catch (error) {
@@ -256,6 +256,11 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
             }
         });
     });
+}, _BldrConfig_createSrcDestObject = function _BldrConfig_createSrcDestObject(src, dest) {
+    return {
+        src: src, //path.join(process.cwd(), src),
+        dest: dest, // path.join(process.cwd(), dest),
+    };
 }, _BldrConfig_handleSDC = function _BldrConfig_handleSDC() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c;
@@ -264,8 +269,6 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
             return;
         }
         this.sdcPath = path.join(process.cwd(), this.userConfig.sdc.directory);
-        this.sdcLocalPath = this.userConfig.sdc.directory;
-        this.sdcLocalPathTest = this.userConfig.sdc.directory.startsWith('./') ? this.userConfig.sdc.directory.replace('./', '') : this.userConfig.sdc.directory;
         this.sdcAssetSubDirectory = ((_b = this.userConfig.sdc) === null || _b === void 0 ? void 0 : _b.assetSubDirectory) || 'assets';
         this.isSDC = true;
         if ((_c = this.userConfig) === null || _c === void 0 ? void 0 : _c.watchPaths) {
@@ -365,8 +368,8 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
         this.sassConfig = {
             useLegacy: false,
         };
-        if ((_a = this.userConfig) === null || _a === void 0 ? void 0 : _a.sass) {
-            this.sassConfig = Object.assign(Object.assign({}, this.sassConfig), this.userConfig.sass);
+        if ((_a = this.userConfig) === null || _a === void 0 ? void 0 : _a.sassConfig) {
+            this.sassConfig = Object.assign(Object.assign({}, this.sassConfig), this.userConfig.sassConfig);
         }
     });
 }, _BldrConfig_setStylelintConfig = function _BldrConfig_setStylelintConfig() {

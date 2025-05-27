@@ -1,4 +1,5 @@
 import * as path from 'path';
+import * as fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'node:module';
 export class BldrSettings {
@@ -12,10 +13,26 @@ export class BldrSettings {
         const bldrRoot = path.join(__dirname, '../..');
         const bldrPackagePath = path.join(bldrRoot, 'package.json');
         const bldrPackageJson = require(bldrPackagePath);
+        // Determine User Config File
+        let configFileName = 'bldrConfig.js';
+        let configFilePath = path.join(process.cwd(), configFileName);
+        if (!fs.existsSync(configFilePath)) {
+            configFileName = 'bldr.config.js';
+            configFilePath = path.join(process.cwd(), configFileName);
+        }
+        // Determine User Local Config File
+        let localConfigFileName = 'bldrConfigLocal.js';
+        let localConfigFilePath = path.join(process.cwd(), localConfigFileName);
+        if (!fs.existsSync(localConfigFilePath)) {
+            localConfigFileName = 'bldr.local.config.js';
+            localConfigFilePath = path.join(process.cwd(), localConfigFileName);
+        }
         this.version = bldrPackageJson.version;
         this.bldrRoot = bldrRoot;
-        this.configFileName = 'bldrConfig.js';
-        this.localConfigFileName = 'bldrConfigLocal.js';
+        this.configFileName = configFileName;
+        this.configFilePath = configFilePath;
+        this.localConfigFileName = localConfigFileName;
+        this.localConfigFilePath = localConfigFilePath;
         this.root = process.cwd();
         this.allowedProcessKeys = ['css', 'sass', 'js'];
         this.syntax = require('postcss-syntax')({

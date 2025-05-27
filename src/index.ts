@@ -19,7 +19,6 @@ const bldrCLI = new Command();
 bldrCLI
   .description('Configurable build tool for css, sass, js and images')
   .option('-e, --env <name>', 'env key name from config')
-  // .option('-l, --lintOnly', 'only run linting processes');
 
 bldrCLI
   .command('dev')

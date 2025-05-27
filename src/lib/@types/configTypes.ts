@@ -2,6 +2,10 @@ import type { InputOptions, OutputOptions } from "rollup";
 import { RollupBabelInputPluginOptions } from "@rollup/plugin-babel";
 import type { Options as SWCOptions } from '@swc/core';
 
+
+/**
+ * @description Bldr configuration settings for bldr.config.js
+ */
 export interface ConfigSettings {
   css?: AssetObjects;
   js?: AssetObjects;
@@ -9,18 +13,19 @@ export interface ConfigSettings {
   watchPaths?: string[];
   reloadExtensions?: string[];
   env?: EnvObject;
-  postcss?: PostCSSSettings;
+  sdc?: BldrSDCSettings;
   esBuild?: BldrEsBuildSettings;
   rollup?: BldrRollupSettings;
   eslint?: BldrEsLintSettings;
   stylelint?: BldrStyleLintSettings;
   sassConfig?: BldrSassSettings;
-  sdc?: BldrSDCSettings;
   browsersync?: browsersyncSettings;
 }
 
 
-
+/**
+ * @description AssetObject for process objects
+ */
 export interface AssetObject {
   /**
    * @description Path to source file(s). Can be a glob pattern.
@@ -31,11 +36,6 @@ export interface AssetObject {
    * @description Path for files to be copied to.
    */
   dest: string;
-
-  /**
-   * @description Array of file paths to watch for changes.
-   */
-  watch?: string[];
 }
 
 
@@ -126,6 +126,9 @@ export interface BldrRollupSettings {
    */
   terserOptions?: null | any;
 
+  /**
+   * @description options for SDC rollup settings
+   */
   sdcOptions?: BldrSDCRollupSettings
 
   /**
@@ -137,7 +140,9 @@ export interface BldrRollupSettings {
   inputPlugins?: null | any[],
   overrideInputPlugins?: null | boolean;
   
-  
+  /**
+   * @description see rollups outputOptions object at https://rollupjs.org/javascript-api/#outputoptions-object
+   */
   outputOptions?: null | OutputOptions;
   outputPlugins?: null | any[];
   overrideOutputPlugins?: null | boolean;
@@ -232,8 +237,6 @@ export interface LocalConfigSettings {
 
 
 export type ProcessKey = 'css' | 'js' | 'sass';
-
-
 
 
 export interface ProcessAssetGroup {
