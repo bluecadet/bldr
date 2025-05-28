@@ -5,6 +5,11 @@
     "url": "https://github.com/bluecadet/bldr/issues"
   },
   "main": "dist/index.js",
+  "typesVersions": {
+    "*": {
+      "*": ["dist/*"]
+    }
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bluecadet/bldr.git"
@@ -70,12 +75,12 @@
     "stylelint": "^16.19.1",
     "stylelint-formatter-pretty": "^4.0.1",
     "terser": "^5.39.0",
+    "@types/babel__core": "^7.20.5",
     "typescript": "^5.8.3"
   },
   "homepage": "https://github.com/bluecadet/bldr#readme",
   "author": "",
   "devDependencies": {
-    "@types/babel__core": "^7.20.5",
     "vitepress": "^1.6.3"
   }
 }
