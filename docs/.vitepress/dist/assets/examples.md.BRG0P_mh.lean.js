@@ -1,0 +1,1 @@
+import{_ as i,c as a,o as n,ae as l}from"./chunks/framework.DvccZNqS.js";const g=JSON.parse('{"title":"Examples","description":"","frontmatter":{},"headers":[],"relativePath":"examples.md","filePath":"examples.md"}'),p={name:"examples.md"};function h(k,s,t,E,e,r){return n(),a("div",null,s[0]||(s[0]=[l("",4)]))}const y=i(p,[["render",h]]);export{g as __pageData,y as default};

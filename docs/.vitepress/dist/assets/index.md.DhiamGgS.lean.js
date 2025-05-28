@@ -1,0 +1,1 @@
+import{_ as a,c as i,o as l,ae as t}from"./chunks/framework.DvccZNqS.js";const p=JSON.parse('{"title":"💪 Bldr","description":"","frontmatter":{},"headers":[],"relativePath":"index.md","filePath":"index.md"}'),r={name:"index.md"};function o(s,e,n,d,h,c){return l(),i("div",null,e[0]||(e[0]=[t("",11)]))}const f=a(r,[["render",o]]);export{p as __pageData,f as default};
