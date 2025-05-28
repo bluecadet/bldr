@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 # Stylelint
 
 Stylelint is used to lint javascript files during `dev`, `build`, and `lint` commands. 

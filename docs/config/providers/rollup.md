@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 # Rollup:
 
 Rollup is used to process javascript during production runs (`bldr build`). 

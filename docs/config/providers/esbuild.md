@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 # esbuild
 
 esbuild is used to process javascript during dev runs (`bldr dev`). 

@@ -5,13 +5,6 @@ To process SDC files, add the `sdc` key to the config:
 ```js
 import {bldrConfig} from '@bluecadet/bldr/config';
 
-const themeCSS = [
-  {
-    src: './path/to/theme/css/**/*.css',
-    dest: './path/to/public/css/',
-  }
-];
-
 export default bldrConfig({
   sdc: {
     directory: './path/to/sdc/folders', // required, (str)
@@ -55,4 +48,9 @@ theme
       - child_component_1.css
       - child_component_1.js
 ```
+
+
+## Additional Configuration
+
+See [Rollup configuration](/config/providers/rollup#sdcoptions) for additional SDC options
 

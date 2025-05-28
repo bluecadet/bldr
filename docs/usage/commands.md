@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 # Commands
 
 ## Interactive Config Setup

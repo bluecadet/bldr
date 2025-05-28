@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 # Browsersync
 
 Configuration options for [Browsersync](https://browsersync.io/)
