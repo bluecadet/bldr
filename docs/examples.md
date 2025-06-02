@@ -17,6 +17,10 @@ export default bldrConfig({
     plugins: [],
     overridePlugins: false,
   },
+  sdc: {
+    directory: '' // or ['', ''],
+    assetSubDirectory: 'assets',
+  },
   rollup: {
     useBabel: false,
     babelPluginOptions: {babelHelpers: 'bundled' },

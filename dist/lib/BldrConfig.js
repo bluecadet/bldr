@@ -271,10 +271,7 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
         this.sdcPaths = Array.isArray(this.userConfig.sdc.directory) ? this.userConfig.sdc.directory : [this.userConfig.sdc.directory];
         this.sdcAssetSubDirectory = ((_b = this.userConfig.sdc) === null || _b === void 0 ? void 0 : _b.assetSubDirectory) || 'assets';
         this.isSDC = true;
-        console.log(this.sdcPaths);
-        // this.sdcPath              = path.join(process.cwd(), this.userConfig.sdc.directory);
         for (const sdcDir of this.sdcPaths) {
-            console.log(sdcDir);
             const sdcFilePath = path.join(process.cwd(), sdcDir);
             if ((_c = this.userConfig) === null || _c === void 0 ? void 0 : _c.watchPaths) {
                 this.chokidarWatchArray.push(sdcDir);
@@ -292,7 +289,6 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
 }, _BldrConfig_handleSDCType = function _BldrConfig_handleSDCType(ext, key, sdcDirPath) {
     return __awaiter(this, void 0, void 0, function* () {
         const files = yield __classPrivateFieldGet(this, _BldrConfig_fg, "f").sync([`${sdcDirPath}/**/**/${this.sdcAssetSubDirectory}/*.${ext}`]);
-        console.log(files);
         if (files && files.length > 0) {
             for (const file of files) {
                 let dest = path.normalize(path.join(path.dirname(file), '..'));

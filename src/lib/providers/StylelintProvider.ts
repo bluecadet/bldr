@@ -4,6 +4,7 @@ import stylelintFormatter from 'stylelint-formatter-pretty';
 import { dashPadFromString, logError } from '../utils/loggers.js';
 import { ProcessAsset } from '../@types/configTypes.js';
 import path from 'node:path';
+import fs from 'node:fs';
 import { createRequire } from 'node:module';
 
 
@@ -47,6 +48,30 @@ export class StylelintProvider {
     this.bldrConfig = BldrConfig._instance;
     this.notice = 'Stylelint initialized';
     this.allowStylelint = this.bldrConfig.stylelintConfig?.useStyleLint ? this.bldrConfig.stylelintConfig.useStyleLint : true;
+
+    // let configPaths = path.join(process.cwd(), 'stylelint.config.js');
+    const configFiles = [
+      'stylelint.config.js',
+      'stylelint.config.mjs',
+      'stylelint.config.cjs',
+      '.stylelintrc.js',
+      '.stylelintrc.mjs',
+      '.stylelintrc.cjs',
+      '.stylelintrc',
+      '.stylelintrc.yml',
+      '.stylelintrc.yaml',
+      '.stylelintrc.json',
+    ];
+
+    // Check if any of the config files exist in the project root
+    const configExists = configFiles.some((file) => {
+      return fs.existsSync(path.join(process.cwd(), file));
+    });
+
+    if ( this.allowStylelint && !configExists ) {
+      logError(`stylelint`, `No Stylelint config found in project root. Stylelint will be skipped.`, {});
+      this.allowStylelint = false;
+    }
 
     if ( this.bldrConfig.isDev || this.bldrConfig.stylelintConfig?.forceBuildIfError === true ) {
       this.bailOnError = {};

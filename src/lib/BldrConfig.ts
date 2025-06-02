@@ -361,13 +361,7 @@ export class BldrConfig {
     this.sdcAssetSubDirectory = this.userConfig.sdc?.assetSubDirectory || 'assets';
     this.isSDC                = true;
 
-    console.log(this.sdcPaths);
-
-    // this.sdcPath              = path.join(process.cwd(), this.userConfig.sdc.directory);
-
     for (const sdcDir of this.sdcPaths) {
-
-      console.log(sdcDir);
       const sdcFilePath = path.join(process.cwd(), sdcDir);
 
       if ( this.userConfig?.watchPaths ) {
@@ -405,7 +399,6 @@ export class BldrConfig {
   async #handleSDCType(ext: string, key: ProcessKey, sdcDirPath: string): Promise<void> {
     const files = await this.#fg.sync([`${sdcDirPath}/**/**/${this.sdcAssetSubDirectory}/*.${ext}`]);
 
-    console.log(files);
     if ( files && files.length > 0 ) {
       for (const file of files) {
         let dest = path.normalize(path.join(path.dirname(file), '..'));

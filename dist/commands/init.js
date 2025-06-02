@@ -18,7 +18,6 @@ const { prompt } = require('enquirer');
 const colors = require('colors');
 const settings = new BldrSettings();
 export default function init(commandOptions) {
-    console.log('init!');
     maybeCreateFiles();
 }
 const maybeCreateFiles = () => __awaiter(void 0, void 0, void 0, function* () {

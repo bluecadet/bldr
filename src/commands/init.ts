@@ -13,7 +13,6 @@ const colors = require('colors');
 const settings = new BldrSettings();
 
 export default function init(commandOptions: CommandSettings) {
-  console.log('init!');
   maybeCreateFiles();
 }
 
