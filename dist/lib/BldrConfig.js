@@ -268,24 +268,31 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
             logError('BldrConfig', 'No directory key found for `sdc`', { throwError: true, exit: true });
             return;
         }
-        this.sdcPath = path.join(process.cwd(), this.userConfig.sdc.directory);
+        this.sdcPaths = Array.isArray(this.userConfig.sdc.directory) ? this.userConfig.sdc.directory : [this.userConfig.sdc.directory];
         this.sdcAssetSubDirectory = ((_b = this.userConfig.sdc) === null || _b === void 0 ? void 0 : _b.assetSubDirectory) || 'assets';
         this.isSDC = true;
-        if ((_c = this.userConfig) === null || _c === void 0 ? void 0 : _c.watchPaths) {
-            this.chokidarWatchArray.push(this.userConfig.sdc.directory);
+        console.log(this.sdcPaths);
+        // this.sdcPath              = path.join(process.cwd(), this.userConfig.sdc.directory);
+        for (const sdcDir of this.sdcPaths) {
+            console.log(sdcDir);
+            const sdcFilePath = path.join(process.cwd(), sdcDir);
+            if ((_c = this.userConfig) === null || _c === void 0 ? void 0 : _c.watchPaths) {
+                this.chokidarWatchArray.push(sdcDir);
+            }
+            yield Promise.all([
+                __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'css', 'css', sdcFilePath),
+                __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'pcss', 'css', sdcFilePath),
+                __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'sass', 'sass', sdcFilePath),
+                __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'scss', 'sass', sdcFilePath),
+                __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'js', 'js', sdcFilePath),
+                __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'ts', 'js', sdcFilePath),
+            ]);
         }
-        yield Promise.all([
-            __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'css', 'css'),
-            __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'pcss', 'css'),
-            __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'sass', 'sass'),
-            __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'scss', 'sass'),
-            __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'js', 'js'),
-            __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'ts', 'js'),
-        ]);
     });
-}, _BldrConfig_handleSDCType = function _BldrConfig_handleSDCType(ext, key) {
+}, _BldrConfig_handleSDCType = function _BldrConfig_handleSDCType(ext, key, sdcDirPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        const files = yield __classPrivateFieldGet(this, _BldrConfig_fg, "f").sync([`${this.sdcPath}/**/**/${this.sdcAssetSubDirectory}/*.${ext}`]);
+        const files = yield __classPrivateFieldGet(this, _BldrConfig_fg, "f").sync([`${sdcDirPath}/**/**/${this.sdcAssetSubDirectory}/*.${ext}`]);
+        console.log(files);
         if (files && files.length > 0) {
             for (const file of files) {
                 let dest = path.normalize(path.join(path.dirname(file), '..'));

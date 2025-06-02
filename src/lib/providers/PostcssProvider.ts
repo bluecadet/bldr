@@ -72,14 +72,20 @@ export class PostcssProvider {
    * @returns {Promise<void>}
    * @memberof PostcssProvider
    */
-  async buildProcessBundle() {
-    if ( !this.bldrConfig.processAssetGroups?.css) {
-      return;
+  async buildProcessBundle(): Promise<void> {
+    if ( this.bldrConfig.processAssetGroups?.css) {
+      for (const asset of Object.keys(this.bldrConfig.processAssetGroups.css)) {
+        await this.buildAssetGroup(this.bldrConfig.processAssetGroups.css[asset]);
+      }  
     }
 
-    for (const asset of Object.keys(this.bldrConfig.processAssetGroups.css)) {
-      await this.buildAssetGroup(this.bldrConfig.processAssetGroups.css[asset]);
+    if ( this.bldrConfig.sdcProcessAssetGroups?.css ) {
+      for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.css)) {
+        await this.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.css[asset]);
+      }  
     }
+
+    
   }
 
 
@@ -121,8 +127,7 @@ export class PostcssProvider {
   
       // Check if postCssResult contains css
       if ( !postCssResult?.css ) {
-        logError(`postcss`, `${fileName} does not contain css, moving on...`);
-        return;
+        logError(`postcss`, `${fileName} does not contain css, generated blank file`);
       }
 
       // Check if destination directory exists, make it if not

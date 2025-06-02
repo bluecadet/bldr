@@ -5,7 +5,7 @@ import { EsBuildProvider } from './EsBuildProvider.js';
 import { PostcssProvider } from './PostcssProvider.js';
 import { SassProvider } from './SassProvider.js';
 import { BrowsersyncProvider } from './BrowsersyncProvider.js';
-import { logAction, logWarn } from '../utils/loggers.js';
+import { logAction } from '../utils/loggers.js';
 import { EslintProvider } from './EslintProvider.js';
 import { StylelintProvider } from './StylelintProvider.js';
 
@@ -207,7 +207,15 @@ export class ChokidarProvider {
    * @memberof ChokidarProvider
    */
   #checkIsSDCFile(filepath: string): boolean {
-    this.isSDCFile = this.#isChildOfDir(filepath, this.bldrConfig.sdcPath);
+    this.isSDCFile = false;
+
+    for (const file of this.bldrConfig.sdcPaths) {
+      if (this.#isChildOfDir(filepath, file)) {
+        this.isSDCFile = true;
+        break;
+      }
+    }
+
     return this.isSDCFile;
   }
 

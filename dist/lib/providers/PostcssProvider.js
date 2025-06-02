@@ -43,12 +43,16 @@ export class PostcssProvider {
      */
     buildProcessBundle() {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            if (!((_a = this.bldrConfig.processAssetGroups) === null || _a === void 0 ? void 0 : _a.css)) {
-                return;
+            var _a, _b;
+            if ((_a = this.bldrConfig.processAssetGroups) === null || _a === void 0 ? void 0 : _a.css) {
+                for (const asset of Object.keys(this.bldrConfig.processAssetGroups.css)) {
+                    yield this.buildAssetGroup(this.bldrConfig.processAssetGroups.css[asset]);
+                }
             }
-            for (const asset of Object.keys(this.bldrConfig.processAssetGroups.css)) {
-                yield this.buildAssetGroup(this.bldrConfig.processAssetGroups.css[asset]);
+            if ((_b = this.bldrConfig.sdcProcessAssetGroups) === null || _b === void 0 ? void 0 : _b.css) {
+                for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.css)) {
+                    yield this.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.css[asset]);
+                }
             }
         });
     }
@@ -86,8 +90,7 @@ export class PostcssProvider {
                 });
                 // Check if postCssResult contains css
                 if (!(postCssResult === null || postCssResult === void 0 ? void 0 : postCssResult.css)) {
-                    logError(`postcss`, `${fileName} does not contain css, moving on...`);
-                    return;
+                    logError(`postcss`, `${fileName} does not contain css, generated blank file`);
                 }
                 // Check if destination directory exists, make it if not
                 yield ensureDirectory(dest);

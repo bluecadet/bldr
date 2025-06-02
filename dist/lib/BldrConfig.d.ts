@@ -72,6 +72,7 @@ export declare class BldrConfig {
      * Path to the SDC directory
      */
     sdcPath: string;
+    sdcPaths: string[];
     /**
      * @property null|string
      * Path to the SDC subdirectory

@@ -7,13 +7,13 @@ import {bldrConfig} from '@bluecadet/bldr/config';
 
 export default bldrConfig({
   sdc: {
-    directory: './path/to/sdc/folders', // required, (str)
+    directory: './path/to/sdc/folders', // required, (str | array of strings)
     assetSubDirectory: 'assets'         // optional, (str), default: assets
   }
 })
 ```
 
-- `directory`: _required, (string)_ Path that points to the 'parent' folder of all components.
+- `directory`: _required, (string | array of strings)_ Path(s) that points to the 'parent' folder of all components. This can be a single string or an array of strings.
 - `assetSubDirectory`: _optional, (string), default: assets_ Name of a folder within an SDC folder that holds raw assets to be processed. 
 
 ## Asset Subdirectory Workflow

@@ -160,7 +160,13 @@ _ChokidarProvider_instances = new WeakSet(), _ChokidarProvider_changeFile = func
         yield this.bldrConfig.rebuildConfig();
     });
 }, _ChokidarProvider_checkIsSDCFile = function _ChokidarProvider_checkIsSDCFile(filepath) {
-    this.isSDCFile = __classPrivateFieldGet(this, _ChokidarProvider_instances, "m", _ChokidarProvider_isChildOfDir).call(this, filepath, this.bldrConfig.sdcPath);
+    this.isSDCFile = false;
+    for (const file of this.bldrConfig.sdcPaths) {
+        if (__classPrivateFieldGet(this, _ChokidarProvider_instances, "m", _ChokidarProvider_isChildOfDir).call(this, filepath, file)) {
+            this.isSDCFile = true;
+            break;
+        }
+    }
     return this.isSDCFile;
 }, _ChokidarProvider_isChildOfDir = function _ChokidarProvider_isChildOfDir(filepath, dir) {
     const relativePath = path.relative(dir, filepath);

@@ -47,6 +47,6 @@ export declare class PostcssProvider {
      * @returns {Promise<void>}
      * @memberof PostcssProvider
      */
-    buildAssetGroup(assetGroup: ProcessAsset): Promise<boolean | undefined>;
+    buildAssetGroup(assetGroup: ProcessAsset): Promise<boolean>;
 }
 //# sourceMappingURL=PostcssProvider.d.ts.map

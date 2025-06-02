@@ -149,9 +149,9 @@ export interface BldrSassSettings {
 }
 export interface BldrSDCSettings {
     /**
-     * @description Path to single directory components
+     * @description Path to single directory components or array of paths
      */
-    directory: string;
+    directory: string | string[];
     assetSubDirectory: string;
 }
 export interface browsersyncSettings {

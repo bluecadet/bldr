@@ -90,6 +90,8 @@ export class BldrConfig {
    */
   public sdcPath!: string;
 
+  public sdcPaths!: string[];
+
   /**
    * @property null|string
    * Path to the SDC subdirectory
@@ -355,22 +357,39 @@ export class BldrConfig {
       return;
     }
 
-    this.sdcPath              = path.join(process.cwd(), this.userConfig.sdc.directory);
+    this.sdcPaths             = Array.isArray(this.userConfig.sdc.directory) ? this.userConfig.sdc.directory: [this.userConfig.sdc.directory];
     this.sdcAssetSubDirectory = this.userConfig.sdc?.assetSubDirectory || 'assets';
     this.isSDC                = true;
 
-    if ( this.userConfig?.watchPaths ) {
-      this.chokidarWatchArray.push(this.userConfig.sdc.directory);
+    console.log(this.sdcPaths);
+
+    // this.sdcPath              = path.join(process.cwd(), this.userConfig.sdc.directory);
+
+    for (const sdcDir of this.sdcPaths) {
+
+      console.log(sdcDir);
+      const sdcFilePath = path.join(process.cwd(), sdcDir);
+
+      if ( this.userConfig?.watchPaths ) {
+        this.chokidarWatchArray.push(sdcDir);
+      }
+  
+      await Promise.all([
+        this.#handleSDCType('css', 'css', sdcFilePath),
+        this.#handleSDCType('pcss', 'css', sdcFilePath),
+        this.#handleSDCType('sass', 'sass', sdcFilePath),
+        this.#handleSDCType('scss', 'sass', sdcFilePath),
+        this.#handleSDCType('js', 'js', sdcFilePath),
+        this.#handleSDCType('ts', 'js', sdcFilePath),
+      ])
+      
     }
 
-    await Promise.all([
-      this.#handleSDCType('css', 'css'),
-      this.#handleSDCType('pcss', 'css'),
-      this.#handleSDCType('sass', 'sass'),
-      this.#handleSDCType('scss', 'sass'),
-      this.#handleSDCType('js', 'js'),
-      this.#handleSDCType('ts', 'js'),
-    ])
+   
+    
+    
+
+    
   }
 
 
@@ -383,8 +402,10 @@ export class BldrConfig {
    * @return {Promise<void>}
    * @private
    */
-  async #handleSDCType(ext: string, key: ProcessKey): Promise<void> {
-    const files = await this.#fg.sync([`${this.sdcPath}/**/**/${this.sdcAssetSubDirectory}/*.${ext}`]);
+  async #handleSDCType(ext: string, key: ProcessKey, sdcDirPath: string): Promise<void> {
+    const files = await this.#fg.sync([`${sdcDirPath}/**/**/${this.sdcAssetSubDirectory}/*.${ext}`]);
+
+    console.log(files);
     if ( files && files.length > 0 ) {
       for (const file of files) {
         let dest = path.normalize(path.join(path.dirname(file), '..'));
