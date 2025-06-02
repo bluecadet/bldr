@@ -117,16 +117,19 @@ export class Bldr {
     const processStart = new Date().getTime();
 
     console.log(``);
-    console.log(`----------------------------------------`);
     if (this.bldrConfig?.envKey) {
+      console.log(`-----------------------------------------------------------------------------------------------`);
       logAction(
         'bldr',
         '💪 Starting production build using ${this.bldrConfig?.envKey} env configuration...'
       );
+      console.log(`-----------------------------------------------------------------------------------------------`);
     } else {
+      console.log(`--------------------------------------------`);
       logAction('bldr', '💪 Starting production build...');
+      console.log(`--------------------------------------------`);
     }
-    console.log(`----------------------------------------`);
+    
     console.log(``);
     
     await this.#runOnce();
@@ -155,17 +158,17 @@ export class Bldr {
     if ( this.isDev ) {
 
       await Promise.all([
-        this.EsBuildProvider.buildProcessBundle(),
         this.PostcssProvider.buildProcessBundle(),
         this.SassProvider.buildProcessBundle(),
+        this.EsBuildProvider.buildProcessBundle(),
       ]);
 
     } else {
       
       await Promise.all([
-        this.RollupProvider.buildProcessBundle(),
         this.PostcssProvider.buildProcessBundle(),
         this.SassProvider.buildProcessBundle(),
+        this.RollupProvider.buildProcessBundle(),
       ]);
     }
     

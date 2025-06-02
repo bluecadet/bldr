@@ -52,9 +52,6 @@ export class RollupProvider {
 
   
   async buildProcessBundle() {
-    if ( !this.bldrConfig.processAssetGroups?.js || !this.bldrConfig.sdcProcessAssetGroups?.js ) {
-      return;
-    }
 
     await this.compileFinalConfig();
 
@@ -156,7 +153,6 @@ export class RollupProvider {
       inputOptions: {},
       outputOptions: {},
     };
-
 
     // INPUT OPTIONS
     if ( this.bldrConfig.rollupConfig?.inputOptions) {

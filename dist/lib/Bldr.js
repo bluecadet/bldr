@@ -89,14 +89,16 @@ _Bldr_instances = new WeakSet(), _Bldr_initialize = function _Bldr_initialize() 
         var _a;
         const processStart = new Date().getTime();
         console.log(``);
-        console.log(`----------------------------------------`);
         if ((_a = this.bldrConfig) === null || _a === void 0 ? void 0 : _a.envKey) {
+            console.log(`-----------------------------------------------------------------------------------------------`);
             logAction('bldr', '💪 Starting production build using ${this.bldrConfig?.envKey} env configuration...');
+            console.log(`-----------------------------------------------------------------------------------------------`);
         }
         else {
+            console.log(`--------------------------------------------`);
             logAction('bldr', '💪 Starting production build...');
+            console.log(`--------------------------------------------`);
         }
-        console.log(`----------------------------------------`);
         console.log(``);
         yield __classPrivateFieldGet(this, _Bldr_instances, "m", _Bldr_runOnce).call(this);
         const processEnd = new Date().getTime();
@@ -112,16 +114,16 @@ _Bldr_instances = new WeakSet(), _Bldr_initialize = function _Bldr_initialize() 
         // Build the things
         if (this.isDev) {
             yield Promise.all([
-                this.EsBuildProvider.buildProcessBundle(),
                 this.PostcssProvider.buildProcessBundle(),
                 this.SassProvider.buildProcessBundle(),
+                this.EsBuildProvider.buildProcessBundle(),
             ]);
         }
         else {
             yield Promise.all([
-                this.RollupProvider.buildProcessBundle(),
                 this.PostcssProvider.buildProcessBundle(),
                 this.SassProvider.buildProcessBundle(),
+                this.RollupProvider.buildProcessBundle(),
             ]);
         }
     });

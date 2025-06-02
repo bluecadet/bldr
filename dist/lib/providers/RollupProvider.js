@@ -34,17 +34,14 @@ export class RollupProvider {
     }
     buildProcessBundle() {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d;
-            if (!((_a = this.bldrConfig.processAssetGroups) === null || _a === void 0 ? void 0 : _a.js) || !((_b = this.bldrConfig.sdcProcessAssetGroups) === null || _b === void 0 ? void 0 : _b.js)) {
-                return;
-            }
+            var _a, _b;
             yield this.compileFinalConfig();
-            if ((_c = this.bldrConfig.processAssetGroups) === null || _c === void 0 ? void 0 : _c.js) {
+            if ((_a = this.bldrConfig.processAssetGroups) === null || _a === void 0 ? void 0 : _a.js) {
                 for (const asset of Object.keys(this.bldrConfig.processAssetGroups.js)) {
                     yield this.buildAssetGroup(this.bldrConfig.processAssetGroups.js[asset]);
                 }
             }
-            if ((_d = this.bldrConfig.sdcProcessAssetGroups) === null || _d === void 0 ? void 0 : _d.js) {
+            if ((_b = this.bldrConfig.sdcProcessAssetGroups) === null || _b === void 0 ? void 0 : _b.js) {
                 for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.js)) {
                     yield this.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.js[asset], true);
                 }
