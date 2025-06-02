@@ -19,6 +19,17 @@ Then run `npm run dev`, which will run `bldr dev`, etc.
 If you need to pass parameters to a script, add `--` between the command and the parameter:
 `npm run dev -- env=SampleEnv`
 
+## Update package.json
+
+Set `"type"` to `"module"` in package.json:
+
+```
+{
+  "name": "...",
+  "type": "module"
+}
+```
+
 
 ## Requirements
 
