@@ -38,20 +38,38 @@ export class EsBuildProvider {
     this.notice = 'ESBuildProvider initialized';
   }
 
-  async buildProcessBundle() {
+
+  /**
+   * @method buildProcessBundle
+   * @description Build the process bundle, which includes all asset groups defined in the processAssetGroups config
+   * @return {Promise<void>}
+   * @memberof EsBuildProvider
+   */
+  async buildProcessBundle(): Promise<void> {
     if ( !this.bldrConfig.processAssetGroups?.js) {
       return;
     }
 
-    if ( this.bldrConfig.processAssetGroups?.js ) {
-      for (const asset of Object.keys(this.bldrConfig.processAssetGroups.js)) {
-        await this.buildAssetGroup(this.bldrConfig.processAssetGroups.js[asset]);
-      }
-    }
+    await this.buildProcessAssetGroupsBundle();
 
     if ( this.bldrConfig.sdcProcessAssetGroups?.js ) {
       for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.js)) {
         await this.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.js[asset]);
+      }
+    }
+  }
+
+
+  /**
+   * @method buildProcessAssetGroupsBundle
+   * @description Builds the asset groups bundle for esbuild
+   * @return {Promise<void>}
+   * @memberof EsBuildProvider
+   */
+  async buildProcessAssetGroupsBundle(): Promise<void> {
+    if ( this.bldrConfig.processAssetGroups?.js ) {
+      for (const asset of Object.keys(this.bldrConfig.processAssetGroups.js)) {
+        await this.buildAssetGroup(this.bldrConfig.processAssetGroups.js[asset]);
       }
     }
   }

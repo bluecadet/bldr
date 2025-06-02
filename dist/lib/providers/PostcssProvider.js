@@ -43,15 +43,27 @@ export class PostcssProvider {
      */
     buildProcessBundle() {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b;
+            var _a;
+            yield this.buildProcessAssetGroupsBundle();
+            if ((_a = this.bldrConfig.sdcProcessAssetGroups) === null || _a === void 0 ? void 0 : _a.css) {
+                for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.css)) {
+                    yield this.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.css[asset]);
+                }
+            }
+        });
+    }
+    /**
+     * @method buildProcessAssetGroupsBundle
+     * @description Builds the asset groups bundle for postcss
+     * @returns {Promise<void>}
+     * @memberof PostcssProvider
+     */
+    buildProcessAssetGroupsBundle() {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             if ((_a = this.bldrConfig.processAssetGroups) === null || _a === void 0 ? void 0 : _a.css) {
                 for (const asset of Object.keys(this.bldrConfig.processAssetGroups.css)) {
                     yield this.buildAssetGroup(this.bldrConfig.processAssetGroups.css[asset]);
-                }
-            }
-            if ((_b = this.bldrConfig.sdcProcessAssetGroups) === null || _b === void 0 ? void 0 : _b.css) {
-                for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.css)) {
-                    yield this.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.css[asset]);
                 }
             }
         });

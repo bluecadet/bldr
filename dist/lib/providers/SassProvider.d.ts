@@ -30,6 +30,7 @@ export declare class SassProvider {
      */
     initialize(): Promise<void>;
     buildProcessBundle(): Promise<void>;
+    buildProcessAssetGroupsBundle(): Promise<void>;
     /**
      * @method buildAssetGroup
      * @description Builds the process bundle for sass

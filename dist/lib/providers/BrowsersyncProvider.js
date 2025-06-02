@@ -33,15 +33,14 @@ export class BrowsersyncProvider {
         });
     }
     bootstrap() {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d;
         if ((_b = (_a = this.bldrConfig.userConfig) === null || _a === void 0 ? void 0 : _a.browsersync) === null || _b === void 0 ? void 0 : _b.disable)
             return;
         let bsOptions = {
             logPrefix: 'bldr',
             logFileChanges: false,
         };
-        console.log((_c = this.bldrConfig) === null || _c === void 0 ? void 0 : _c.localConfig);
-        if ((_e = (_d = this.bldrConfig) === null || _d === void 0 ? void 0 : _d.localConfig) === null || _e === void 0 ? void 0 : _e.browsersync) {
+        if ((_d = (_c = this.bldrConfig) === null || _c === void 0 ? void 0 : _c.localConfig) === null || _d === void 0 ? void 0 : _d.browsersync) {
             bsOptions = Object.assign(Object.assign({}, this.bldrConfig.localConfig.browsersync), bsOptions);
         }
         this.browsersyncInstance.init(bsOptions);

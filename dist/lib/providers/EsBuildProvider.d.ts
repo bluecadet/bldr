@@ -13,7 +13,20 @@ export declare class EsBuildProvider {
     notice: string;
     constructor();
     initialize(): Promise<void>;
+    /**
+     * @method buildProcessBundle
+     * @description Build the process bundle, which includes all asset groups defined in the processAssetGroups config
+     * @return {Promise<void>}
+     * @memberof EsBuildProvider
+     */
     buildProcessBundle(): Promise<void>;
+    /**
+     * @method buildProcessAssetGroupsBundle
+     * @description Builds the asset groups bundle for esbuild
+     * @return {Promise<void>}
+     * @memberof EsBuildProvider
+     */
+    buildProcessAssetGroupsBundle(): Promise<void>;
     buildAssetGroup(assetGroup: ProcessAsset): Promise<void>;
 }
 //# sourceMappingURL=EsBuildProvider.d.ts.map

@@ -41,6 +41,13 @@ export declare class PostcssProvider {
      */
     buildProcessBundle(): Promise<void>;
     /**
+     * @method buildProcessAssetGroupsBundle
+     * @description Builds the asset groups bundle for postcss
+     * @returns {Promise<void>}
+     * @memberof PostcssProvider
+     */
+    buildProcessAssetGroupsBundle(): Promise<void>;
+    /**
      * @method buildAssetGroup
      * @description Builds the asset group for postcss
      * @param {ProcessAsset} assetGroup

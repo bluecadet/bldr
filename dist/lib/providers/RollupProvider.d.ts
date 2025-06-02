@@ -14,7 +14,20 @@ export declare class RollupProvider {
     notice: string;
     constructor();
     initialize(): Promise<void>;
+    /**
+     * @method buildProcessBundle
+     * @description Build the process bundle, which includes all asset groups defined in the processAssetGroups config
+     * @returns {Promise<void>}
+     * @memberof RollupProvider
+     */
     buildProcessBundle(): Promise<void>;
+    /**
+     * @method buildProcessAssetGroupsBundle
+     * @description Build all asset groups defined in the processAssetGroups config
+     * @returns {Promise<void>}
+     * @memberof RollupProvider
+     */
+    buildProcessAssetGroupsBundle(): Promise<void>;
     /**
      * @description Build a single asset group
      * @param {ProcessAsset} assetGroup

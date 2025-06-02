@@ -105,31 +105,29 @@ _ChokidarProvider_instances = new WeakSet(), _ChokidarProvider_changeFile = func
             yield this.Stylelint.lintFile(filepath);
             if (this.isSDCFile && ((_a = this.bldrConfig.sdcProcessAssetGroups.css) === null || _a === void 0 ? void 0 : _a[filepath])) {
                 yield this.Postcss.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.css[filepath]);
-                this.Browsersync.reloadCSS();
-                return;
             }
             else if ((_b = this.bldrConfig.processAssetGroups.css) === null || _b === void 0 ? void 0 : _b[filepath]) {
-                yield this.Postcss.buildProcessBundle();
-                this.Browsersync.reloadCSS();
-                return;
+                yield this.Postcss.buildAssetGroup(this.bldrConfig.processAssetGroups.css[filepath]);
             }
-            // logWarn('bldr', `No css file found for ${filepath}`);
+            else {
+                yield this.Postcss.buildProcessAssetGroupsBundle();
+            }
+            this.Browsersync.reloadCSS();
             return;
         }
         // Process sass files
         if ((ext === 'sass' || ext === 'scss') && this.Sass) {
             yield this.Stylelint.lintFile(filepath);
-            if (this.isSDCFile && ((_c = this.bldrConfig.sdcProcessAssetGroups.css) === null || _c === void 0 ? void 0 : _c[filepath])) {
-                yield this.Sass.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.css[filepath]);
-                this.Browsersync.reloadCSS();
-                return;
+            if (this.isSDCFile && ((_c = this.bldrConfig.sdcProcessAssetGroups.sass) === null || _c === void 0 ? void 0 : _c[filepath])) {
+                yield this.Sass.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.sass[filepath]);
             }
             else if ((_d = this.bldrConfig.processAssetGroups.sass) === null || _d === void 0 ? void 0 : _d[filepath]) {
                 yield this.Sass.buildProcessBundle();
-                this.Browsersync.reloadCSS();
-                return;
             }
-            // logWarn('bldr', `No sass file found for ${filepath}`);
+            else {
+                yield this.Sass.buildProcessAssetGroupsBundle();
+            }
+            this.Browsersync.reloadCSS();
             return;
         }
         // Process js files
@@ -137,13 +135,12 @@ _ChokidarProvider_instances = new WeakSet(), _ChokidarProvider_changeFile = func
             yield this.EsLint.lintFile(filepath);
             if (this.isSDCFile && ((_e = this.bldrConfig.sdcProcessAssetGroups.js) === null || _e === void 0 ? void 0 : _e[filepath])) {
                 yield this.EsBuild.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.js[filepath]);
-                this.Browsersync.reloadJS();
-                return;
             }
             else if ((_f = this.bldrConfig.processAssetGroups.js) === null || _f === void 0 ? void 0 : _f[filepath]) {
                 yield this.EsBuild.buildProcessBundle();
-                this.Browsersync.reloadJS();
-                return;
+            }
+            else {
+                yield this.EsBuild.buildProcessAssetGroupsBundle();
             }
             this.Browsersync.reloadJS();
             return;

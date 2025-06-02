@@ -48,18 +48,20 @@ export class RollupProvider {
   async initialize() {
     this.bldrConfig = BldrConfig._instance;
     this.notice = 'RollupProvider initialized';
+
+    await this.compileFinalConfig();
   }
 
   
+  /**
+   * @method buildProcessBundle
+   * @description Build the process bundle, which includes all asset groups defined in the processAssetGroups config  
+   * @returns {Promise<void>}
+   * @memberof RollupProvider
+   */
   async buildProcessBundle() {
 
-    await this.compileFinalConfig();
-
-    if ( this.bldrConfig.processAssetGroups?.js ) {
-      for (const asset of Object.keys(this.bldrConfig.processAssetGroups.js)) {
-        await this.buildAssetGroup(this.bldrConfig.processAssetGroups.js[asset]);
-      }
-    }
+    await this.buildProcessAssetGroupsBundle();
 
     if ( this.bldrConfig.sdcProcessAssetGroups?.js ) {
       for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.js)) {
@@ -67,6 +69,21 @@ export class RollupProvider {
       }
     }
     
+  }
+
+
+  /**
+   * @method buildProcessAssetGroupsBundle
+   * @description Build all asset groups defined in the processAssetGroups config
+   * @returns {Promise<void>}
+   * @memberof RollupProvider
+   */
+  async buildProcessAssetGroupsBundle() {
+    if ( this.bldrConfig.processAssetGroups?.js ) {
+      for (const asset of Object.keys(this.bldrConfig.processAssetGroups.js)) {
+        await this.buildAssetGroup(this.bldrConfig.processAssetGroups.js[asset]);
+      }
+    }
   }
 
 

@@ -73,11 +73,7 @@ export class PostcssProvider {
    * @memberof PostcssProvider
    */
   async buildProcessBundle(): Promise<void> {
-    if ( this.bldrConfig.processAssetGroups?.css) {
-      for (const asset of Object.keys(this.bldrConfig.processAssetGroups.css)) {
-        await this.buildAssetGroup(this.bldrConfig.processAssetGroups.css[asset]);
-      }  
-    }
+    await this.buildProcessAssetGroupsBundle();
 
     if ( this.bldrConfig.sdcProcessAssetGroups?.css ) {
       for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.css)) {
@@ -86,6 +82,21 @@ export class PostcssProvider {
     }
 
     
+  }
+
+
+  /**
+   * @method buildProcessAssetGroupsBundle
+   * @description Builds the asset groups bundle for postcss
+   * @returns {Promise<void>}
+   * @memberof PostcssProvider
+   */
+  async buildProcessAssetGroupsBundle(): Promise<void> {
+    if ( this.bldrConfig.processAssetGroups?.css ) {
+      for (const asset of Object.keys(this.bldrConfig.processAssetGroups.css)) {
+        await this.buildAssetGroup(this.bldrConfig.processAssetGroups.css[asset]);
+      }
+    }
   }
 
 

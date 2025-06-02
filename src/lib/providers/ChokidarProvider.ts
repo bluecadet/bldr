@@ -121,15 +121,13 @@ export class ChokidarProvider {
 
       if ( this.isSDCFile && this.bldrConfig.sdcProcessAssetGroups.css?.[filepath] ) {
         await this.Postcss.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.css[filepath]);
-        this.Browsersync.reloadCSS();
-        return;
       } else if ( this.bldrConfig.processAssetGroups.css?.[filepath] ) {
-        await this.Postcss.buildProcessBundle();
-        this.Browsersync.reloadCSS();
-        return;
+        await this.Postcss.buildAssetGroup(this.bldrConfig.processAssetGroups.css[filepath]);
+      } else {
+        await this.Postcss.buildProcessAssetGroupsBundle();
       }
 
-      // logWarn('bldr', `No css file found for ${filepath}`);
+      this.Browsersync.reloadCSS();
       return;
     }
 
@@ -137,17 +135,15 @@ export class ChokidarProvider {
     if ( (ext === 'sass' || ext === 'scss') && this.Sass ) {
       await this.Stylelint.lintFile(filepath);
       
-      if ( this.isSDCFile && this.bldrConfig.sdcProcessAssetGroups.css?.[filepath] ) {
-        await this.Sass.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.css[filepath]);
-        this.Browsersync.reloadCSS();
-        return;
+      if ( this.isSDCFile && this.bldrConfig.sdcProcessAssetGroups.sass?.[filepath] ) {
+        await this.Sass.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.sass[filepath]);
       } else if ( this.bldrConfig.processAssetGroups.sass?.[filepath] ) {
         await this.Sass.buildProcessBundle();
-        this.Browsersync.reloadCSS();
-        return;
+      } else {
+        await this.Sass.buildProcessAssetGroupsBundle();
       }
 
-      // logWarn('bldr', `No sass file found for ${filepath}`);
+      this.Browsersync.reloadCSS();
       return;
     }
 
@@ -158,14 +154,12 @@ export class ChokidarProvider {
 
       if ( this.isSDCFile && this.bldrConfig.sdcProcessAssetGroups.js?.[filepath] ) {
         await this.EsBuild.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.js[filepath]);
-        this.Browsersync.reloadJS();
-        return;
       } else if ( this.bldrConfig.processAssetGroups.js?.[filepath] ) {
         await this.EsBuild.buildProcessBundle();
-        this.Browsersync.reloadJS();
-        return;  
+      } else {
+        await this.EsBuild.buildProcessAssetGroupsBundle();
       }
-      
+
       this.Browsersync.reloadJS();
       return;
     }

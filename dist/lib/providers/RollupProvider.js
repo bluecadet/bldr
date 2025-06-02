@@ -30,20 +30,38 @@ export class RollupProvider {
         return __awaiter(this, void 0, void 0, function* () {
             this.bldrConfig = BldrConfig._instance;
             this.notice = 'RollupProvider initialized';
+            yield this.compileFinalConfig();
         });
     }
+    /**
+     * @method buildProcessBundle
+     * @description Build the process bundle, which includes all asset groups defined in the processAssetGroups config
+     * @returns {Promise<void>}
+     * @memberof RollupProvider
+     */
     buildProcessBundle() {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b;
-            yield this.compileFinalConfig();
+            var _a;
+            yield this.buildProcessAssetGroupsBundle();
+            if ((_a = this.bldrConfig.sdcProcessAssetGroups) === null || _a === void 0 ? void 0 : _a.js) {
+                for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.js)) {
+                    yield this.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.js[asset], true);
+                }
+            }
+        });
+    }
+    /**
+     * @method buildProcessAssetGroupsBundle
+     * @description Build all asset groups defined in the processAssetGroups config
+     * @returns {Promise<void>}
+     * @memberof RollupProvider
+     */
+    buildProcessAssetGroupsBundle() {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             if ((_a = this.bldrConfig.processAssetGroups) === null || _a === void 0 ? void 0 : _a.js) {
                 for (const asset of Object.keys(this.bldrConfig.processAssetGroups.js)) {
                     yield this.buildAssetGroup(this.bldrConfig.processAssetGroups.js[asset]);
-                }
-            }
-            if ((_b = this.bldrConfig.sdcProcessAssetGroups) === null || _b === void 0 ? void 0 : _b.js) {
-                for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.js)) {
-                    yield this.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.js[asset], true);
                 }
             }
         });

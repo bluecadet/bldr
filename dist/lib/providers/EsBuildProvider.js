@@ -25,20 +25,38 @@ export class EsBuildProvider {
             this.notice = 'ESBuildProvider initialized';
         });
     }
+    /**
+     * @method buildProcessBundle
+     * @description Build the process bundle, which includes all asset groups defined in the processAssetGroups config
+     * @return {Promise<void>}
+     * @memberof EsBuildProvider
+     */
     buildProcessBundle() {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c;
+            var _a, _b;
             if (!((_a = this.bldrConfig.processAssetGroups) === null || _a === void 0 ? void 0 : _a.js)) {
                 return;
             }
-            if ((_b = this.bldrConfig.processAssetGroups) === null || _b === void 0 ? void 0 : _b.js) {
-                for (const asset of Object.keys(this.bldrConfig.processAssetGroups.js)) {
-                    yield this.buildAssetGroup(this.bldrConfig.processAssetGroups.js[asset]);
-                }
-            }
-            if ((_c = this.bldrConfig.sdcProcessAssetGroups) === null || _c === void 0 ? void 0 : _c.js) {
+            yield this.buildProcessAssetGroupsBundle();
+            if ((_b = this.bldrConfig.sdcProcessAssetGroups) === null || _b === void 0 ? void 0 : _b.js) {
                 for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.js)) {
                     yield this.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.js[asset]);
+                }
+            }
+        });
+    }
+    /**
+     * @method buildProcessAssetGroupsBundle
+     * @description Builds the asset groups bundle for esbuild
+     * @return {Promise<void>}
+     * @memberof EsBuildProvider
+     */
+    buildProcessAssetGroupsBundle() {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            if ((_a = this.bldrConfig.processAssetGroups) === null || _a === void 0 ? void 0 : _a.js) {
+                for (const asset of Object.keys(this.bldrConfig.processAssetGroups.js)) {
+                    yield this.buildAssetGroup(this.bldrConfig.processAssetGroups.js[asset]);
                 }
             }
         });

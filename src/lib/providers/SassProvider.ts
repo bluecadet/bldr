@@ -61,8 +61,21 @@ export class SassProvider {
       return;
     }
 
-    for (const asset of Object.keys(this.bldrConfig.processAssetGroups.sass)) {
-      await this.buildAssetGroup(this.bldrConfig.processAssetGroups.sass[asset]);
+    await this.buildProcessAssetGroupsBundle();
+
+    if ( this.bldrConfig.sdcProcessAssetGroups?.sass ) {
+      for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.sass)) {
+        await this.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.sass[asset]);
+      }  
+    }
+  }
+
+
+  async buildProcessAssetGroupsBundle() {
+    if ( this.bldrConfig.sdcProcessAssetGroups?.sass ) {
+      for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.sass)) {
+        await this.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.sass[asset]);
+      }  
     }
   }
 
