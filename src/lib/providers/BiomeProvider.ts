@@ -1,6 +1,6 @@
 import { BldrConfig } from '../BldrConfig.js';
 import { Biome, Distribution } from "@biomejs/js-api";
-import { dashPadFromString, logAction, logError } from '../utils/loggers.js';
+import { dashPadFromString, logSuccess, logError } from '../utils/loggers.js';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { ProcessAsset, ProcessKey } from '../@types/configTypes.js';
@@ -44,13 +44,12 @@ export class BiomeProvider {
   private biomeAllPaths!: string[];
 
 
-  private bailOnError!: null | any;
-
-
   private globIgnorePaths!: string[];
 
   private writeLogfile!: boolean;
   private logFilePath!: string;
+  
+  private hasErrors: boolean = false;
 
 
   constructor() {
@@ -77,18 +76,10 @@ export class BiomeProvider {
       distribution: Distribution.NODE,
     });
 
-    if ( this.bldrConfig.isDev || this.bldrConfig.biomeConfig?.forceBuildIfError === true ) {
-      this.bailOnError = {};
-      if ( this.bldrConfig.isDev ) {
-        this.resultMessage = `Errors found in Biome`;
-      } else {
-        this.resultMessage = `Errors found in Biome, but build forced in config`;
-      }
-      
-    } else {
-      this.bailOnError = { throwError: true, exit: true };
-      this.resultMessage = `Errors found in Biome - process aborted`;
-    }
+    const msg = ' Errors found in ESlint ';
+    const count = Math.floor(((process.stdout.columns - 14) - msg.length - 2) / 2);
+    const sym = '=';
+    this.resultMessage = `${sym.repeat(count)}${msg}${sym.repeat(count)}`;
     
   }
 
@@ -99,12 +90,14 @@ export class BiomeProvider {
    * @returns {Promise<void>}
    * @memberof BiomeProvider
    */
-  async lintAll(isLintCommand: boolean = false): Promise<void> {
-    // if ( !this.eslint ) {
-    //   return false;
-    // }
+  async lintAll(): Promise<void> {
+    // Check if Biome is enabled
+    if ( !this.biomeInstance ) {
+      return;
+    }
 
-    if ( this.bldrConfig.biomeConfig?.writeLogfile === true && this.bldrConfig.biomeConfig?.logFilePath && isLintCommand) {
+    // Check if log should be written
+    if ( this.bldrConfig.biomeConfig?.writeLogfile === true && this.bldrConfig.biomeConfig?.logFilePath) {
       this.writeLogfile = true;
       this.logFilePath = path.join(process.cwd(), this.bldrConfig.biomeConfig?.logFilePath);
 
@@ -113,10 +106,24 @@ export class BiomeProvider {
       }
     }
 
+    // Reset errors
+    this.hasErrors = false;
+
+    // Set paths for linting
     await this.#setBiomePaths();
     
+    // If paths are set, run lint
     if (this.biomeAllPaths.length > 0) {
       await this.#runLint(this.biomeAllPaths);
+    }
+
+    if (this.hasErrors && this.bldrConfig.biomeConfig?.forceBuildIfError === true) {
+      console.log('');
+      logError(`biome`, '🚨🚨🚨 Biome errors found 🚨🚨🚨', { throwError: true, exit: true });
+    } else if (this.hasErrors) {
+      logError(`biome`, 'Biome errors found, forceBuildIfError set to true, continuing on', {});
+    } else {
+      logSuccess(`biome`, `No Biome errors found`);
     }
     
   }
@@ -231,11 +238,12 @@ export class BiomeProvider {
         files = [files];
       }
 
+      // If writing to log, clear file first
       if ( this.writeLogfile ) {
         fs.writeFileSync(this.logFilePath, '', 'utf-8');
       }
 
-      let isFail = false;
+      const errorArray: string[] = [];
 
       for (const file of files) {
         const content = fs.readFileSync(file, 'utf-8');
@@ -253,22 +261,24 @@ export class BiomeProvider {
           continue;
         }
 
-        isFail = true;
-        const dashes = dashPadFromString(this.resultMessage);
-        logError(`biome`, dashes, {});
-        logError(`biome`, this.resultMessage, {});
-        logError(`biome`, '', {});
-        console.log(this.#formatHTML(html));
-        logError(`biome`, '', {});
-        logError(`biome`, dashes, {});
+        this.hasErrors = true;
+        errorArray.push(html);
 
-        if ( this.writeLogfile ) {
+        if ( this.hasErrors ) {
           fs.appendFileSync(this.logFilePath, html, 'utf-8');
         }
       }
 
-      if ( isFail ) {
-        logError(`biome`, `Errors found`, this.bailOnError);
+      if ( this.hasErrors && errorArray.length > 0 ) {
+        const dashes = dashPadFromString(this.resultMessage);
+        logError(`biome`, dashes, {});
+        logError(`biome`, this.resultMessage, {});
+        logError(`biome`, dashes, {});
+        
+        errorArray.forEach((html) => {
+          console.log(this.#formatHTML(html));
+          logError(`biome`, dashes, {});
+        });
       }
 
     } catch (err) {
@@ -303,12 +313,13 @@ export class BiomeProvider {
 
 
 
-
+  /**
+   * @description Format HTML output to console
+   * @param {string} html - The HTML string to format
+   * @returns {string} - The formatted string
+   * @memberof BiomeProvider
+   */
   #formatHTML(html: string): string {
-    // let result = html.match(/<strong>(.*?)<\/strong>/g).map(function(val){
-    //   return val.replace(/<\/?b>/g,'');
-    // });
-
     let newHTML = html.replace(/<strong>(.*?)<\/strong>/g, chalk.bold(`$1`));
     newHTML = newHTML.replace(/&gt;/g, '>');
     newHTML = newHTML.replace(/<span style="color: Tomato;">(.*?)<\/span>/g, chalk.red(`$1`));
@@ -317,27 +328,8 @@ export class BiomeProvider {
     newHTML = newHTML.replace(/<span style="opacity: 0.8;">(.*?)<\/span>/g, chalk.dim(`$1`));
     newHTML = newHTML.replace(/<span style="color: #000; background-color: #ddd;">(.*?)<\/span>/g, chalk.bgGreen.white(`\n\n$1`));
     newHTML = newHTML.replace(/<a href="([^"]+)">([^<]+)<\/a>/g, `${chalk.yellow.bold(`$2`)} ${chalk.yellowBright(`($1)`)}`);
-    newHTML = newHTML.replace(/━━━━━━━━━━/g, '');
 
     return newHTML;
 
   }
-
-
-  // `
-  // web/theme/sample_theme/sdc/accordion/assets/accordion.css:6:4 <a href="https://biomejs.dev/linter/rules/no-unknown-type-selector">lint/nursery/noUnknownTypeSelector</a> ━━━━━━━━━━
-
-  // <strong><span style="color: Tomato;">✖</span></strong> <span style="color: Tomato;">Unknown type selector is not allowed.</span>
-  
-  //   <strong>4 │ </strong>  width: 100%;
-  //   <strong>5 │ </strong>
-  // <strong><span style="color: Tomato;">&gt;</span></strong> <strong>6 │ </strong>  &amp;__thing {
-  //  <strong>   │ </strong>   <strong><span style="color: Tomato;">^</span></strong><strong><span style="color: Tomato;">^</span></strong><strong><span style="color: Tomato;">^</span></strong><strong><span style="color: Tomato;">^</span></strong><strong><span style="color: Tomato;">^</span></strong><strong><span style="color: Tomato;">^</span></strong><strong><span style="color: Tomato;">^</span></strong>
-  //   <strong>7 │ </strong>    display: flex;
-  //   <strong>8 │ </strong>    flex-direction: column;
-  
-  // <strong><span style="color: lightgreen;">ℹ</span></strong> <span style="color: lightgreen;">See </span><span style="color: lightgreen;"><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Type_selectors">MDN web docs</a></span><span style="color: lightgreen;"> for more details.</span>
-  
-  // <strong><span style="color: lightgreen;">ℹ</span></strong> <span style="color: lightgreen;">Consider replacing the unknown type selector with valid one.</span>`
-
 }

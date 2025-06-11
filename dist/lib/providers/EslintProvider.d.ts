@@ -24,10 +24,6 @@ export declare class EslintProvider {
      */
     private formatter;
     /**
-     * @property null | object
-     */
-    private bailOnError;
-    /**
      * @property null | string
      */
     private resultMessage;
@@ -39,6 +35,7 @@ export declare class EslintProvider {
      * @property null | string[]
      */
     private eslintAllPaths;
+    private hasErrors;
     constructor();
     /**
      * @description Initialize the EslintProvider

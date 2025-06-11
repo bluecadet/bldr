@@ -16,25 +16,29 @@ export default function lint(commandOptions) {
     doLint(commandOptions);
 }
 const doLint = (commandOptions) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _a, _b, _c;
     const config = new BldrConfig(commandOptions, false);
     yield config.initialize();
     if ((_a = config === null || config === void 0 ? void 0 : config.biomeConfig) === null || _a === void 0 ? void 0 : _a.useBiome) {
         const biomeProvider = new BiomeProvider();
         yield biomeProvider.initialize();
-        yield biomeProvider.lintAll(true);
+        yield biomeProvider.lintAll();
         logSuccess('bldr', 'Linting complete with Biome');
         process.exit(0);
-        return;
     }
     else {
-        const eslintProvider = new EslintProvider();
         const stylelintProvider = new StylelintProvider();
-        yield eslintProvider.initialize();
-        yield stylelintProvider.initialize();
-        yield eslintProvider.lintAll();
-        yield stylelintProvider.lintAll();
+        if ((_b = config === null || config === void 0 ? void 0 : config.eslintConfig) === null || _b === void 0 ? void 0 : _b.useEslint) {
+            const eslintProvider = new EslintProvider();
+            yield eslintProvider.initialize();
+            yield eslintProvider.lintAll();
+        }
+        if ((_c = config === null || config === void 0 ? void 0 : config.stylelintConfig) === null || _c === void 0 ? void 0 : _c.useStyleLint) {
+            yield stylelintProvider.initialize();
+            yield stylelintProvider.lintAll();
+        }
+        logSuccess('bldr', 'Linting complete');
+        process.exit(0);
     }
-    logSuccess('bldr', 'Linting complete');
 });
 //# sourceMappingURL=lint.js.map

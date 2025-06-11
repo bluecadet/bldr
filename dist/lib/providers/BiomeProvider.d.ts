@@ -27,10 +27,10 @@ export declare class BiomeProvider {
      * @property null | string[]
      */
     private biomeAllPaths;
-    private bailOnError;
     private globIgnorePaths;
     private writeLogfile;
     private logFilePath;
+    private hasErrors;
     constructor();
     initialize(): Promise<false | undefined>;
     /**
@@ -38,7 +38,7 @@ export declare class BiomeProvider {
      * @returns {Promise<void>}
      * @memberof BiomeProvider
      */
-    lintAll(isLintCommand?: boolean): Promise<void>;
+    lintAll(): Promise<void>;
     /**
      * @description Lint single file in the project
      * @param {string} filepath - Path to the file to lint

@@ -15,6 +15,7 @@ export declare class StylelintProvider {
     private allowStylelint;
     private bailOnError;
     private resultMessage;
+    private hasErrors;
     constructor();
     initialize(): Promise<void>;
     /**

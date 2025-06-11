@@ -15,7 +15,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 var _EslintProvider_instances, _EslintProvider_setEsLintPaths, _EslintProvider_runLint, _EslintProvider_compileFinalConfig;
 import { BldrConfig } from '../BldrConfig.js';
 import { ESLint } from 'eslint';
-import { dashPadFromString, logAction, logError } from '../utils/loggers.js';
+import { dashPadFromString, logAction, logError, logSuccess } from '../utils/loggers.js';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
@@ -27,6 +27,7 @@ export class EslintProvider {
          * ESLint instance
          */
         this.eslint = null;
+        this.hasErrors = false;
         if (EslintProvider._instance) {
             return EslintProvider._instance;
         }
@@ -39,7 +40,7 @@ export class EslintProvider {
      */
     initialize() {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d;
+            var _a, _b, _c;
             this.bldrConfig = BldrConfig._instance;
             this.notice = 'EslintProvider initialized';
             if (((_a = this.bldrConfig.eslintConfig) === null || _a === void 0 ? void 0 : _a.useEslint) === false) {
@@ -50,19 +51,10 @@ export class EslintProvider {
             }
             this.eslint = new ESLint(this.eslintOptions);
             this.formatter = yield this.eslint.loadFormatter('stylish');
-            if (this.bldrConfig.isDev || ((_d = this.bldrConfig.eslintConfig) === null || _d === void 0 ? void 0 : _d.forceBuildIfError) === true) {
-                this.bailOnError = {};
-                if (this.bldrConfig.isDev) {
-                    this.resultMessage = `Errors found in Eslint`;
-                }
-                else {
-                    this.resultMessage = `Errors found in Eslint, but build forced in config`;
-                }
-            }
-            else {
-                this.bailOnError = { throwError: true, exit: true };
-                this.resultMessage = `Errors found in Eslint - process aborted`;
-            }
+            const msg = ' Errors found in ESlint ';
+            const count = Math.floor(((process.stdout.columns - 14) - msg.length - 2) / 2);
+            const sym = '=';
+            this.resultMessage = `${sym.repeat(count)}${msg}${sym.repeat(count)}`;
             yield __classPrivateFieldGet(this, _EslintProvider_instances, "m", _EslintProvider_compileFinalConfig).call(this);
         });
     }
@@ -73,12 +65,25 @@ export class EslintProvider {
      */
     lintAll() {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             if (!this.eslint) {
                 return false;
             }
+            // Reset the hasErrors flag
+            this.hasErrors = false;
             yield __classPrivateFieldGet(this, _EslintProvider_instances, "m", _EslintProvider_setEsLintPaths).call(this);
             if (this.eslintAllPaths.length > 0) {
                 yield __classPrivateFieldGet(this, _EslintProvider_instances, "m", _EslintProvider_runLint).call(this, this.eslintAllPaths);
+            }
+            if (this.hasErrors && ((_a = this.bldrConfig.eslintConfig) === null || _a === void 0 ? void 0 : _a.forceBuildIfError) === true) {
+                console.log('');
+                logError(`eslint`, '🚨🚨🚨 ESLint errors found 🚨🚨🚨', { throwError: true, exit: true });
+            }
+            else if (this.hasErrors) {
+                logError(`eslint`, 'ESLint errors found, forceBuildIfError set to true, continuing on', {});
+            }
+            else {
+                logSuccess(`eslint`, `No ESLint errors found`);
             }
         });
     }
@@ -145,17 +150,25 @@ _EslintProvider_instances = new WeakSet(), _EslintProvider_setEsLintPaths = func
             }
             const results = yield this.eslint.lintFiles(files);
             const resultText = this.formatter.format(results);
+            let resultErrors = false;
             results.forEach((res) => {
                 if (res.errorCount > 0) {
-                    const dashes = dashPadFromString(this.resultMessage);
-                    logError(`eslint`, dashes, {});
-                    logError(`eslint`, this.resultMessage, {});
-                    logError(`eslint`, dashes, {});
-                    console.log(resultText);
-                    logError(`eslint`, dashes, this.bailOnError);
-                    console.log('');
+                    resultErrors = true;
                 }
             });
+            if (resultErrors) {
+                const dashes = dashPadFromString(this.resultMessage);
+                logError(`eslint`, dashes, {});
+                logError(`eslint`, this.resultMessage, {});
+                logError(`eslint`, dashes, {});
+                results.forEach((res) => {
+                    if (res.errorCount > 0) {
+                        this.hasErrors = true;
+                        console.log(resultText);
+                        logError(`eslint`, dashes, {});
+                    }
+                });
+            }
         }
         catch (err) {
             if (this.bldrConfig.isDev || ((_a = this.bldrConfig.eslintConfig) === null || _a === void 0 ? void 0 : _a.forceBuildIfError)) {

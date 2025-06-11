@@ -378,7 +378,7 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
             useStyleLint: true,
             forceBuildIfError: true,
         };
-        if ((_a = this.userConfig) === null || _a === void 0 ? void 0 : _a.sass) {
+        if ((_a = this.userConfig) === null || _a === void 0 ? void 0 : _a.stylelint) {
             this.stylelintConfig = Object.assign(Object.assign({}, this.stylelintConfig), this.userConfig.stylelint);
         }
     });

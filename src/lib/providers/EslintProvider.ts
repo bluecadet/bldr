@@ -1,10 +1,11 @@
 import { BldrConfig } from '../BldrConfig.js';
 import { ESLint } from 'eslint';
-import { dashPadFromString, logAction, logError } from '../utils/loggers.js';
+import { dashPadFromString, logAction, logError, logSuccess } from '../utils/loggers.js';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { ProcessAsset } from '../@types/configTypes.js';
 import fs from 'node:fs';
+import chalk from 'chalk';
 
 export class EslintProvider {
 
@@ -36,11 +37,6 @@ export class EslintProvider {
    */
   private formatter!: any;
 
-  /**
-   * @property null | object
-   */
-  private bailOnError!: null | any;
-
 
   /**
    * @property null | string
@@ -56,6 +52,8 @@ export class EslintProvider {
    * @property null | string[]
    */
   private eslintAllPaths!: string[];
+
+  private hasErrors: boolean = false;
 
 
   constructor() {
@@ -89,20 +87,11 @@ export class EslintProvider {
     
     this.eslint = new ESLint(this.eslintOptions);
     this.formatter = await this.eslint.loadFormatter('stylish');
-    
 
-    if ( this.bldrConfig.isDev || this.bldrConfig.eslintConfig?.forceBuildIfError === true ) {
-      this.bailOnError = {};
-      if ( this.bldrConfig.isDev ) {
-        this.resultMessage = `Errors found in Eslint`;
-      } else {
-        this.resultMessage = `Errors found in Eslint, but build forced in config`;
-      }
-      
-    } else {
-      this.bailOnError = { throwError: true, exit: true };
-      this.resultMessage = `Errors found in Eslint - process aborted`;
-    }
+    const msg = ' Errors found in ESlint ';
+    const count = Math.floor(((process.stdout.columns - 14) - msg.length - 2) / 2);
+    const sym = '=';
+    this.resultMessage = `${sym.repeat(count)}${msg}${sym.repeat(count)}`;
 
     await this.#compileFinalConfig();
     
@@ -120,10 +109,22 @@ export class EslintProvider {
       return false;
     }
 
+    // Reset the hasErrors flag
+    this.hasErrors = false;
+
     await this.#setEsLintPaths();
     
     if (this.eslintAllPaths.length > 0) {
       await this.#runLint(this.eslintAllPaths);
+    }
+
+    if (this.hasErrors && this.bldrConfig.eslintConfig?.forceBuildIfError === true) {
+      console.log('');
+      logError(`eslint`, '🚨🚨🚨 ESLint errors found 🚨🚨🚨', { throwError: true, exit: true });
+    } else if (this.hasErrors) {
+      logError(`eslint`, 'ESLint errors found, forceBuildIfError set to true, continuing on', {});
+    } else {
+      logSuccess(`eslint`, `No ESLint errors found`);
     }
     
   }
@@ -213,20 +214,30 @@ export class EslintProvider {
 
       const results = await this.eslint.lintFiles(files);
       const resultText = this.formatter.format(results);
+      let resultErrors = false;
 
       results.forEach((res: any) => {
-
-        if ( res.errorCount > 0 ) {
-          const dashes = dashPadFromString(this.resultMessage);
-          logError(`eslint`, dashes, {});
-          logError(`eslint`, this.resultMessage, {});
-          logError(`eslint`, dashes, {});
-          console.log(resultText);
-          logError(`eslint`, dashes, this.bailOnError);
-          console.log('');
+        if (res.errorCount > 0) {
+          resultErrors = true;
         }
-
       });
+
+      if ( resultErrors ) {
+        const dashes = dashPadFromString(this.resultMessage);
+        logError(`eslint`, dashes, {});
+        logError(`eslint`, this.resultMessage, {});
+        logError(`eslint`, dashes, {});
+
+        results.forEach((res: any) => {
+          if ( res.errorCount > 0 ) {
+            this.hasErrors = true;    
+            console.log(resultText);
+            logError(`eslint`, dashes, {});
+          }
+        });
+      }
+
+      
 
     } catch (err) {
       if ( this.bldrConfig.isDev || this.bldrConfig.eslintConfig?.forceBuildIfError ) {

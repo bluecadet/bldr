@@ -19,23 +19,31 @@ const doLint = async (commandOptions: CommandSettings) => {
     const biomeProvider = new BiomeProvider();
     await biomeProvider.initialize();
 
-    await biomeProvider.lintAll(true);
+    await biomeProvider.lintAll();
     
     logSuccess('bldr', 'Linting complete with Biome');
     process.exit(0);
-    return;
+
   } else {
-    const eslintProvider = new EslintProvider();
+    
     const stylelintProvider = new StylelintProvider();
 
-    await eslintProvider.initialize();
-    await stylelintProvider.initialize();
+    if (config?.eslintConfig?.useEslint) {
+      const eslintProvider = new EslintProvider();
+      await eslintProvider.initialize();
+      await eslintProvider.lintAll();
+    }
 
-    await eslintProvider.lintAll();
-    await stylelintProvider.lintAll();
+    if (config?.stylelintConfig?.useStyleLint) {
+      await stylelintProvider.initialize();
+      await stylelintProvider.lintAll();
+    }
+
+    logSuccess('bldr', 'Linting complete');
+    process.exit(0);
   }
 
   
 
-  logSuccess('bldr', 'Linting complete');
+  
 }

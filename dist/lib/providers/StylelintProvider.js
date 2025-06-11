@@ -16,7 +16,7 @@ var _StylelintProvider_instances, _StylelintProvider_setStyleLintPaths, _Styleli
 import { BldrConfig } from '../BldrConfig.js';
 import stylelint from 'stylelint';
 import stylelintFormatter from 'stylelint-formatter-pretty';
-import { dashPadFromString, logError } from '../utils/loggers.js';
+import { dashPadFromString, logError, logSuccess } from '../utils/loggers.js';
 import path from 'node:path';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
@@ -25,6 +25,7 @@ export class StylelintProvider {
         _StylelintProvider_instances.add(this);
         this.allPaths = [];
         this.allowStylelint = true;
+        this.hasErrors = false;
         if (StylelintProvider._instance) {
             return StylelintProvider._instance;
         }
@@ -32,10 +33,13 @@ export class StylelintProvider {
     }
     initialize() {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b;
+            var _a;
             this.bldrConfig = BldrConfig._instance;
             this.notice = 'Stylelint initialized';
-            this.allowStylelint = ((_a = this.bldrConfig.stylelintConfig) === null || _a === void 0 ? void 0 : _a.useStyleLint) ? this.bldrConfig.stylelintConfig.useStyleLint : true;
+            this.allowStylelint = ((_a = this.bldrConfig.stylelintConfig) === null || _a === void 0 ? void 0 : _a.useStyleLint) === true;
+            if (!this.allowStylelint) {
+                return;
+            }
             // let configPaths = path.join(process.cwd(), 'stylelint.config.js');
             const configFiles = [
                 'stylelint.config.js',
@@ -56,20 +60,12 @@ export class StylelintProvider {
             if (this.allowStylelint && !configExists) {
                 logError(`stylelint`, `No Stylelint config found in project root. Stylelint will be skipped.`, {});
                 this.allowStylelint = false;
+                return;
             }
-            if (this.bldrConfig.isDev || ((_b = this.bldrConfig.stylelintConfig) === null || _b === void 0 ? void 0 : _b.forceBuildIfError) === true) {
-                this.bailOnError = {};
-                if (this.bldrConfig.isDev) {
-                    this.resultMessage = `Errors found in Stylelint`;
-                }
-                else {
-                    this.resultMessage = `Errors found in Stylelint, but build forced in config`;
-                }
-            }
-            else {
-                this.bailOnError = { throwError: true, exit: true };
-                this.resultMessage = `Errors found in Stylelint - process aborted`;
-            }
+            const msg = ' Errors found in Stylelint ';
+            const count = Math.floor(((process.stdout.columns - 14) - msg.length - 2) / 2);
+            const sym = '=';
+            this.resultMessage = `${sym.repeat(count)}${msg}${sym.repeat(count)}`;
         });
     }
     /**
@@ -79,12 +75,28 @@ export class StylelintProvider {
      */
     lintAll() {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             if (!this.allowStylelint) {
                 return;
             }
+            // Reset the hasErrors flag
+            this.hasErrors = false;
+            // Get paths to lint
             yield __classPrivateFieldGet(this, _StylelintProvider_instances, "m", _StylelintProvider_setStyleLintPaths).call(this);
+            // If we have paths to lint, run the linter
             if (this.allPaths.length > 0) {
                 yield __classPrivateFieldGet(this, _StylelintProvider_instances, "m", _StylelintProvider_runLint).call(this, this.allPaths);
+            }
+            // If we have errors, log them
+            if (this.hasErrors && ((_a = this.bldrConfig.stylelintConfig) === null || _a === void 0 ? void 0 : _a.forceBuildIfError) === true) {
+                console.log('');
+                logError(`stylelint`, '🚨🚨🚨 Stylelint errors found 🚨🚨🚨', { throwError: true, exit: true });
+            }
+            else if (this.hasErrors) {
+                logError(`stylelint`, 'Stylelint errors found, forceBuildIfError set to true, continuing on', {});
+            }
+            else {
+                logSuccess(`stylelint`, `No Stylelint errors found`);
             }
         });
     }
@@ -135,14 +147,13 @@ _StylelintProvider_instances = new WeakSet(), _StylelintProvider_setStyleLintPat
                 formatter: stylelintFormatter,
             });
             if (result.errored) {
+                this.hasErrors = true;
                 const dashes = dashPadFromString(this.resultMessage);
-                console.log('');
                 logError(`stylelint`, dashes, {});
                 logError(`stylelint`, this.resultMessage, {});
                 logError(`stylelint`, dashes, {});
                 console.log(result.report);
-                logError(`stylelint`, dashes, this.bailOnError);
-                console.log('');
+                logError(`stylelint`, dashes, {});
             }
         }
         catch (err) {

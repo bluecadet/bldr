@@ -526,7 +526,7 @@ export class BldrConfig {
       forceBuildIfError: true,
     };
 
-    if ( this.userConfig?.sass ) {
+    if ( this.userConfig?.stylelint ) {
       this.stylelintConfig = {...this.stylelintConfig, ...this.userConfig.stylelint};
     }
   }

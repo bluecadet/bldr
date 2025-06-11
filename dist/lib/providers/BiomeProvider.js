@@ -15,7 +15,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 var _BiomeProvider_instances, _BiomeProvider_setBiomePaths, _BiomeProvider_runLint, _BiomeProvider_addUserDestToIgnorePaths, _BiomeProvider_formatHTML;
 import { BldrConfig } from '../BldrConfig.js';
 import { Biome, Distribution } from "@biomejs/js-api";
-import { dashPadFromString, logError } from '../utils/loggers.js';
+import { dashPadFromString, logSuccess, logError } from '../utils/loggers.js';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
@@ -23,6 +23,7 @@ import chalk from 'chalk';
 export class BiomeProvider {
     constructor() {
         _BiomeProvider_instances.add(this);
+        this.hasErrors = false;
         if (BiomeProvider._instance) {
             return BiomeProvider._instance;
         }
@@ -30,7 +31,7 @@ export class BiomeProvider {
     }
     initialize() {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b;
+            var _a;
             this.bldrConfig = BldrConfig._instance;
             this.notice = 'BiomeProvider initialized';
             if (((_a = this.bldrConfig.biomeConfig) === null || _a === void 0 ? void 0 : _a.useBiome) === false) {
@@ -39,19 +40,10 @@ export class BiomeProvider {
             this.biomeInstance = yield Biome.create({
                 distribution: Distribution.NODE,
             });
-            if (this.bldrConfig.isDev || ((_b = this.bldrConfig.biomeConfig) === null || _b === void 0 ? void 0 : _b.forceBuildIfError) === true) {
-                this.bailOnError = {};
-                if (this.bldrConfig.isDev) {
-                    this.resultMessage = `Errors found in Biome`;
-                }
-                else {
-                    this.resultMessage = `Errors found in Biome, but build forced in config`;
-                }
-            }
-            else {
-                this.bailOnError = { throwError: true, exit: true };
-                this.resultMessage = `Errors found in Biome - process aborted`;
-            }
+            const msg = ' Errors found in ESlint ';
+            const count = Math.floor(((process.stdout.columns - 14) - msg.length - 2) / 2);
+            const sym = '=';
+            this.resultMessage = `${sym.repeat(count)}${msg}${sym.repeat(count)}`;
         });
     }
     /**
@@ -60,21 +52,37 @@ export class BiomeProvider {
      * @memberof BiomeProvider
      */
     lintAll() {
-        return __awaiter(this, arguments, void 0, function* (isLintCommand = false) {
-            // if ( !this.eslint ) {
-            //   return false;
-            // }
-            var _a, _b, _c;
-            if (((_a = this.bldrConfig.biomeConfig) === null || _a === void 0 ? void 0 : _a.writeLogfile) === true && ((_b = this.bldrConfig.biomeConfig) === null || _b === void 0 ? void 0 : _b.logFilePath) && isLintCommand) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b, _c, _d;
+            // Check if Biome is enabled
+            if (!this.biomeInstance) {
+                return;
+            }
+            // Check if log should be written
+            if (((_a = this.bldrConfig.biomeConfig) === null || _a === void 0 ? void 0 : _a.writeLogfile) === true && ((_b = this.bldrConfig.biomeConfig) === null || _b === void 0 ? void 0 : _b.logFilePath)) {
                 this.writeLogfile = true;
                 this.logFilePath = path.join(process.cwd(), (_c = this.bldrConfig.biomeConfig) === null || _c === void 0 ? void 0 : _c.logFilePath);
                 if (!fs.existsSync(this.logFilePath)) {
                     fs.writeFileSync(this.logFilePath, '', 'utf-8');
                 }
             }
+            // Reset errors
+            this.hasErrors = false;
+            // Set paths for linting
             yield __classPrivateFieldGet(this, _BiomeProvider_instances, "m", _BiomeProvider_setBiomePaths).call(this);
+            // If paths are set, run lint
             if (this.biomeAllPaths.length > 0) {
                 yield __classPrivateFieldGet(this, _BiomeProvider_instances, "m", _BiomeProvider_runLint).call(this, this.biomeAllPaths);
+            }
+            if (this.hasErrors && ((_d = this.bldrConfig.biomeConfig) === null || _d === void 0 ? void 0 : _d.forceBuildIfError) === true) {
+                console.log('');
+                logError(`biome`, '🚨🚨🚨 Biome errors found 🚨🚨🚨', { throwError: true, exit: true });
+            }
+            else if (this.hasErrors) {
+                logError(`biome`, 'Biome errors found, forceBuildIfError set to true, continuing on', {});
+            }
+            else {
+                logSuccess(`biome`, `No Biome errors found`);
             }
         });
     }
@@ -160,10 +168,11 @@ _BiomeProvider_instances = new WeakSet(), _BiomeProvider_setBiomePaths = functio
             if (typeof files === 'string') {
                 files = [files];
             }
+            // If writing to log, clear file first
             if (this.writeLogfile) {
                 fs.writeFileSync(this.logFilePath, '', 'utf-8');
             }
-            let isFail = false;
+            const errorArray = [];
             for (const file of files) {
                 const content = fs.readFileSync(file, 'utf-8');
                 const result = this.biomeInstance.lintContent(content, {
@@ -176,20 +185,21 @@ _BiomeProvider_instances = new WeakSet(), _BiomeProvider_setBiomePaths = functio
                 if (result.diagnostics.length === 0) {
                     continue;
                 }
-                isFail = true;
-                const dashes = dashPadFromString(this.resultMessage);
-                logError(`biome`, dashes, {});
-                logError(`biome`, this.resultMessage, {});
-                logError(`biome`, '', {});
-                console.log(__classPrivateFieldGet(this, _BiomeProvider_instances, "m", _BiomeProvider_formatHTML).call(this, html));
-                logError(`biome`, '', {});
-                logError(`biome`, dashes, {});
-                if (this.writeLogfile) {
+                this.hasErrors = true;
+                errorArray.push(html);
+                if (this.hasErrors) {
                     fs.appendFileSync(this.logFilePath, html, 'utf-8');
                 }
             }
-            if (isFail) {
-                logError(`biome`, `Errors found`, this.bailOnError);
+            if (this.hasErrors && errorArray.length > 0) {
+                const dashes = dashPadFromString(this.resultMessage);
+                logError(`biome`, dashes, {});
+                logError(`biome`, this.resultMessage, {});
+                logError(`biome`, dashes, {});
+                errorArray.forEach((html) => {
+                    console.log(__classPrivateFieldGet(this, _BiomeProvider_instances, "m", _BiomeProvider_formatHTML).call(this, html));
+                    logError(`biome`, dashes, {});
+                });
             }
         }
         catch (err) {
@@ -214,9 +224,6 @@ _BiomeProvider_instances = new WeakSet(), _BiomeProvider_setBiomePaths = functio
         }
     });
 }, _BiomeProvider_formatHTML = function _BiomeProvider_formatHTML(html) {
-    // let result = html.match(/<strong>(.*?)<\/strong>/g).map(function(val){
-    //   return val.replace(/<\/?b>/g,'');
-    // });
     let newHTML = html.replace(/<strong>(.*?)<\/strong>/g, chalk.bold(`$1`));
     newHTML = newHTML.replace(/&gt;/g, '>');
     newHTML = newHTML.replace(/<span style="color: Tomato;">(.*?)<\/span>/g, chalk.red(`$1`));
@@ -225,7 +232,6 @@ _BiomeProvider_instances = new WeakSet(), _BiomeProvider_setBiomePaths = functio
     newHTML = newHTML.replace(/<span style="opacity: 0.8;">(.*?)<\/span>/g, chalk.dim(`$1`));
     newHTML = newHTML.replace(/<span style="color: #000; background-color: #ddd;">(.*?)<\/span>/g, chalk.bgGreen.white(`\n\n$1`));
     newHTML = newHTML.replace(/<a href="([^"]+)">([^<]+)<\/a>/g, `${chalk.yellow.bold(`$2`)} ${chalk.yellowBright(`($1)`)}`);
-    newHTML = newHTML.replace(/━━━━━━━━━━/g, '');
     return newHTML;
 };
 //# sourceMappingURL=BiomeProvider.js.map
