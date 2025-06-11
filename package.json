@@ -7,7 +7,9 @@
   "main": "dist/index.js",
   "typesVersions": {
     "*": {
-      "*": ["dist/*"]
+      "*": [
+        "dist/*"
+      ]
     }
   },
   "repository": {
@@ -44,17 +46,24 @@
   ],
   "license": "ISC",
   "dependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@biomejs/js-api": "^0.7.1",
+    "@biomejs/wasm-bundler": "^1.9.4",
+    "@biomejs/wasm-nodejs": "^1.9.4",
+    "@biomejs/wasm-web": "^1.9.4",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^28.0.3",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-swc": "^0.4.0",
     "@swc/core": "^1.11.24",
+    "@types/babel__core": "^7.20.5",
     "browser-sync": "^3.0.4",
     "center-align": "^1.0.1",
     "chalk": "^5.4.1",
     "chokidar": "^4.0.3",
     "colors": "^1.4.0",
     "commander": "^13.1.0",
+    "console-style": "^0.1.2",
     "enquirer": "^2.4.1",
     "enquirer-esm": "^2.3.6-ext.1",
     "esbuild": "^0.25.3",
@@ -75,7 +84,6 @@
     "stylelint": "^16.19.1",
     "stylelint-formatter-pretty": "^4.0.1",
     "terser": "^5.39.0",
-    "@types/babel__core": "^7.20.5",
     "typescript": "^5.8.3"
   },
   "homepage": "https://github.com/bluecadet/bldr#readme",

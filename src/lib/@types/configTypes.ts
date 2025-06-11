@@ -16,6 +16,7 @@ export interface ConfigSettings {
   sdc?: BldrSDCSettings;
   esBuild?: BldrEsBuildSettings;
   rollup?: BldrRollupSettings;
+  biome?: BldrBiomeSettings;
   eslint?: BldrEsLintSettings;
   stylelint?: BldrStyleLintSettings;
   sassConfig?: BldrSassSettings;
@@ -177,6 +178,15 @@ export interface BldrEsLintSettings {
   useEslint?: boolean;
   options?: any;
   forceBuildIfError?: boolean;
+}
+
+
+export interface BldrBiomeSettings {
+  useBiome?: boolean;
+  ignorePaths?: string[];
+  forceBuildIfError?: boolean;
+  writeLogfile?: boolean;
+  logFilePath?: string;
 }
 
 

@@ -22,6 +22,7 @@ import { RollupProvider } from "./providers/RollupProvider.js";
 import { logAction } from "./utils/loggers.js";
 import { EslintProvider } from "./providers/EslintProvider.js";
 import { StylelintProvider } from "./providers/StylelintProvider.js";
+import { BiomeProvider } from "./providers/BiomeProvider.js";
 export class Bldr {
     constructor(commandSettings, isDev = false, isInit = false) {
         _Bldr_instances.add(this);
@@ -34,6 +35,7 @@ export class Bldr {
         this.SassProvider = new SassProvider();
         this.EslintProvider = new EslintProvider();
         this.StylelintProvider = new StylelintProvider();
+        this.BiomeProvider = new BiomeProvider();
         __classPrivateFieldGet(this, _Bldr_instances, "m", _Bldr_initialize).call(this);
     }
 }
@@ -49,6 +51,7 @@ _Bldr_instances = new WeakSet(), _Bldr_initialize = function _Bldr_initialize() 
             this.SassProvider.initialize(),
             this.EslintProvider.initialize(),
             this.StylelintProvider.initialize(),
+            this.BiomeProvider.initialize(),
         ]);
         if (this.isDev) {
             yield __classPrivateFieldGet(this, _Bldr_instances, "m", _Bldr_dev).call(this);

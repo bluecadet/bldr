@@ -1,5 +1,5 @@
 import { CommandSettings } from "./@types/commandSettings";
-import { AssetObject, BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, ConfigSettings, LocalConfigSettings, ProcessAsset, ProcessKey } from "./@types/configTypes";
+import { AssetObject, BldrBiomeSettings, BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, ConfigSettings, LocalConfigSettings, ProcessAsset, ProcessKey } from "./@types/configTypes";
 import { BldrSettings } from "./BldrSettings.js";
 import path from "node:path";
 import { logAction, logError, logWarn } from "./utils/loggers.js";
@@ -133,6 +133,12 @@ export class BldrConfig {
    * User defined config for StyleLint processing
    */
   public stylelintConfig: BldrStyleLintSettings | null = null;
+
+  /**
+   * @property null|object
+   * User defined config for Biome processing
+   */
+  public biomeConfig: BldrBiomeSettings | null = null;
 
   /**
    * @property null|function
@@ -378,12 +384,6 @@ export class BldrConfig {
       ])
       
     }
-
-   
-    
-    
-
-    
   }
 
 
@@ -435,6 +435,8 @@ export class BldrConfig {
     if ( this.processAssetGroups?.css || this.sdcProcessAssetGroups?.css || this.processAssetGroups?.sass || this.sdcProcessAssetGroups?.sass ) {
       await this.#setStylelintConfig(); 
     }
+
+    await this.#setBiomeConfig();
   }
 
 
@@ -513,24 +515,6 @@ export class BldrConfig {
 
 
   /**
-   * @method setSassConfig
-   * @description Set the Sass config based on the user config and bldr defaults
-   * @return {Promise<void>}
-   * @private
-   */
-  async #setSassConfig(): Promise<void> {
-    this.sassConfig = {
-      useLegacy: false,
-    };
-
-    if ( this.userConfig?.sassConfig ) {
-      this.sassConfig = {...this.sassConfig, ...this.userConfig.sassConfig};
-    }
-  }
-
-
-
-  /**
    * @method setStylelintConfig
    * @description Set the StyleLint config based on the user config and bldr defaults
    * @return {Promise<void>}
@@ -544,6 +528,55 @@ export class BldrConfig {
 
     if ( this.userConfig?.sass ) {
       this.stylelintConfig = {...this.stylelintConfig, ...this.userConfig.stylelint};
+    }
+  }
+
+
+  /**
+   * @method setBiomeConfig
+   * @description Set the Biome config based on the user config and bldr defaults
+   * @return {Promise<void>}
+   * @private
+   */
+  async #setBiomeConfig(): Promise<void> {
+    this.biomeConfig = {
+      useBiome: false,
+      forceBuildIfError: true,
+      ignorePaths: [],
+      writeLogfile: false,
+      logFilePath: 'biome.log.html',
+    };
+
+    if ( this.userConfig?.biome ) {
+      this.biomeConfig = {...this.biomeConfig, ...this.userConfig.biome};
+    }
+
+    if ( this.biomeConfig.useBiome ) {
+      if ( this.eslintConfig?.useEslint ) {
+        this.eslintConfig.useEslint = false;
+      }
+
+      if ( this.stylelintConfig?.useStyleLint ) {
+        this.stylelintConfig.useStyleLint = false;
+      }
+    }
+  }
+
+
+
+  /**
+   * @method setSassConfig
+   * @description Set the Sass config based on the user config and bldr defaults
+   * @return {Promise<void>}
+   * @private
+   */
+  async #setSassConfig(): Promise<void> {
+    this.sassConfig = {
+      useLegacy: false,
+    };
+
+    if ( this.userConfig?.sassConfig ) {
+      this.sassConfig = {...this.sassConfig, ...this.userConfig.sassConfig};
     }
   }
 

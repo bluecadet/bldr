@@ -8,6 +8,8 @@ import { BrowsersyncProvider } from './BrowsersyncProvider.js';
 import { logAction } from '../utils/loggers.js';
 import { EslintProvider } from './EslintProvider.js';
 import { StylelintProvider } from './StylelintProvider.js';
+import { isChildOfDir } from '../utils/isChildOfDir.js';
+import { checkIsSDCFile } from '../utils/checkIsSDCFile.js';
 
 export class ChokidarProvider {
 
@@ -58,7 +60,7 @@ export class ChokidarProvider {
         let isDestPath = false;
 
         this.bldrConfig.chokidarIgnorePathsArray.forEach((destPath) => {
-          if (this.#isChildOfDir(path, destPath)) {
+          if (isChildOfDir(path, destPath)) {
             isDestPath = true;
           }
         });
@@ -100,7 +102,7 @@ export class ChokidarProvider {
    * @memberof ChokidarProvider
    */
   async #changeFile(filepath: string) {
-    this.#checkIsSDCFile(filepath);
+    this.isSDCFile = checkIsSDCFile(filepath, this.bldrConfig.sdcPaths);
 
     const ext = path.extname(filepath).replace('.', '');
 
@@ -190,41 +192,6 @@ export class ChokidarProvider {
    */
   async #unlinkFile() {
     await this.bldrConfig.rebuildConfig();
-  }
-
-
-  /**
-   * @method #checkIsSDCFile
-   * @description Checks if the file is an SDC file
-   * @param {string} filepath - The path to the file
-   * @returns {boolean}
-   * @memberof ChokidarProvider
-   */
-  #checkIsSDCFile(filepath: string): boolean {
-    this.isSDCFile = false;
-
-    for (const file of this.bldrConfig.sdcPaths) {
-      if (this.#isChildOfDir(filepath, file)) {
-        this.isSDCFile = true;
-        break;
-      }
-    }
-
-    return this.isSDCFile;
-  }
-
-
-  /**
-   * @method #isChildOfDir
-   * @description Checks if the file is a child of the directory
-   * @param {string} filepath - The path to the file
-   * @param {string} dir - The directory to check against
-   * @returns {boolean}
-   * @memberof ChokidarProvider
-   */
-  #isChildOfDir(filepath: string, dir: string): boolean {
-    const relativePath = path.relative(dir, filepath);
-    return (relativePath && !relativePath.startsWith('..') && !path.isAbsolute(relativePath)) ? true : false;
   }
 
 }

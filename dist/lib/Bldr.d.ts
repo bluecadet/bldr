@@ -11,6 +11,7 @@ export declare class Bldr {
     private SassProvider;
     private EslintProvider;
     private StylelintProvider;
+    private BiomeProvider;
     constructor(commandSettings: CommandSettings, isDev?: boolean, isInit?: boolean);
 }
 //# sourceMappingURL=Bldr.d.ts.map

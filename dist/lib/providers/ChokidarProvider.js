@@ -12,7 +12,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _ChokidarProvider_instances, _ChokidarProvider_changeFile, _ChokidarProvider_addFile, _ChokidarProvider_unlinkFile, _ChokidarProvider_checkIsSDCFile, _ChokidarProvider_isChildOfDir;
+var _ChokidarProvider_instances, _ChokidarProvider_changeFile, _ChokidarProvider_addFile, _ChokidarProvider_unlinkFile;
 import chokidar from 'chokidar';
 import { BldrConfig } from '../BldrConfig.js';
 import path from 'node:path';
@@ -23,6 +23,8 @@ import { BrowsersyncProvider } from './BrowsersyncProvider.js';
 import { logAction } from '../utils/loggers.js';
 import { EslintProvider } from './EslintProvider.js';
 import { StylelintProvider } from './StylelintProvider.js';
+import { isChildOfDir } from '../utils/isChildOfDir.js';
+import { checkIsSDCFile } from '../utils/checkIsSDCFile.js';
 export class ChokidarProvider {
     constructor() {
         _ChokidarProvider_instances.add(this);
@@ -58,7 +60,7 @@ export class ChokidarProvider {
                     // Ignore dest files
                     let isDestPath = false;
                     this.bldrConfig.chokidarIgnorePathsArray.forEach((destPath) => {
-                        if (__classPrivateFieldGet(this, _ChokidarProvider_instances, "m", _ChokidarProvider_isChildOfDir).call(this, path, destPath)) {
+                        if (isChildOfDir(path, destPath)) {
                             isDestPath = true;
                         }
                     });
@@ -89,7 +91,7 @@ export class ChokidarProvider {
 _ChokidarProvider_instances = new WeakSet(), _ChokidarProvider_changeFile = function _ChokidarProvider_changeFile(filepath) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c, _d, _e, _f;
-        __classPrivateFieldGet(this, _ChokidarProvider_instances, "m", _ChokidarProvider_checkIsSDCFile).call(this, filepath);
+        this.isSDCFile = checkIsSDCFile(filepath, this.bldrConfig.sdcPaths);
         const ext = path.extname(filepath).replace('.', '');
         // Reload if extension is in the reloadExtensions array
         if (this.bldrConfig.reloadExtensions.includes(ext)) {
@@ -156,17 +158,5 @@ _ChokidarProvider_instances = new WeakSet(), _ChokidarProvider_changeFile = func
     return __awaiter(this, void 0, void 0, function* () {
         yield this.bldrConfig.rebuildConfig();
     });
-}, _ChokidarProvider_checkIsSDCFile = function _ChokidarProvider_checkIsSDCFile(filepath) {
-    this.isSDCFile = false;
-    for (const file of this.bldrConfig.sdcPaths) {
-        if (__classPrivateFieldGet(this, _ChokidarProvider_instances, "m", _ChokidarProvider_isChildOfDir).call(this, filepath, file)) {
-            this.isSDCFile = true;
-            break;
-        }
-    }
-    return this.isSDCFile;
-}, _ChokidarProvider_isChildOfDir = function _ChokidarProvider_isChildOfDir(filepath, dir) {
-    const relativePath = path.relative(dir, filepath);
-    return (relativePath && !relativePath.startsWith('..') && !path.isAbsolute(relativePath)) ? true : false;
 };
 //# sourceMappingURL=ChokidarProvider.js.map

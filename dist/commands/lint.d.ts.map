@@ -1,1 +1,1 @@
-{"version":3,"file":"lint.d.ts","sourceRoot":"","sources":["../../src/commands/lint.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,eAAe,EAAE,MAAM,+BAA+B,CAAC;AAMhE,MAAM,CAAC,OAAO,UAAU,IAAI,CAAC,cAAc,EAAE,eAAe,QAG3D"}
+{"version":3,"file":"lint.d.ts","sourceRoot":"","sources":["../../src/commands/lint.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,eAAe,EAAE,MAAM,+BAA+B,CAAC;AAOhE,MAAM,CAAC,OAAO,UAAU,IAAI,CAAC,cAAc,EAAE,eAAe,QAG3D"}
