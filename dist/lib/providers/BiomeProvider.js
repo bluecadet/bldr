@@ -23,6 +23,7 @@ import chalk from 'chalk';
 export class BiomeProvider {
     constructor() {
         _BiomeProvider_instances.add(this);
+        this.writeLogfile = false;
         this.hasErrors = false;
         if (BiomeProvider._instance) {
             return BiomeProvider._instance;
@@ -40,7 +41,7 @@ export class BiomeProvider {
             this.biomeInstance = yield Biome.create({
                 distribution: Distribution.NODE,
             });
-            const msg = ' Errors found in ESlint ';
+            const msg = ' Errors found in Biome ';
             const count = Math.floor(((process.stdout.columns - 14) - msg.length - 2) / 2);
             const sym = '=';
             this.resultMessage = `${sym.repeat(count)}${msg}${sym.repeat(count)}`;
@@ -94,8 +95,9 @@ export class BiomeProvider {
      */
     lintFile(filepath) {
         return __awaiter(this, void 0, void 0, function* () {
+            this.writeLogfile = false;
             if (!this.biomeInstance) {
-                return false;
+                return;
             }
             yield __classPrivateFieldGet(this, _BiomeProvider_instances, "m", _BiomeProvider_runLint).call(this, filepath);
         });
@@ -174,20 +176,24 @@ _BiomeProvider_instances = new WeakSet(), _BiomeProvider_setBiomePaths = functio
             }
             const errorArray = [];
             for (const file of files) {
-                const content = fs.readFileSync(file, 'utf-8');
-                const result = this.biomeInstance.lintContent(content, {
+                const contentBuffer = fs.readFileSync(file);
+                console.log(contentBuffer.toString());
+                const formatted = this.biomeInstance.formatContent(contentBuffer.toString(), {
+                    filePath: file,
+                });
+                const result = this.biomeInstance.lintContent(formatted.content, {
                     filePath: file,
                 });
                 const html = this.biomeInstance.printDiagnostics(result.diagnostics, {
                     filePath: file,
-                    fileSource: content,
+                    fileSource: contentBuffer.toString(),
                 });
                 if (result.diagnostics.length === 0) {
                     continue;
                 }
                 this.hasErrors = true;
                 errorArray.push(html);
-                if (this.hasErrors) {
+                if (this.writeLogfile && this.hasErrors) {
                     fs.appendFileSync(this.logFilePath, html, 'utf-8');
                 }
             }
@@ -226,12 +232,14 @@ _BiomeProvider_instances = new WeakSet(), _BiomeProvider_setBiomePaths = functio
 }, _BiomeProvider_formatHTML = function _BiomeProvider_formatHTML(html) {
     let newHTML = html.replace(/<strong>(.*?)<\/strong>/g, chalk.bold(`$1`));
     newHTML = newHTML.replace(/&gt;/g, '>');
+    newHTML = newHTML.replace(/&amp;/g, '&');
     newHTML = newHTML.replace(/<span style="color: Tomato;">(.*?)<\/span>/g, chalk.red(`$1`));
+    newHTML = newHTML.replace(/lint\//g, `\nlint/`);
     newHTML = newHTML.replace(/<span style="color: lightgreen;">(.*?)<\/span>/g, chalk.green(`$1`));
     newHTML = newHTML.replace(/<span style="color: MediumSeaGreen;">(.*?)<\/span>/g, chalk.greenBright(`$1`));
     newHTML = newHTML.replace(/<span style="opacity: 0.8;">(.*?)<\/span>/g, chalk.dim(`$1`));
     newHTML = newHTML.replace(/<span style="color: #000; background-color: #ddd;">(.*?)<\/span>/g, chalk.bgGreen.white(`\n\n$1`));
-    newHTML = newHTML.replace(/<a href="([^"]+)">([^<]+)<\/a>/g, `${chalk.yellow.bold(`$2`)} ${chalk.yellowBright(`($1)`)}`);
+    newHTML = newHTML.replace(/<a href="([^"]+)">([^<]+)<\/a>/g, `${chalk.yellow.bold(`$2`)} ${chalk.cyan(`($1)`)}`);
     return newHTML;
 };
 //# sourceMappingURL=BiomeProvider.js.map

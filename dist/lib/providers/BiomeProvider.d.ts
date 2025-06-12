@@ -45,6 +45,6 @@ export declare class BiomeProvider {
      * @returns {Promise<void>}
      * @memberof BiomeProvider
      */
-    lintFile(filepath: string): Promise<false | undefined>;
+    lintFile(filepath: string): Promise<void>;
 }
 //# sourceMappingURL=BiomeProvider.d.ts.map

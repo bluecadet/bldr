@@ -22,6 +22,7 @@ import { SassProvider } from './SassProvider.js';
 import { BrowsersyncProvider } from './BrowsersyncProvider.js';
 import { logAction } from '../utils/loggers.js';
 import { EslintProvider } from './EslintProvider.js';
+import { BiomeProvider } from './BiomeProvider.js';
 import { StylelintProvider } from './StylelintProvider.js';
 import { isChildOfDir } from '../utils/isChildOfDir.js';
 import { checkIsSDCFile } from '../utils/checkIsSDCFile.js';
@@ -41,6 +42,7 @@ export class ChokidarProvider {
         this.EsBuild = EsBuildProvider._instance;
         this.EsLint = EslintProvider._instance;
         this.Stylelint = StylelintProvider._instance;
+        this.Biome = BiomeProvider._instance;
     }
     /**
      * @method initialize
@@ -90,7 +92,7 @@ export class ChokidarProvider {
 }
 _ChokidarProvider_instances = new WeakSet(), _ChokidarProvider_changeFile = function _ChokidarProvider_changeFile(filepath) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
         this.isSDCFile = checkIsSDCFile(filepath, this.bldrConfig.sdcPaths);
         const ext = path.extname(filepath).replace('.', '');
         // Reload if extension is in the reloadExtensions array
@@ -104,11 +106,16 @@ _ChokidarProvider_instances = new WeakSet(), _ChokidarProvider_changeFile = func
         }
         // Process css files
         if ((ext === 'css') || (ext === 'pcss')) {
-            yield this.Stylelint.lintFile(filepath);
-            if (this.isSDCFile && ((_a = this.bldrConfig.sdcProcessAssetGroups.css) === null || _a === void 0 ? void 0 : _a[filepath])) {
+            if ((_a = this.bldrConfig.biomeConfig) === null || _a === void 0 ? void 0 : _a.useBiome) {
+                yield this.Biome.lintFile(filepath);
+            }
+            else if ((_b = this.bldrConfig.stylelintConfig) === null || _b === void 0 ? void 0 : _b.useStyleLint) {
+                yield this.Stylelint.lintFile(filepath);
+            }
+            if (this.isSDCFile && ((_c = this.bldrConfig.sdcProcessAssetGroups.css) === null || _c === void 0 ? void 0 : _c[filepath])) {
                 yield this.Postcss.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.css[filepath]);
             }
-            else if ((_b = this.bldrConfig.processAssetGroups.css) === null || _b === void 0 ? void 0 : _b[filepath]) {
+            else if ((_d = this.bldrConfig.processAssetGroups.css) === null || _d === void 0 ? void 0 : _d[filepath]) {
                 yield this.Postcss.buildAssetGroup(this.bldrConfig.processAssetGroups.css[filepath]);
             }
             else {
@@ -120,10 +127,10 @@ _ChokidarProvider_instances = new WeakSet(), _ChokidarProvider_changeFile = func
         // Process sass files
         if ((ext === 'sass' || ext === 'scss') && this.Sass) {
             yield this.Stylelint.lintFile(filepath);
-            if (this.isSDCFile && ((_c = this.bldrConfig.sdcProcessAssetGroups.sass) === null || _c === void 0 ? void 0 : _c[filepath])) {
+            if (this.isSDCFile && ((_e = this.bldrConfig.sdcProcessAssetGroups.sass) === null || _e === void 0 ? void 0 : _e[filepath])) {
                 yield this.Sass.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.sass[filepath]);
             }
-            else if ((_d = this.bldrConfig.processAssetGroups.sass) === null || _d === void 0 ? void 0 : _d[filepath]) {
+            else if ((_f = this.bldrConfig.processAssetGroups.sass) === null || _f === void 0 ? void 0 : _f[filepath]) {
                 yield this.Sass.buildProcessBundle();
             }
             else {
@@ -134,11 +141,16 @@ _ChokidarProvider_instances = new WeakSet(), _ChokidarProvider_changeFile = func
         }
         // Process js files
         if ((ext === 'js' || ext === 'ts') && this.EsBuild) {
-            yield this.EsLint.lintFile(filepath);
-            if (this.isSDCFile && ((_e = this.bldrConfig.sdcProcessAssetGroups.js) === null || _e === void 0 ? void 0 : _e[filepath])) {
+            if ((_g = this.bldrConfig.biomeConfig) === null || _g === void 0 ? void 0 : _g.useBiome) {
+                yield this.Biome.lintFile(filepath);
+            }
+            else if ((_h = this.bldrConfig.eslintConfig) === null || _h === void 0 ? void 0 : _h.useEslint) {
+                yield this.EsLint.lintFile(filepath);
+            }
+            if (this.isSDCFile && ((_j = this.bldrConfig.sdcProcessAssetGroups.js) === null || _j === void 0 ? void 0 : _j[filepath])) {
                 yield this.EsBuild.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.js[filepath]);
             }
-            else if ((_f = this.bldrConfig.processAssetGroups.js) === null || _f === void 0 ? void 0 : _f[filepath]) {
+            else if ((_k = this.bldrConfig.processAssetGroups.js) === null || _k === void 0 ? void 0 : _k[filepath]) {
                 yield this.EsBuild.buildProcessBundle();
             }
             else {

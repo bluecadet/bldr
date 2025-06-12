@@ -7,6 +7,7 @@ import { SassProvider } from './SassProvider.js';
 import { BrowsersyncProvider } from './BrowsersyncProvider.js';
 import { logAction } from '../utils/loggers.js';
 import { EslintProvider } from './EslintProvider.js';
+import { BiomeProvider } from './BiomeProvider.js';
 import { StylelintProvider } from './StylelintProvider.js';
 import { isChildOfDir } from '../utils/isChildOfDir.js';
 import { checkIsSDCFile } from '../utils/checkIsSDCFile.js';
@@ -25,6 +26,7 @@ export class ChokidarProvider {
   private Browsersync: BrowsersyncProvider;
   private EsLint: EslintProvider;
   private Stylelint: StylelintProvider;
+  private Biome: BiomeProvider;
   private isSDCFile: boolean = false;
 
 
@@ -36,6 +38,7 @@ export class ChokidarProvider {
     this.EsBuild     = EsBuildProvider._instance;
     this.EsLint      = EslintProvider._instance;
     this.Stylelint   = StylelintProvider._instance;
+    this.Biome       = BiomeProvider._instance;
   }
 
 
@@ -119,7 +122,13 @@ export class ChokidarProvider {
 
     // Process css files
     if ( (ext === 'css') || (ext === 'pcss') ) {
-      await this.Stylelint.lintFile(filepath);
+
+      if ( this.bldrConfig.biomeConfig?.useBiome ) {
+        await this.Biome.lintFile(filepath);
+      } else if ( this.bldrConfig.stylelintConfig?.useStyleLint ) {
+        await this.Stylelint.lintFile(filepath);
+      }
+      
 
       if ( this.isSDCFile && this.bldrConfig.sdcProcessAssetGroups.css?.[filepath] ) {
         await this.Postcss.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.css[filepath]);
@@ -152,7 +161,12 @@ export class ChokidarProvider {
     // Process js files
     if ( (ext === 'js' || ext === 'ts') && this.EsBuild ) {
 
-      await this.EsLint.lintFile(filepath);
+      if ( this.bldrConfig.biomeConfig?.useBiome ) {
+        await this.Biome.lintFile(filepath);
+      } else if ( this.bldrConfig.eslintConfig?.useEslint ) {
+        await this.EsLint.lintFile(filepath);
+      }
+      
 
       if ( this.isSDCFile && this.bldrConfig.sdcProcessAssetGroups.js?.[filepath] ) {
         await this.EsBuild.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.js[filepath]);
