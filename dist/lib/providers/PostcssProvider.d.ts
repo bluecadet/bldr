@@ -1,4 +1,4 @@
-import { ProcessAsset } from '../@types/configTypes.js';
+import type { ProcessAsset } from '../@types/configTypes.js';
 export declare class PostcssProvider {
     /**
      * @property null|object
@@ -25,6 +25,10 @@ export declare class PostcssProvider {
      * Postcssrc instance
      */
     private postcssrc;
+    /**
+     * @description Syntax rules for postcss
+     */
+    private syntax;
     constructor();
     /**
      * @method initialize
@@ -54,6 +58,6 @@ export declare class PostcssProvider {
      * @returns {Promise<void>}
      * @memberof PostcssProvider
      */
-    buildAssetGroup(assetGroup: ProcessAsset): Promise<boolean>;
+    buildAssetGroup(assetGroup: ProcessAsset): Promise<void>;
 }
 //# sourceMappingURL=PostcssProvider.d.ts.map

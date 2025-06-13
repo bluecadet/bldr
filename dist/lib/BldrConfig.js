@@ -7,22 +7,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
-    if (kind === "m") throw new TypeError("Private method is not writable");
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
-    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
-};
 var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _BldrConfig_instances, _BldrConfig_fg, _BldrConfig_loadConfig, _BldrConfig_createProcessConfig, _BldrConfig_setProcessSrc, _BldrConfig_handleProcessGroup, _BldrConfig_createSrcDestObject, _BldrConfig_handleSDC, _BldrConfig_handleSDCType, _BldrConfig_buildProviderConfig, _BldrConfig_setEsBuildConfig, _BldrConfig_setRollupConfig, _BldrConfig_setEslintConfig, _BldrConfig_setStylelintConfig, _BldrConfig_setBiomeConfig, _BldrConfig_setSassConfig;
-import { BldrSettings } from "./BldrSettings.js";
-import path from "node:path";
+var _BldrConfig_instances, _BldrConfig_loadConfig, _BldrConfig_createProcessConfig, _BldrConfig_setProcessSrc, _BldrConfig_handleProcessGroup, _BldrConfig_createSrcDestObject, _BldrConfig_handleSDC, _BldrConfig_handleSDCType, _BldrConfig_buildProviderConfig, _BldrConfig_setEsBuildConfig, _BldrConfig_setRollupConfig, _BldrConfig_setEslintConfig, _BldrConfig_setStylelintConfig, _BldrConfig_setBiomeConfig, _BldrConfig_setSassConfig;
 import { logAction, logError, logWarn } from "./utils/loggers.js";
-import { createRequire } from 'node:module';
+import FastGlob from "fast-glob";
+import path from "node:path";
+import fs from "node:fs";
 export class BldrConfig {
     /**
      * @description BldrConfig constructor
@@ -109,20 +103,27 @@ export class BldrConfig {
          * User defined config for Biome processing
          */
         this.biomeConfig = null;
-        /**
-         * @property null|function
-         * Fast-glob function
-         */
-        _BldrConfig_fg.set(this, null);
         if (BldrConfig._instance) {
+            // biome-ignore lint/correctness/noConstructorReturn: <explanation>
             return BldrConfig._instance;
         }
         BldrConfig._instance = this;
-        const require = createRequire(import.meta.url);
-        this.bldrSettings = new BldrSettings();
         this.cliArgs = commandSettings;
         this.isDev = isDev;
-        __classPrivateFieldSet(this, _BldrConfig_fg, require('fast-glob'), "f");
+        // Determine if old User Config File...
+        this.configFileName = 'bldrConfig.js';
+        this.configFilePath = path.join(process.cwd(), this.configFileName);
+        if (!fs.existsSync(this.configFilePath)) {
+            this.configFileName = 'bldr.config.js';
+            this.configFilePath = path.join(process.cwd(), this.configFileName);
+        }
+        // Determine User Local Config File
+        this.localConfigFileName = 'bldrConfigLocal.js';
+        this.localConfigFilePath = path.join(process.cwd(), this.localConfigFileName);
+        if (!fs.existsSync(this.localConfigFilePath)) {
+            this.localConfigFileName = 'bldr.local.config.js';
+            this.localConfigFilePath = path.join(process.cwd(), this.localConfigFileName);
+        }
     }
     /**
      * @method initialize
@@ -146,14 +147,15 @@ export class BldrConfig {
     addFileToAssetGroup(file_1, key_1) {
         return __awaiter(this, arguments, void 0, function* (file, key, isSDC = false, dest = null) {
             const group = isSDC ? this.sdcProcessAssetGroups : this.processAssetGroups;
-            const localFile = file.replace(process.cwd() + '/', '');
+            const localFile = file.replace(`${process.cwd()}/`, '');
             if (!(group === null || group === void 0 ? void 0 : group[key])) {
                 group[key] = {};
             }
-            if (!dest) {
-                dest = path.dirname(file);
+            let setDest = dest;
+            if (!setDest) {
+                setDest = path.dirname(file);
             }
-            group[key][localFile] = __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_createSrcDestObject).call(this, file, dest);
+            group[key][localFile] = __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_createSrcDestObject).call(this, file, setDest);
         });
     }
     /**
@@ -181,26 +183,26 @@ export class BldrConfig {
         });
     }
 }
-_BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConfig_loadConfig = function _BldrConfig_loadConfig() {
+_BldrConfig_instances = new WeakSet(), _BldrConfig_loadConfig = function _BldrConfig_loadConfig() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
         // Load bldr config file
         try {
-            const config = yield import(this.bldrSettings.configFilePath);
+            const config = yield import(this.configFilePath);
             this.userConfig = config.default;
         }
         catch (error) {
             console.log(error);
-            logError('bldr', `Missing required ${this.bldrSettings.configFileName} file`, { throwError: true, exit: true });
+            logError('bldr', `Missing required ${this.configFileName} file`, { throwError: true, exit: true });
         }
         // Load Local User Config
         try {
-            const localConfig = yield import(this.bldrSettings.localConfigFilePath);
+            const localConfig = yield import(this.localConfigFilePath);
             this.localConfig = localConfig.default;
         }
         catch (error) {
             if (this.isDev && !((_a = this.userConfig.browsersync) === null || _a === void 0 ? void 0 : _a.disable)) {
-                logWarn('bldr', `Missing ${this.bldrSettings.localConfigFileName} file, using defaults`);
+                logWarn('bldr', `Missing ${this.localConfigFileName} file, using defaults`);
             }
             this.localConfig = null;
         }
@@ -227,7 +229,7 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
             this.chokidarWatchArray.push('.');
         }
         // Dedupe chokidar watch array
-        this.chokidarWatchArray = this.chokidarWatchArray.filter((elem, pos) => this.chokidarWatchArray.indexOf(elem) == pos);
+        this.chokidarWatchArray = this.chokidarWatchArray.filter((elem, pos) => this.chokidarWatchArray.indexOf(elem) === pos);
     });
 }, _BldrConfig_setProcessSrc = function _BldrConfig_setProcessSrc() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -251,15 +253,15 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
         if (!((_a = this.processSrc) === null || _a === void 0 ? void 0 : _a[key])) {
             return;
         }
-        this.processSrc[key].forEach((p) => {
-            const files = __classPrivateFieldGet(this, _BldrConfig_fg, "f").sync([`${path.join(process.cwd(), p.src)}`]);
+        for (const p of this.processSrc[key]) {
+            const files = FastGlob.sync([`${path.join(process.cwd(), p.src)}`]);
             if (files && files.length > 0) {
                 for (const file of files) {
                     this.chokidarIgnorePathsArray.push(path.resolve(p.dest));
                     this.addFileToAssetGroup(file, key, false, p.dest);
                 }
             }
-        });
+        }
     });
 }, _BldrConfig_createSrcDestObject = function _BldrConfig_createSrcDestObject(src, dest) {
     return {
@@ -293,10 +295,10 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
     });
 }, _BldrConfig_handleSDCType = function _BldrConfig_handleSDCType(ext, key, sdcDirPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        const files = yield __classPrivateFieldGet(this, _BldrConfig_fg, "f").sync([`${sdcDirPath}/**/**/${this.sdcAssetSubDirectory}/*.${ext}`]);
+        const files = FastGlob.sync([`${sdcDirPath}/**/**/${this.sdcAssetSubDirectory}/*.${ext}`]);
         if (files && files.length > 0) {
             for (const file of files) {
-                let dest = path.normalize(path.join(path.dirname(file), '..'));
+                const dest = path.normalize(path.join(path.dirname(file), '..'));
                 this.addFileToAssetGroup(file, key, true, dest);
             }
         }
@@ -366,6 +368,7 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
             useEslint: true,
             options: {},
             forceBuildIfError: true,
+            ignorePaths: [],
         };
         if ((_a = this.userConfig) === null || _a === void 0 ? void 0 : _a.eslint) {
             this.eslintConfig = Object.assign(Object.assign({}, this.eslintConfig), this.userConfig.eslint);
@@ -377,6 +380,7 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
         this.stylelintConfig = {
             useStyleLint: true,
             forceBuildIfError: true,
+            ignorePaths: [],
         };
         if ((_a = this.userConfig) === null || _a === void 0 ? void 0 : _a.stylelint) {
             this.stylelintConfig = Object.assign(Object.assign({}, this.stylelintConfig), this.userConfig.stylelint);

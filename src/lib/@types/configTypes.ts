@@ -1,5 +1,5 @@
 import type { InputOptions, OutputOptions } from "rollup";
-import { RollupBabelInputPluginOptions } from "@rollup/plugin-babel";
+import type { RollupBabelInputPluginOptions } from "@rollup/plugin-babel";
 import type { Options as SWCOptions } from '@swc/core';
 
 
@@ -64,24 +64,12 @@ export interface EnvObjectConfig {
 
 
 
-export interface PostCSSSettings {
-  /**
-   * @description PostCssPlugins
-   */
-  plugins?: [string, any][];
-
-  /**
-   * @description Override PostCssPlugins native to bldr
-   */
-  overridePlugins?: boolean;
-}
-
-
-
 export interface BldrEsBuildSettings {
   /**
    * @description EsBuild native to bldr
    */
+  
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   plugins?: [string, any][];
 
   /**
@@ -125,6 +113,7 @@ export interface BldrRollupSettings {
   /**
    * @description set to false if terser should not be ran. Default: true
    */
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   terserOptions?: null | any;
 
   /**
@@ -138,6 +127,7 @@ export interface BldrRollupSettings {
    * default: { external: [/@babel\/runtime/] }
    */
   inputOptions?: null | InputOptions;
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   inputPlugins?: null | any[],
   overrideInputPlugins?: null | boolean;
   
@@ -145,6 +135,7 @@ export interface BldrRollupSettings {
    * @description see rollups outputOptions object at https://rollupjs.org/javascript-api/#outputoptions-object
    */
   outputOptions?: null | OutputOptions;
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   outputPlugins?: null | any[];
   overrideOutputPlugins?: null | boolean;
 }
@@ -176,8 +167,10 @@ export interface BldrEsLintSettings {
    * set to false if eslint should not be ran. Default: true
    */
   useEslint?: boolean;
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   options?: any;
   forceBuildIfError?: boolean;
+  ignorePaths?: string[];
 }
 
 
@@ -192,6 +185,7 @@ export interface BldrBiomeSettings {
 
 export interface BldrStyleLintSettings {
   useStyleLint?: boolean;
+  ignorePaths?: string[];
   forceBuildIfError?: boolean;
 }
 
@@ -242,6 +236,7 @@ export interface LocalConfigSettings {
   /**
    * @description browsersync options
    */
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   browsersync?: any;
 }
 

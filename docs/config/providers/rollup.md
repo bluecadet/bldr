@@ -4,7 +4,7 @@ outline: deep
 
 # Rollup:
 
-Rollup is used to process javascript during production runs (`bldr build`). 
+[Rollup](https://rollupjs.org/) is used to process javascript during production runs (`bldr build`). 
 
 The `rollup` key in bldrConfig has the following options:
 

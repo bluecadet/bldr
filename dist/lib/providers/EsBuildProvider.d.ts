@@ -1,4 +1,4 @@
-import { ProcessAsset } from '../@types/configTypes.js';
+import type { ProcessAsset } from '../@types/configTypes.js';
 export declare class EsBuildProvider {
     /**
      * @property null|object

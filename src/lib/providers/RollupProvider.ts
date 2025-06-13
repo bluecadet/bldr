@@ -1,18 +1,15 @@
-import { ProcessAsset } from '../@types/configTypes.js';
+import type { ProcessAsset } from '../@types/configTypes.js';
 import { BldrConfig } from '../BldrConfig.js';
-import path from 'node:path';
-import fs from 'node:fs';
-
-import { rollup } from 'rollup';
-import commonjs from '@rollup/plugin-commonjs';
-import { nodeResolve } from '@rollup/plugin-node-resolve';
-// import injectProcessEnv from 'rollup-plugin-inject-process-env';
-import swc from '@rollup/plugin-swc';
-import { babel } from '@rollup/plugin-babel';
-
-import { minify } from "terser";
 import { logAction, logError, logSuccess } from '../utils/loggers.js';
 import { ensureDirectory } from '../utils/ensureDirectory.js';
+import { rollup, RollupBuild } from 'rollup';
+import commonjs from '@rollup/plugin-commonjs';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import swc from '@rollup/plugin-swc';
+import { babel } from '@rollup/plugin-babel';
+import { minify } from "terser";
+import path from 'node:path';
+import fs from 'node:fs';
 
 export class RollupProvider {
 
@@ -29,14 +26,23 @@ export class RollupProvider {
   public static _instance: RollupProvider;
 
 
+  /**
+   * @property rollupFinalConfig
+   */
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   private rollupFinalConfig!: any;
 
+
+  /**
+   * @property null|string notice
+   */
   public notice!: string;
 
 
   constructor() {
 
     if (RollupProvider._instance) {
+      // biome-ignore lint/correctness/noConstructorReturn: <explanation>
       return RollupProvider._instance;
     }
 
@@ -59,7 +65,7 @@ export class RollupProvider {
    * @returns {Promise<void>}
    * @memberof RollupProvider
    */
-  async buildProcessBundle() {
+  async buildProcessBundle(): Promise<void> {
 
     await this.buildProcessAssetGroupsBundle();
 
@@ -68,7 +74,6 @@ export class RollupProvider {
         await this.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.js[asset], true);
       }
     }
-    
   }
 
 
@@ -78,7 +83,7 @@ export class RollupProvider {
    * @returns {Promise<void>}
    * @memberof RollupProvider
    */
-  async buildProcessAssetGroupsBundle() {
+  async buildProcessAssetGroupsBundle(): Promise<void> {
     if ( this.bldrConfig.processAssetGroups?.js ) {
       for (const asset of Object.keys(this.bldrConfig.processAssetGroups.js)) {
         await this.buildAssetGroup(this.bldrConfig.processAssetGroups.js[asset]);
@@ -94,7 +99,7 @@ export class RollupProvider {
    * @returns {Promise<void>}
    * @memberof RollupProvider
    */
-  async buildAssetGroup(assetGroup: ProcessAsset, isSDC: boolean = false): Promise<void> {
+  async buildAssetGroup(assetGroup: ProcessAsset, isSDC = false): Promise<void> {
 
     const {src, dest} = assetGroup;
     const filename = path.basename(src);
@@ -118,7 +123,7 @@ export class RollupProvider {
       bundleConfig.outputOptions.format = this.bldrConfig.rollupConfig.sdcOptions?.format;
     }
 
-    let bundle;
+    let bundle: RollupBuild | null = null;
     let buildStart = 0;
     let buildEnd = 0;
 
@@ -127,9 +132,7 @@ export class RollupProvider {
       await ensureDirectory(dest);
 
       buildStart = new Date().getTime();
-      // create a bundle
       bundle = await rollup({...this.rollupFinalConfig.inputOptions, input: src});
-      // write the bundle
       await bundle.write({...this.rollupFinalConfig.outputOptions, file: destPath});
   
     } catch (error) {
@@ -188,12 +191,6 @@ export class RollupProvider {
       // CommonJS
       inputPlugins.push(commonjs());
 
-      // Replace process.env in files with production
-      // inputPlugins.push(injectProcessEnv({
-      //   NODE_ENV: 'production',
-      // }));
-
-
       // SWC or Babel
       if ( this.rollupFinalConfig.useSWC ) {
         inputPlugins.push(swc(this.rollupFinalConfig.swcPluginOptions || {}));
@@ -203,7 +200,6 @@ export class RollupProvider {
 
       // Node resolve
       inputPlugins.push(nodeResolve());
-
 
       // Set plugins
       if ( this.bldrConfig.rollupConfig?.inputPlugins ) {

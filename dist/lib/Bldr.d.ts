@@ -1,4 +1,4 @@
-import { CommandSettings } from "./@types/commandSettings";
+import type { CommandSettings } from "./@types/commandSettings";
 import { BldrConfig } from "./BldrConfig.js";
 export declare class Bldr {
     #private;
@@ -12,6 +12,6 @@ export declare class Bldr {
     private EslintProvider;
     private StylelintProvider;
     private BiomeProvider;
-    constructor(commandSettings: CommandSettings, isDev?: boolean, isInit?: boolean);
+    constructor(commandSettings: CommandSettings, isDev?: boolean);
 }
 //# sourceMappingURL=Bldr.d.ts.map

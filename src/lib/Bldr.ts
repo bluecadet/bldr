@@ -1,6 +1,5 @@
-import { CommandSettings } from "./@types/commandSettings";
+import type { CommandSettings } from "./@types/commandSettings";
 import { BldrConfig } from "./BldrConfig.js";
-import { BldrSettings } from "./BldrSettings.js";
 import { ChokidarProvider } from "./providers/ChokidarProvider.js";
 import { PostcssProvider } from "./providers/PostcssProvider.js";
 import { SassProvider } from "./providers/SassProvider.js";
@@ -25,7 +24,7 @@ export class Bldr {
   private StylelintProvider: StylelintProvider;
   private BiomeProvider: BiomeProvider;
 
-  constructor(commandSettings: CommandSettings, isDev: boolean = false, isInit: boolean = false) {
+  constructor(commandSettings: CommandSettings, isDev = false) {
     
     this.commandSettings = commandSettings;
     this.isDev = isDev;
@@ -43,11 +42,14 @@ export class Bldr {
 
   }
 
-  async #initialize() {
+
+  /**
+   * @description Initialize the Bldr instance
+   * @returns {Promise<void>}
+   */
+  async #initialize(): Promise<void> {
 
     // Initialize the Bldr instance with command settings
-    logAction('bldr', '...initializing providers...');
-
     await this.bldrConfig.initialize();
 
     await Promise.all([
@@ -75,17 +77,22 @@ export class Bldr {
    * @memberof Bldr
    * @private
    */
-  async #dev() {
+  async #dev(): Promise<void> {
+
+    if (this.bldrConfig?.envKey) {
+      logAction(
+        'bldr',
+        `🐣 Starting dev using ${this.bldrConfig?.envKey} env configuration...`
+      );
+    } else {
+      logAction('bldr', '🐣 Starting dev...');
+    }
 
     // The once command was sent, run dev build and bail
     if ( this.commandSettings?.once ) {
       const processStart = new Date().getTime();
 
-      if (this.bldrConfig?.envKey) {
-        logAction('bldr', `Running single dev build using ${this.bldrConfig.envKey} env configuration...`);
-      } else {
-        logAction('bldr', 'Running single dev build...');
-      }
+      logAction('bldr', '💪 Running single dev build...');
 
       await this.#runOnce();
 
@@ -116,25 +123,26 @@ export class Bldr {
    * @memberof Bldr
    * @private
    */
-  async #production() {
+  async #production(): Promise<void> {
 
     const processStart = new Date().getTime();
 
-    console.log(``);
+    console.log('');
+
     if (this.bldrConfig?.envKey) {
-      console.log(`-----------------------------------------------------------------------------------------------`);
+      console.log('-'.repeat(process.stdout.columns));
       logAction(
         'bldr',
-        '💪 Starting production build using ${this.bldrConfig?.envKey} env configuration...'
+        `💪 Starting production build using ${this.bldrConfig?.envKey} env configuration...`
       );
-      console.log(`-----------------------------------------------------------------------------------------------`);
+      console.log('-'.repeat(process.stdout.columns));
     } else {
-      console.log(`--------------------------------------------`);
+      console.log('-'.repeat(process.stdout.columns));
       logAction('bldr', '💪 Starting production build...');
-      console.log(`--------------------------------------------`);
+      console.log('-'.repeat(process.stdout.columns));
     }
     
-    console.log(``);
+    console.log('');
     
     await this.#runOnce();
     
@@ -151,7 +159,7 @@ export class Bldr {
    * @memberof Bldr
    * @private
    */
-  async #runOnce() {
+  async #runOnce(): Promise<void> {
 
     // Lint the things
     await Promise.all([

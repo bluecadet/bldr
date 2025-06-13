@@ -18,7 +18,9 @@ export class ChokidarProvider {
    * @property null|object
    * Chokidar instance
    */
-  public watcher: any = null;
+  
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  public  watcher: any = null;
   private bldrConfig: BldrConfig;
   private EsBuild: EsBuildProvider;
   private Postcss: PostcssProvider;
@@ -27,7 +29,7 @@ export class ChokidarProvider {
   private EsLint: EslintProvider;
   private Stylelint: StylelintProvider;
   private Biome: BiomeProvider;
-  private isSDCFile: boolean = false;
+  private isSDCFile = false;
 
 
   constructor() {
@@ -48,7 +50,7 @@ export class ChokidarProvider {
    * @returns {Promise<void>}
    * @memberof ChokidarProvider
    */
-  async initialize() {
+  async initialize(): Promise<void> {
 
     await this.Browsersync.initialize();
 
@@ -62,11 +64,11 @@ export class ChokidarProvider {
         // Ignore dest files
         let isDestPath = false;
 
-        this.bldrConfig.chokidarIgnorePathsArray.forEach((destPath) => {
+        for (const destPath of this.bldrConfig.chokidarIgnorePathsArray) {
           if (isChildOfDir(path, destPath)) {
             isDestPath = true;
           }
-        });
+        }
 
         return isDestPath;
       },
@@ -74,11 +76,11 @@ export class ChokidarProvider {
     });
 
     this.watcher.on('ready', () => {
-      console.log(``);
-      console.log(`-------------------------------------------`);
+      console.log('');
+      console.log('-'.repeat(process.stdout.columns));
       logAction('bldr', '💪 Ready and waiting for changes!');
-      console.log(`-------------------------------------------`);
-      console.log(``);
+      console.log('-'.repeat(process.stdout.columns));
+      console.log('');
 
       this.Browsersync.bootstrap();
     });

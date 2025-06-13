@@ -55,6 +55,6 @@ export declare class EslintProvider {
      * @returns {Promise<void>}
      * @memberof EslintProvider
      */
-    lintFile(filepath: string): Promise<false | undefined>;
+    lintFile(filepath: string): Promise<void>;
 }
 //# sourceMappingURL=EslintProvider.d.ts.map

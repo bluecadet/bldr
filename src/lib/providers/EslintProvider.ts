@@ -2,10 +2,8 @@ import { BldrConfig } from '../BldrConfig.js';
 import { ESLint } from 'eslint';
 import { dashPadFromString, logAction, logError, logSuccess } from '../utils/loggers.js';
 import path from 'node:path';
-import { createRequire } from 'node:module';
-import { ProcessAsset } from '../@types/configTypes.js';
 import fs from 'node:fs';
-import chalk from 'chalk';
+import { getAllFiles } from '../utils/getAllFiles.js';
 
 export class EslintProvider {
 
@@ -35,7 +33,8 @@ export class EslintProvider {
   /**
    * @property null|object
    */
-  private formatter!: any;
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  private  formatter!: any;
 
 
   /**
@@ -51,14 +50,15 @@ export class EslintProvider {
   /**
    * @property null | string[]
    */
-  private eslintAllPaths!: string[];
+  private eslintAllPaths!: string[] | false;
 
-  private hasErrors: boolean = false;
+  private hasErrors = false;
 
 
   constructor() {
 
     if (EslintProvider._instance) {
+      // biome-ignore lint/correctness/noConstructorReturn: <explanation>
       return EslintProvider._instance;
     }
 
@@ -114,17 +114,17 @@ export class EslintProvider {
 
     await this.#setEsLintPaths();
     
-    if (this.eslintAllPaths.length > 0) {
+    if (this.eslintAllPaths && this.eslintAllPaths.length > 0) {
       await this.#runLint(this.eslintAllPaths);
     }
 
     if (this.hasErrors && this.bldrConfig.eslintConfig?.forceBuildIfError === true) {
       console.log('');
-      logError(`eslint`, '🚨🚨🚨 ESLint errors found 🚨🚨🚨', { throwError: true, exit: true });
+      logError('eslint', '🚨🚨🚨 ESLint errors found 🚨🚨🚨', { throwError: true, exit: true });
     } else if (this.hasErrors) {
-      logError(`eslint`, 'ESLint errors found, forceBuildIfError set to true, continuing on', {});
+      logError('eslint', 'ESLint errors found, forceBuildIfError set to true, continuing on', {});
     } else {
-      logSuccess(`eslint`, `No ESLint errors found`);
+      logSuccess('eslint', 'No ESLint errors found');
     }
     
   }
@@ -141,44 +141,25 @@ export class EslintProvider {
     this.eslintAllPaths = [];
 
     // Check if eslint.config.js exists in the project root, and use files from config if defined
-    const eslintConfigPath = path.join(process.cwd(), `eslint.config.js`);
+    const eslintConfigPath = path.join(process.cwd(), 'eslint.config.js');
     if ( fs.existsSync(eslintConfigPath) ) {
       const configFile = await import(eslintConfigPath);
 
-      configFile.default.forEach((c: { files: any[]; }) => {
+      for (const c of configFile.default as { files: string[] }[]) {
         if (c?.files) {
-          c.files.forEach((file) => {
+          for (const file of c.files) {
             this.eslintAllPaths.push(path.join(process.cwd(), file));
-          });
+          }
         }
-      })
+      }
 
       if ( this.eslintAllPaths.length > 0 ) {
-        logAction(`eslint`, `Linting files from eslint.config.js`);
+        logAction('eslint', 'Linting files from eslint.config.js');
         return;
       }
     }
 
-    // Otherwise, Use files from config
-    const require = createRequire(import.meta.url);
-    const fg      = require('fast-glob');
-
-    if ( this.bldrConfig.processSrc?.js ) {
-      this.bldrConfig.processSrc.js.forEach((p: ProcessAsset) => {
-        const files = fg.sync([`${path.join(process.cwd(), p.src)}`]);
-        if ( files && files.length > 0 ) {
-          for (const file of files) {
-            this.eslintAllPaths.push(path.resolve(file));
-          }
-        }
-      });
-    }
-
-    if ( this.bldrConfig.sdcProcessAssetGroups?.js ) {
-      for (const [key, value] of Object.entries(this.bldrConfig.sdcProcessAssetGroups.js)) {
-        this.eslintAllPaths.push(path.resolve((value as { src: string }).src));
-      }
-    }
+    this.eslintAllPaths = await getAllFiles(['js'], []);
   }
 
 
@@ -189,10 +170,10 @@ export class EslintProvider {
    * @returns {Promise<void>}
    * @memberof EslintProvider
    */
-  async lintFile(filepath: string) {
+  async lintFile(filepath: string): Promise<void> {
 
     if ( !this.eslint ) {
-      return false;
+      return;
     }
 
     await this.#runLint(filepath);
@@ -216,25 +197,25 @@ export class EslintProvider {
       const resultText = this.formatter.format(results);
       let resultErrors = false;
 
-      results.forEach((res: any) => {
+      for (const res of results) {
         if (res.errorCount > 0) {
           resultErrors = true;
         }
-      });
+      }
 
       if ( resultErrors ) {
         const dashes = dashPadFromString(this.resultMessage);
-        logError(`eslint`, dashes, {});
-        logError(`eslint`, this.resultMessage, {});
-        logError(`eslint`, dashes, {});
+        logError('eslint', dashes, {});
+        logError('eslint', this.resultMessage, {});
+        logError('eslint', dashes, {});
 
-        results.forEach((res: any) => {
+        for (const res of results) {
           if ( res.errorCount > 0 ) {
             this.hasErrors = true;    
             console.log(resultText);
-            logError(`eslint`, dashes, {});
+            logError('eslint', dashes, {});
           }
-        });
+        };
       }
 
       

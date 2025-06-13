@@ -1,4 +1,4 @@
-import { CommandSettings } from './@types/commandSettings';
+import type { CommandSettings } from './@types/commandSettings';
 export declare class BldrSettings {
     /**
      * @description Singleton instance of BldrSettings
@@ -45,19 +45,6 @@ export declare class BldrSettings {
      * @description Flag indicating if the current environment is development
      */
     isDev: boolean;
-    /**
-     * @description Syntax rules for postcss
-     */
-    syntax: {
-        rules: {
-            test: RegExp;
-            extract?: string;
-            lang?: string;
-        }[];
-        css: any;
-        sass: any;
-        scss: any;
-    };
     constructor();
 }
 //# sourceMappingURL=BldrSettings.d.ts.map

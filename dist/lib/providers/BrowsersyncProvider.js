@@ -12,8 +12,14 @@ import { createRequire } from 'node:module';
 import { logAction } from '../utils/loggers.js';
 export class BrowsersyncProvider {
     constructor() {
+        /**
+         * @property null|object
+         * Browsersync instance
+         */
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
         this.browsersyncInstance = null;
         if (BrowsersyncProvider._instance) {
+            // biome-ignore lint/correctness/noConstructorReturn: <explanation>
             return BrowsersyncProvider._instance;
         }
         BrowsersyncProvider._instance = this;
@@ -32,6 +38,11 @@ export class BrowsersyncProvider {
             this.notice = 'BrowsersyncProvider initialized';
         });
     }
+    /**
+     * @method bootstrap
+     * @description Starts the Browsersync server with the provided configuration.
+     * @returns {void}
+     */
     bootstrap() {
         var _a, _b, _c, _d;
         if ((_b = (_a = this.bldrConfig.userConfig) === null || _a === void 0 ? void 0 : _a.browsersync) === null || _b === void 0 ? void 0 : _b.disable)
@@ -45,16 +56,31 @@ export class BrowsersyncProvider {
         }
         this.browsersyncInstance.init(bsOptions);
     }
+    /**
+     * @method reload
+     * @description Reloads the Browsersync server.
+     * @returns {void}
+     */
     reload() {
         if (!this.browsersyncInstance)
             return;
         this.browsersyncInstance.reload();
     }
+    /**
+     * @method reloadHTML
+     * @description Reloads the Browsersync server for js files.
+     * @returns {void}
+     */
     reloadJS() {
         if (!this.browsersyncInstance)
             return;
         this.browsersyncInstance.reload(['*.js']);
     }
+    /**
+     * @method reloadCSS
+     * @description Reloads the Browsersync server for css files.
+     * @returns {void}
+     */
     reloadCSS() {
         if (!this.browsersyncInstance)
             return;

@@ -8,6 +8,9 @@ import path from 'node:path';
  */
 export function isChildOfDir(filepath, dir) {
     const relativePath = path.relative(dir, filepath);
-    return (relativePath && !relativePath.startsWith('..') && !path.isAbsolute(relativePath)) ? true : false;
+    if (relativePath && !relativePath.startsWith('..') && !path.isAbsolute(relativePath)) {
+        return true;
+    }
+    return false;
 }
 //# sourceMappingURL=isChildOfDir.js.map

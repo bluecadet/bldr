@@ -10,13 +10,33 @@ export declare class StylelintProvider {
      * Singleton instance of Stylelint
      */
     static _instance: StylelintProvider;
+    /**
+     * @property null | string
+     * Notice message
+     */
     notice: string;
-    private allPaths;
+    /**
+     * @property null | string[]
+     * All paths to lint
+     */
+    private allStylelintPaths;
+    /**
+     * @property null | boolean
+     * Whether to allow stylelint to run
+     */
     private allowStylelint;
-    private bailOnError;
+    /**
+     * @property null | string
+     * Result message for errors
+     */
     private resultMessage;
     private hasErrors;
     constructor();
+    /**
+     * @description Initialize the StylelintProvider
+     * @returns {Promise<void>}
+     * @memberof StylelintProvider
+     */
     initialize(): Promise<void>;
     /**
      * @description Lint all files in the project
@@ -24,6 +44,12 @@ export declare class StylelintProvider {
      * @memberof EslintProvider
      */
     lintAll(): Promise<void>;
+    /**
+     * @description Set the paths for stylelint
+     * @returns {Promise<void>}
+     * @memberof EslintProvider
+     * @private
+     */
     /**
      * @description Lint single file in the project
      * @param {string} filepath - Path to the file to lint

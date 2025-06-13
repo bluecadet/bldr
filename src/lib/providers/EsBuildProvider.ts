@@ -1,4 +1,4 @@
-import { ProcessAsset } from '../@types/configTypes.js';
+import type { ProcessAsset } from '../@types/configTypes.js';
 import { BldrConfig } from '../BldrConfig.js';
 import * as esBuild from 'esbuild';
 import path from 'node:path';
@@ -25,6 +25,7 @@ export class EsBuildProvider {
   constructor() {
 
     if (EsBuildProvider._instance) {
+      // biome-ignore lint/correctness/noConstructorReturn: <explanation>
       return EsBuildProvider._instance;
     }
 
@@ -86,7 +87,7 @@ export class EsBuildProvider {
 
       await ensureDirectory(dest);
 
-      const result = await esBuild
+      await esBuild
         .build({
           entryPoints: [src],
           bundle: true,
@@ -102,8 +103,8 @@ export class EsBuildProvider {
     } catch (error) {
       // General error caught
       const toBailOrNotToBail = this.bldrConfig.isDev ? {} : { throwError: true, exit: true };
-      logError(`esbuild`, `General error:`, {});
-      logError(`esbuild`, `${error}`, toBailOrNotToBail);
+      logError('esbuild', 'General error:', {});
+      logError('esbuild', `${error}`, toBailOrNotToBail);
     }
   }
 

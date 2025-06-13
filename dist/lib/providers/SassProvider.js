@@ -23,6 +23,7 @@ export class SassProvider {
     constructor() {
         _SassProvider_instances.add(this);
         if (SassProvider._instance) {
+            // biome-ignore lint/correctness/noConstructorReturn: <explanation>
             return SassProvider._instance;
         }
         SassProvider._instance = this;
@@ -55,6 +56,12 @@ export class SassProvider {
             }
         });
     }
+    /**
+     * @method buildProcessAssetGroupsBundle
+     * @description Builds the process bundle for sass
+     * @returns {Promise<void>}
+     * @memberof SassProvider
+     */
     buildProcessAssetGroupsBundle() {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
@@ -81,6 +88,7 @@ export class SassProvider {
             const ext = path.extname(src);
             const cleanName = filename.replace(ext, '');
             try {
+                // biome-ignore lint/suspicious/noExplicitAny: <explanation>
                 let result;
                 yield ensureDirectory(dest);
                 if ((_b = (_a = this.bldrConfig) === null || _a === void 0 ? void 0 : _a.sassConfig) === null || _b === void 0 ? void 0 : _b.useLegacy) {
@@ -95,7 +103,7 @@ export class SassProvider {
                 }
                 let cssString = result.css.toString();
                 if (result === null || result === void 0 ? void 0 : result.sourceMap) {
-                    cssString += '\n'.repeat(2) + '/*# sourceMappingURL=' + `${cleanName}.css.map` + ' */';
+                    cssString += `\n\n/*# sourceMappingURL=${cleanName}.css.map */`;
                     fs.writeFileSync(path.join(dest, `${cleanName}.css.map`), JSON.stringify(result.sourceMap));
                 }
                 fs.writeFileSync(path.join(dest, `${cleanName}.css`), cssString);
@@ -107,8 +115,8 @@ export class SassProvider {
             catch (error) {
                 // General error caught
                 const toBailOrNotToBail = this.bldrConfig.isDev ? {} : { throwError: true, exit: true };
-                logError(`sass`, `General error:`, {});
-                logError(`sass`, `${error}`, toBailOrNotToBail);
+                logError('sass', 'General error:', {});
+                logError('sass', `${error}`, toBailOrNotToBail);
             }
         });
     }

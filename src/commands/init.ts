@@ -1,16 +1,14 @@
-import { CommandSettings } from "../lib/@types/commandSettings";
-import { BldrSettings } from "../lib/BldrSettings.js";
+import type { CommandSettings } from "../lib/@types/commandSettings";
 import { logSuccess, logError } from "../lib/utils/loggers.js";
-import { ConfigSettings, LocalConfigSettings } from "../lib/@types/configTypes";
+import type { ConfigSettings, LocalConfigSettings } from "../lib/@types/configTypes";
 import { handleBrowsersync, handleEsLint, handlePathPrompt, handleReloadExtensions, handleRollup, handleSDC, handleStylelint, handleWatchPaths } from "../lib/utils/createFilePrompts.js";
 import path from "node:path";
 import fs from "node:fs";
 import Module from "node:module";
 
 const require  = Module.createRequire(import.meta.url);
-const { prompt } = require('enquirer');
-const colors = require('colors');
-const settings = new BldrSettings();
+import { prompt } from 'enquirer';
+import colors from 'colors';
 
 export default function init(commandOptions: CommandSettings) {
   maybeCreateFiles();
@@ -18,22 +16,22 @@ export default function init(commandOptions: CommandSettings) {
 
 
 const maybeCreateFiles = async () => {
-  const configPath = path.join(settings.root, settings.configFileName);
-  const localConfigPath = path.join(settings.root, settings.localConfigFileName);
+  const configPath = path.join(process.cwd(), 'bldr.config.js');
+  const localConfigPath = path.join(process.cwd(), 'bldr.local.config.js');
 
   if ( fs.existsSync(configPath) ) {
-    logSuccess(`bldr init`, `${settings.configFileName} already exists in this project.`);
+    logSuccess('bldr init', 'bldr.config.js already exists in this project.');
   } else {
     await createBldrConfig();
   }
 
   if ( fs.existsSync(localConfigPath) ) {
-    logSuccess(`bldr init`, `${settings.localConfigFileName} already exists in this project.`);
+    logSuccess('bldr init', 'bldr.local.config.js already exists in this project.');
   } else {
     await createBldrLocalConfig();
   }
 
-  logSuccess(`bldr init`, `all done!`);
+  logSuccess('bldr init', 'all done!');
 }
 
 
@@ -42,18 +40,18 @@ const maybeCreateFiles = async () => {
  */
 const createBldrLocalConfig = async () => {
 
-  const askToCreate = await prompt({
+  const askToCreate: { local: boolean } = await prompt({
     type: 'confirm',
     name: 'local',
-    message: `${colors.yellow(`Would you like to create a ${settings.localConfigFileName} file?`)}`
+    message: `${colors.yellow('Would you like to create a bldr.local.config.js file?')}`
   });
 
   if ( !askToCreate.local ) {
-    logSuccess(`bldr init`, `a ${settings.localConfigFileName} file was not created`);
+    logSuccess('bldr init', 'a bldr.local.config.js file was not created');
     return;
   }
 
-  const localPrompt = await prompt([
+  const localPrompt: { port: string; proxyUrl: string } = await prompt([
     {
       type: 'input',
       name: 'port',
@@ -62,7 +60,7 @@ const createBldrLocalConfig = async () => {
     {
       type: 'input',
       name: 'proxyUrl',
-      message: `${colors.cyan(`proxy`)} ${colors.dim('(local dev url)')}:`,
+      message: `${colors.cyan('proxy')} ${colors.dim('(local dev url)')}:`,
     }
   ]);
 
@@ -83,11 +81,11 @@ const createBldrLocalConfig = async () => {
 export default bldrLocalConfig(${JSON.stringify(config, null, 2)})`;
 
   try {
-    fs.writeFileSync(`${path.join(process.cwd(), settings.localConfigFileName)}`, content, 'utf8');
-    logSuccess(`bldr init`, `${settings.localConfigFileName} file created in project root.`);
+    fs.writeFileSync(`${path.join(process.cwd(), 'bldr.local.config.js')}`, content, 'utf8');
+    logSuccess('bldr init', 'bldr.local.config.js file created in project root.');
   } catch (err) {
     // Error if can't write file
-    logError(`bldr init`, `error writing ${settings.localConfigFileName} file to ${process.cwd()}`);
+    logError('bldr init', `error writing bldr.local.config.js file to ${process.cwd()}`);
   }
 }
 
@@ -100,14 +98,14 @@ export default bldrLocalConfig(${JSON.stringify(config, null, 2)})`;
  */
 const createBldrConfig = async () => {
 
-  const askToCreate = await prompt({
+  const askToCreate: { local: boolean } = await prompt({
     type: 'confirm',
     name: 'local',
-    message: `${colors.yellow(`Would you like to create a ${settings.configFileName} file?`)}`
+    message: `${colors.yellow('Would you like to create a bldr.config.js file?')}`
   });
 
   if ( !askToCreate.local ) {
-    logSuccess(`bldr init`, `a ${settings.configFileName} file was not created`);
+    logSuccess('bldr init', 'a bldr.config.js file was not created');
     return;
   }
 
@@ -129,11 +127,11 @@ const createBldrConfig = async () => {
 export default bldrConfig(${JSON.stringify(config, null, 2)})`;
 
   try {
-    fs.writeFileSync(`${path.join(process.cwd(), settings.configFileName)}`, content, 'utf8');
-    logSuccess(`bldr init`, `${settings.configFileName} file created in project root.`);
+    fs.writeFileSync(`${path.join(process.cwd(), 'bldr.config.js')}`, content, 'utf8');
+    logSuccess('bldr init', 'bldr.config.js file created in project root.');
   } catch (err) {
     // Error if can't write file
-    logError(`bldr init`, `error writing ${settings.configFileName} file to ${process.cwd()}`);
+    logError('bldr init', `error writing bldr.config.js file to ${process.cwd()}`);
   }
   
 }

@@ -1,4 +1,4 @@
-import { ProcessAsset } from '../@types/configTypes.js';
+import type { ProcessAsset } from '../@types/configTypes.js';
 import { BldrConfig } from '../BldrConfig.js';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -31,18 +31,35 @@ export class PostcssProvider {
    * @property null|object
    * Postcss instance
    */
-  private postcss: any;
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  private  postcss: any;
 
   /**
    * @property null|object
    * Postcssrc instance
    */
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   private postcssrc: any;
+
+
+  /**
+   * @description Syntax rules for postcss
+   */
+  private syntax!: {
+    rules: { test: RegExp; extract?: string; lang?: string }[];
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    css: any;
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    sass: any;
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    scss: any;
+  };
 
 
   constructor() {
 
     if (PostcssProvider._instance) {
+      // biome-ignore lint/correctness/noConstructorReturn: <explanation>
       return PostcssProvider._instance;
     }
 
@@ -57,12 +74,36 @@ export class PostcssProvider {
    * @returns {Promise<void>}
    * @memberof PostcssProvider
    */
-  async initialize() {
+  async initialize(): Promise<void> {
     const require = createRequire(import.meta.url);
     this.bldrConfig = BldrConfig._instance;
     this.postcss = require('postcss');
     this.postcssrc = require('postcss-load-config');
     this.notice = 'PostcssProvider initialized';
+
+    this.syntax = require('postcss-syntax')({
+      rules: [
+        {
+          test: /\.(?:[sx]?html?|[sx]ht|vue|ux|php)$/i,
+          extract: 'html',
+        },
+        {
+          test: /\.(?:markdown|md)$/i,
+          extract: 'markdown',
+        },
+        {
+          test: /\.(?:m?[jt]sx?|es\d*|pac)$/i,
+          extract: 'jsx',
+        },
+        {
+          test: /\.(?:postcss|pcss|css)$/i,
+          lang: 'scss',
+        },
+      ],
+      css: require('postcss-safe-parser'),
+      sass: require('postcss-sass'),
+      scss: require('postcss-scss'),
+    });
   }
 
 
@@ -79,9 +120,7 @@ export class PostcssProvider {
       for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.css)) {
         await this.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.css[asset]);
       }  
-    }
-
-    
+    }    
   }
 
 
@@ -107,7 +146,7 @@ export class PostcssProvider {
    * @returns {Promise<void>}
    * @memberof PostcssProvider
    */
-  async buildAssetGroup(assetGroup: ProcessAsset) {
+  async buildAssetGroup(assetGroup: ProcessAsset): Promise<void> {
 
     const start             = Date.now();
     const {src, dest}       = assetGroup;
@@ -130,7 +169,7 @@ export class PostcssProvider {
 
       // Run postcss process
       const postCssResult = await this.postcss(postCSSConfig.plugins).process(fileContent, {
-        syntax: postCSSConfig.options?.syntax ?? this.bldrConfig.bldrSettings.syntax,
+        syntax: postCSSConfig.options?.syntax ?? this.syntax,
         from:   src,
         to:     writeFileName,
         map:    postCSSConfig.options?.map ?? mapOpts,
@@ -138,7 +177,7 @@ export class PostcssProvider {
   
       // Check if postCssResult contains css
       if ( !postCssResult?.css ) {
-        logError(`postcss`, `${fileName} does not contain css, generated blank file`);
+        logError('postcss', `${fileName} does not contain css, generated blank file`);
       }
 
       // Check if destination directory exists, make it if not
@@ -149,9 +188,9 @@ export class PostcssProvider {
         fs.writeFileSync(path.join(dest, writeFileName), postCssResult.css);
       } catch (err) {
         // Error if can't write file
-        logError(`postcss`, `error writing ${fileName} to ${dest}`, {});
-        logError(`postcss`, `${err}`, toBailOrNotToBail);
-        return false;
+        logError('postcss', `error writing ${fileName} to ${dest}`, {});
+        logError('postcss', `${err}`, toBailOrNotToBail);
+        return;
       }
   
       // Write maps
@@ -161,9 +200,9 @@ export class PostcssProvider {
             fs.writeFileSync(`${path.join(dest, writeFileName)}.map`, postCssResult.map.toString())
           } catch (err) {
             // Error if can't write file
-            logError(`postcss`, `error writing ${fileName} map file to ${dest}`, {});
-            logError(`postcss`, `${err}`, toBailOrNotToBail);
-            return false;
+            logError('postcss', `error writing ${fileName} map file to ${dest}`, {});
+            logError('postcss', `${err}`, toBailOrNotToBail);
+            return;
           }
         }
       }
@@ -175,8 +214,9 @@ export class PostcssProvider {
       logSuccess('postcss', `${fileName} processed`, ((stop - start) / 1000));
   
       // All done
-      return true;
+      return;
   
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     } catch(err: any) {
 
       if ( err?.file ) {
@@ -184,13 +224,13 @@ export class PostcssProvider {
         logPostCssErrorMessage(err, {});
       } else {
         // General error caught
-        logError(`postcss`, `General error:`, {});
-        logError(`postcss`, `${err}`, toBailOrNotToBail);
+        logError('postcss', 'General error:', {});
+        logError('postcss', `${err}`, toBailOrNotToBail);
       }
   
       // Allow process to continue if watch is running
       if ( this.bldrConfig.isDev ) {
-        return false;
+        return;
       }
   
       process.exit(1);

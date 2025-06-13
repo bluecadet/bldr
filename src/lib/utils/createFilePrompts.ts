@@ -1,10 +1,18 @@
 import Module from "node:module";
-import { ConfigSettings, ProcessKey } from "../@types/configTypes";
+import type { ConfigSettings, ProcessKey } from "../@types/configTypes";
 const require  = Module.createRequire(import.meta.url);
 const { prompt } = require('enquirer');
 const colors = require('colors');
 
-export const handlePathPrompt = async (processName: ProcessKey, ext: string, config: ConfigSettings) => {
+
+/**
+ * Handles the path prompts for various processes like sass, js, etc.
+ * @param {ProcessKey} processName - The name of the process (e.g., 'sass', 'js').
+ * @param {string} ext - The file extension to process (e.g., 'scss', 'js').
+ * @param {ConfigSettings} config - The configuration object to update.
+ * @returns {Promise<ConfigSettings>} - The updated configuration object.
+ */
+export const handlePathPrompt = async (processName: ProcessKey, ext: string, config: ConfigSettings): Promise<ConfigSettings> => {
   
   const basePrompt = await prompt([
     {
@@ -42,8 +50,8 @@ export const handlePathPrompt = async (processName: ProcessKey, ext: string, con
       const sassPrompt = await prompt([
         {
           type: 'input',
-          name: `sassOpt`,
-          message: `${colors.cyan(`Use legacy api?`)}`,
+          name: 'sassOpt',
+          message: `${colors.cyan('Use legacy api?')}`,
           initial: false,
         }
       ]);
@@ -58,14 +66,18 @@ export const handlePathPrompt = async (processName: ProcessKey, ext: string, con
 }
 
 
-
+/**
+ * Handles the watch paths prompt for custom directories.
+ * @param {ConfigSettings} config - The configuration object to update.
+ * @returns {Promise<ConfigSettings>} - The updated configuration object.
+ */
 export const handleWatchPaths = async (config: ConfigSettings) => {
   
   const basePrompt = await prompt([
     {
       type: 'confirm',
       name: 'use',
-      message: `${colors.blue(`Add custom watch paths? (defaults to root directory)`)}`,
+      message: `${colors.blue('Add custom watch paths? (defaults to root directory)')}`,
     },
   ]);
 
@@ -73,12 +85,12 @@ export const handleWatchPaths = async (config: ConfigSettings) => {
     const pathPrompt = await prompt([
       {
         type: 'input',
-        name: `text`,
-        message: `${colors.cyan(`enter a comma seperated list of directory paths`)} ${colors.dim('( from root, can end with glob pattern)')}:`,
+        name: 'text',
+        message: `${colors.cyan('enter a comma seperated list of directory paths')} ${colors.dim('( from root, can end with glob pattern)')}:`,
       },
     ]);
 
-    config['watchPaths'] = pathPrompt.text.split(',').map((str: string) => str.trim());
+    config.watchPaths = pathPrompt.text.split(',').map((str: string) => str.trim());
   }
 
   return config;
@@ -92,7 +104,7 @@ export const handleReloadExtensions = async (config: ConfigSettings) => {
     {
       type: 'confirm',
       name: 'use',
-      message: `${colors.blue(`Add custom reload extensions? (ie html, php, twig etc.)`)}`,
+      message: `${colors.blue('Add custom reload extensions? (ie html, php, twig etc.)')}`,
     },
   ]);
 
@@ -100,12 +112,12 @@ export const handleReloadExtensions = async (config: ConfigSettings) => {
     const pathPrompt = await prompt([
       {
         type: 'input',
-        name: `text`,
-        message: `${colors.cyan(`enter a comma seperated list of extensions`)} ${colors.dim(`(extension name only without a dot, such as 'twig' or 'html')`)}:`,
+        name: 'text',
+        message: `${colors.cyan('enter a comma seperated list of extensions')} ${colors.dim(`(extension name only without a dot, such as 'twig' or 'html')`)}:`,
       },
     ]);
 
-    config['reloadExtensions'] = pathPrompt.text.split(',').map((str: string) => str.trim());
+    config.reloadExtensions = pathPrompt.text.split(',').map((str: string) => str.trim());
   }
 
   return config;
@@ -119,7 +131,7 @@ export const handleSDC = async (config: ConfigSettings) => {
     {
       type: 'confirm',
       name: 'use',
-      message: `${colors.blue(`Configure SDC?`)}`,
+      message: `${colors.blue('Configure SDC?')}`,
       initial: false,
     },
   ]);
@@ -128,24 +140,24 @@ export const handleSDC = async (config: ConfigSettings) => {
     const pathPrompt = await prompt([
       {
         type: 'input',
-        name: `directory`,
-        message: `${colors.cyan(`path to SDC components from root`)}:`,
+        name: 'directory',
+        message: `${colors.cyan('path to SDC components from root')}:`,
       },
       {
         type: 'input',
-        name: `assetSubDirectory`,
-        message: `${colors.cyan(`subdirectory name within an SDC component that contains raw assets`)} ${colors.dim(`(defaults to 'assets')`)}:`,
+        name: 'assetSubDirectory',
+        message: `${colors.cyan('subdirectory name within an SDC component that contains raw assets')} ${colors.dim(`(defaults to 'assets')`)}:`,
         initial: 'assets',
       },
       {
         type: 'confirm',
         name: 'bundle',
-        message: `${colors.blue(`Bundle SDC js files with rollup?`)}`,
+        message: `${colors.blue('Bundle SDC js files with rollup?')}`,
         initial: true,
       },
     ]);
 
-    config['sdc'] = {
+    config.sdc = {
       directory: pathPrompt.directory,
       assetSubDirectory: pathPrompt.assetSubDirectory || 'assets',
     }
@@ -166,13 +178,13 @@ export const handleSDC = async (config: ConfigSettings) => {
         {
           type: 'confirm',
           name: 'minify',
-          message: `${colors.blue(`Minify SDC js files with rollup?`)}`,
+          message: `${colors.blue("Minify SDC js files with rollup?")}`,
           initial: true,
         },
         {
           type: 'select',
           name: 'format',
-          message: `${colors.blue(`Bundle SDC js files with rollup?`)}`,
+          message: `${colors.blue("Bundle SDC js files with rollup?")}`,
           choices: ['es', 'iife', 'amd', 'cjs', 'umd', 'system'],
           initial: 'es',
         },
@@ -195,14 +207,14 @@ export const handleRollup = async (config: ConfigSettings) => {
     {
       type: 'select',
       name: 'compiler',
-      message: `${colors.blue(`Rollup Transpiler?`)}`,
+      message: `${colors.blue('Rollup Transpiler?')}`,
       choices: ['babel', 'swc', 'none'],
       initial: 'babel',
     },
     {
       type: 'confirm',
       name: 'terser',
-      message: `${colors.blue(`Minify with Terser?`)}`,
+      message: `${colors.blue('Minify with Terser?')}`,
       initial: true,
     }
   ]);
@@ -211,8 +223,8 @@ export const handleRollup = async (config: ConfigSettings) => {
     config.rollup = {}
   }
 
-  config.rollup.useBabel = basePrompt.compiler === 'babel' ? true : false;
-  config.rollup.useSWC = basePrompt.compiler === 'swc' ? true : false;
+  config.rollup.useBabel = basePrompt.compiler  === 'babel';
+  config.rollup.useSWC = basePrompt.compiler  === 'swc';
 
   if ( basePrompt.compiler === 'none' ) {
     config.rollup.useBabel = false;
@@ -234,7 +246,7 @@ export const handleEsLint = async (config: ConfigSettings) => {
     {
       type: 'confirm',
       name: 'use',
-      message: `${colors.blue(`Use EsLint?`)}`,
+      message: `${colors.blue('Use EsLint?')}`,
       initial: true,
     },
   ]);
@@ -243,18 +255,18 @@ export const handleEsLint = async (config: ConfigSettings) => {
     const pathPrompt = await prompt([
       {
         type: 'confirm',
-        name: `forceBuild`,
-        message: `${colors.cyan(`force production build if eslint results in errors?`)}`,
+        name: 'forceBuild',
+        message: `${colors.cyan('force production build if eslint results in errors?')}`,
         initial: true,
       },
     ]);
 
-    config['eslint'] = {
+    config.eslint = {
       useEslint: true,
       forceBuildIfError: pathPrompt.forceBuild,
     };
   } else {
-    config['eslint'] = {
+    config.eslint = {
       useEslint: false,
     };
   }
@@ -272,7 +284,7 @@ export const handleStylelint = async (config: ConfigSettings) => {
     {
       type: 'confirm',
       name: 'use',
-      message: `${colors.blue(`Use StyleLint?`)}`,
+      message: `${colors.blue('Use StyleLint?')}`,
       initial: true,
     },
   ]);
@@ -281,18 +293,18 @@ export const handleStylelint = async (config: ConfigSettings) => {
     const pathPrompt = await prompt([
       {
         type: 'confirm',
-        name: `forceBuild`,
-        message: `${colors.cyan(`force production build if eslint results in errors?`)}`,
+        name: 'forceBuild',
+        message: `${colors.cyan('force production build if eslint results in errors?')}`,
         initial: true,
       },
     ]);
 
-    config['stylelint'] = {
+    config.stylelint = {
       useStyleLint: true,
       forceBuildIfError: pathPrompt.forceBuild,
     };
   } else {
-    config['stylelint'] = {
+    config.stylelint = {
       useStyleLint: false,
     };
   }
@@ -310,13 +322,13 @@ export const handleBrowsersync = async (config: ConfigSettings) => {
     {
       type: 'confirm',
       name: 'use',
-      message: `${colors.blue(`Use browsersync?`)}`,
+      message: `${colors.blue('Use browsersync?')}`,
       initial: true,
     },
   ]);
 
   if ( !basePrompt.use ) {
-    config['browsersync'] = {
+    config.browsersync = {
       disable: true,
     };
   }

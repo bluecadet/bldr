@@ -2,10 +2,10 @@ import { BldrConfig } from '../BldrConfig.js';
 import stylelint from 'stylelint';
 import stylelintFormatter from 'stylelint-formatter-pretty';
 import { dashPadFromString, logError, logSuccess } from '../utils/loggers.js';
-import { ProcessAsset } from '../@types/configTypes.js';
 import path from 'node:path';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
+import { getAllFiles } from '../utils/getAllFiles.js';
 
 
 export class StylelintProvider {
@@ -22,22 +22,37 @@ export class StylelintProvider {
    */
   public static _instance: StylelintProvider;
 
+  /**
+   * @property null | string
+   * Notice message
+   */
   public notice!: string;
 
-  private allPaths: string[] = [];
+  /**
+   * @property null | string[]
+   * All paths to lint
+   */
+  private allStylelintPaths: false | string[] = [];
 
-  private allowStylelint: boolean = true;
+  /**
+   * @property null | boolean
+   * Whether to allow stylelint to run
+   */
+  private allowStylelint = true;
 
-  private bailOnError!: null | any;
-
+  /**
+   * @property null | string
+   * Result message for errors
+   */
   private resultMessage!: string;
 
-  private hasErrors: boolean = false;
+  private hasErrors = false;
 
 
   constructor() {
 
     if (StylelintProvider._instance) {
+      // biome-ignore lint/correctness/noConstructorReturn: <explanation>
       return StylelintProvider._instance;
     }
 
@@ -46,6 +61,11 @@ export class StylelintProvider {
   }
 
 
+  /**
+   * @description Initialize the StylelintProvider
+   * @returns {Promise<void>}
+   * @memberof StylelintProvider
+   */
   async initialize() {
     this.bldrConfig = BldrConfig._instance;
     this.notice = 'Stylelint initialized';
@@ -75,7 +95,7 @@ export class StylelintProvider {
     });
 
     if ( this.allowStylelint && !configExists ) {
-      logError(`stylelint`, `No Stylelint config found in project root. Stylelint will be skipped.`, {});
+      logError('stylelint', 'No Stylelint config found in project root. Stylelint will be skipped.', {});
       this.allowStylelint = false;
       return;
     }
@@ -103,21 +123,21 @@ export class StylelintProvider {
     this.hasErrors = false;
 
     // Get paths to lint
-    await this.#setStyleLintPaths();
+    this.allStylelintPaths = await getAllFiles(['css'], this.bldrConfig.stylelintConfig?.ignorePaths || []);
     
     // If we have paths to lint, run the linter
-    if (this.allPaths.length > 0) {
-      await this.#runLint(this.allPaths);
+    if (this.allStylelintPaths && this.allStylelintPaths.length > 0) {
+      await this.#runLint(this.allStylelintPaths);
     }
 
     // If we have errors, log them
     if (this.hasErrors && this.bldrConfig.stylelintConfig?.forceBuildIfError === true) {
       console.log('');
-      logError(`stylelint`, '🚨🚨🚨 Stylelint errors found 🚨🚨🚨', { throwError: true, exit: true });
+      logError('stylelint', '🚨🚨🚨 Stylelint errors found 🚨🚨🚨', { throwError: true, exit: true });
     } else if (this.hasErrors) {
-      logError(`stylelint`, 'Stylelint errors found, forceBuildIfError set to true, continuing on', {});
+      logError('stylelint', 'Stylelint errors found, forceBuildIfError set to true, continuing on', {});
     } else {
-      logSuccess(`stylelint`, `No Stylelint errors found`);
+      logSuccess('stylelint', 'No Stylelint errors found');
     }
     
   }
@@ -130,31 +150,31 @@ export class StylelintProvider {
    * @memberof EslintProvider
    * @private
    */
-  async #setStyleLintPaths(): Promise<void> {
+  // async #setStyleLintPaths(): Promise<void> {
 
-    this.allPaths = [];
+  //   this.allStylelintPaths = [];
 
-    // Otherwise, Use files from config
-    const require = createRequire(import.meta.url);
-    const fg      = require('fast-glob');
+  //   // Otherwise, Use files from config
+  //   const require = createRequire(import.meta.url);
+  //   const fg      = require('fast-glob');
 
-    if ( this.bldrConfig.processSrc?.css ) {
-      this.bldrConfig.processSrc.css.forEach((p: ProcessAsset) => {
-        const files = fg.sync([`${path.join(process.cwd(), p.src)}`]);
-        if ( files && files.length > 0 ) {
-          for (const file of files) {
-            this.allPaths.push(path.resolve(file));
-          }
-        }
-      });
-    }
+  //   if ( this.bldrConfig.processSrc?.css ) {
+  //     for (const p of this.bldrConfig.processSrc.css) {
+  //       const files = fg.sync([`${path.join(process.cwd(), p.src)}`]);
+  //       if ( files && files.length > 0 ) {
+  //         for (const file of files) {
+  //           this.allStylelintPaths.push(path.resolve(file));
+  //         }
+  //       }
+  //     }
+  //   }
 
-    if ( this.bldrConfig.sdcProcessAssetGroups?.css ) {
-      for (const [key, value] of Object.entries(this.bldrConfig.sdcProcessAssetGroups.css)) {
-        this.allPaths.push(path.resolve((value as { src: string }).src));
-      }
-    }
-  }
+  //   if ( this.bldrConfig.sdcProcessAssetGroups?.css ) {
+  //     for (const [key, value] of Object.entries(this.bldrConfig.sdcProcessAssetGroups.css)) {
+  //       this.allStylelintPaths.push(path.resolve((value as { src: string }).src));
+  //     }
+  //   }
+  // }
 
 
 
@@ -191,11 +211,11 @@ export class StylelintProvider {
       if ( result.errored ) {
         this.hasErrors = true;
         const dashes = dashPadFromString(this.resultMessage);
-        logError(`stylelint`, dashes, {});
-        logError(`stylelint`, this.resultMessage, {});
-        logError(`stylelint`, dashes, {});
+        logError('stylelint', dashes, {});
+        logError('stylelint', this.resultMessage, {});
+        logError('stylelint', dashes, {});
         console.log(result.report);
-        logError(`stylelint`, dashes, {});
+        logError('stylelint', dashes, {});
       }
 
     } catch (err) {

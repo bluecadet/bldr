@@ -4,7 +4,7 @@ outline: deep
 
 # esbuild
 
-esbuild is used to process javascript during dev runs (`bldr dev`). 
+[esbuild](https://esbuild.github.io/) is used to process javascript during dev runs (`bldr dev`). 
 
 The `esbuild` key in bldrConfig has the following options:
 

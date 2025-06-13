@@ -4,7 +4,11 @@ outline: deep
 
 # ESLint
 
-ESLint is used to lint javascript files during `dev`, `build`, and `lint` commands. 
+[ESLint](https://eslint.org/) is used to lint javascript files during `dev`, `build`, and `lint` commands.
+
+When running `dev`, js files will be linted when they are saved (if `eslint.useEsLint` is true or null). 
+
+When running `build` or `lint`, bldr will attempt to load `files` from a `eslint.config.js` file (in the same directory as `bldr.config.js`). If the `files` key (or the eslint config file) is not present, bldr will load js files from the `watchPaths` and `sdc.directory` paths (excluding any `dest` directories). Additional configuration can be added to the `ignorePaths` option below.
 
 The `eslint` key in bldrConfig has the following options:
 
@@ -27,7 +31,13 @@ Options for ESLint instance. See https://eslint.org/docs/latest/integrate/nodejs
 
 `boolean | null` - Default: `true`
 
-If set to `false`, an error will be thrown and process will exit if lint encounters an error
+If set to `false`, an error will be thrown and process will exit if lint encounters an error. Error will only be thrown when running `build` or `lint`.
+
+### ignorePaths
+
+`string[] | null` - Default: `[]`
+
+An array of paths (strings) that should be ignored by eslint.
 
 
 ## All Options (with defaults)

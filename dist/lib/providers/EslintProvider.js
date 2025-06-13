@@ -17,8 +17,8 @@ import { BldrConfig } from '../BldrConfig.js';
 import { ESLint } from 'eslint';
 import { dashPadFromString, logAction, logError, logSuccess } from '../utils/loggers.js';
 import path from 'node:path';
-import { createRequire } from 'node:module';
 import fs from 'node:fs';
+import { getAllFiles } from '../utils/getAllFiles.js';
 export class EslintProvider {
     constructor() {
         _EslintProvider_instances.add(this);
@@ -29,6 +29,7 @@ export class EslintProvider {
         this.eslint = null;
         this.hasErrors = false;
         if (EslintProvider._instance) {
+            // biome-ignore lint/correctness/noConstructorReturn: <explanation>
             return EslintProvider._instance;
         }
         EslintProvider._instance = this;
@@ -72,18 +73,18 @@ export class EslintProvider {
             // Reset the hasErrors flag
             this.hasErrors = false;
             yield __classPrivateFieldGet(this, _EslintProvider_instances, "m", _EslintProvider_setEsLintPaths).call(this);
-            if (this.eslintAllPaths.length > 0) {
+            if (this.eslintAllPaths && this.eslintAllPaths.length > 0) {
                 yield __classPrivateFieldGet(this, _EslintProvider_instances, "m", _EslintProvider_runLint).call(this, this.eslintAllPaths);
             }
             if (this.hasErrors && ((_a = this.bldrConfig.eslintConfig) === null || _a === void 0 ? void 0 : _a.forceBuildIfError) === true) {
                 console.log('');
-                logError(`eslint`, '🚨🚨🚨 ESLint errors found 🚨🚨🚨', { throwError: true, exit: true });
+                logError('eslint', '🚨🚨🚨 ESLint errors found 🚨🚨🚨', { throwError: true, exit: true });
             }
             else if (this.hasErrors) {
-                logError(`eslint`, 'ESLint errors found, forceBuildIfError set to true, continuing on', {});
+                logError('eslint', 'ESLint errors found, forceBuildIfError set to true, continuing on', {});
             }
             else {
-                logSuccess(`eslint`, `No ESLint errors found`);
+                logSuccess('eslint', 'No ESLint errors found');
             }
         });
     }
@@ -96,7 +97,7 @@ export class EslintProvider {
     lintFile(filepath) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this.eslint) {
-                return false;
+                return;
             }
             yield __classPrivateFieldGet(this, _EslintProvider_instances, "m", _EslintProvider_runLint).call(this, filepath);
         });
@@ -104,42 +105,24 @@ export class EslintProvider {
 }
 _EslintProvider_instances = new WeakSet(), _EslintProvider_setEsLintPaths = function _EslintProvider_setEsLintPaths() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b;
         this.eslintAllPaths = [];
         // Check if eslint.config.js exists in the project root, and use files from config if defined
-        const eslintConfigPath = path.join(process.cwd(), `eslint.config.js`);
+        const eslintConfigPath = path.join(process.cwd(), 'eslint.config.js');
         if (fs.existsSync(eslintConfigPath)) {
             const configFile = yield import(eslintConfigPath);
-            configFile.default.forEach((c) => {
+            for (const c of configFile.default) {
                 if (c === null || c === void 0 ? void 0 : c.files) {
-                    c.files.forEach((file) => {
+                    for (const file of c.files) {
                         this.eslintAllPaths.push(path.join(process.cwd(), file));
-                    });
+                    }
                 }
-            });
+            }
             if (this.eslintAllPaths.length > 0) {
-                logAction(`eslint`, `Linting files from eslint.config.js`);
+                logAction('eslint', 'Linting files from eslint.config.js');
                 return;
             }
         }
-        // Otherwise, Use files from config
-        const require = createRequire(import.meta.url);
-        const fg = require('fast-glob');
-        if ((_a = this.bldrConfig.processSrc) === null || _a === void 0 ? void 0 : _a.js) {
-            this.bldrConfig.processSrc.js.forEach((p) => {
-                const files = fg.sync([`${path.join(process.cwd(), p.src)}`]);
-                if (files && files.length > 0) {
-                    for (const file of files) {
-                        this.eslintAllPaths.push(path.resolve(file));
-                    }
-                }
-            });
-        }
-        if ((_b = this.bldrConfig.sdcProcessAssetGroups) === null || _b === void 0 ? void 0 : _b.js) {
-            for (const [key, value] of Object.entries(this.bldrConfig.sdcProcessAssetGroups.js)) {
-                this.eslintAllPaths.push(path.resolve(value.src));
-            }
-        }
+        this.eslintAllPaths = yield getAllFiles(['js'], []);
     });
 }, _EslintProvider_runLint = function _EslintProvider_runLint(files) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -151,23 +134,24 @@ _EslintProvider_instances = new WeakSet(), _EslintProvider_setEsLintPaths = func
             const results = yield this.eslint.lintFiles(files);
             const resultText = this.formatter.format(results);
             let resultErrors = false;
-            results.forEach((res) => {
+            for (const res of results) {
                 if (res.errorCount > 0) {
                     resultErrors = true;
                 }
-            });
+            }
             if (resultErrors) {
                 const dashes = dashPadFromString(this.resultMessage);
-                logError(`eslint`, dashes, {});
-                logError(`eslint`, this.resultMessage, {});
-                logError(`eslint`, dashes, {});
-                results.forEach((res) => {
+                logError('eslint', dashes, {});
+                logError('eslint', this.resultMessage, {});
+                logError('eslint', dashes, {});
+                for (const res of results) {
                     if (res.errorCount > 0) {
                         this.hasErrors = true;
                         console.log(resultText);
-                        logError(`eslint`, dashes, {});
+                        logError('eslint', dashes, {});
                     }
-                });
+                }
+                ;
             }
         }
         catch (err) {

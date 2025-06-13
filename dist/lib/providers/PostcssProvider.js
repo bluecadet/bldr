@@ -16,6 +16,7 @@ import { ensureDirectory } from '../utils/ensureDirectory.js';
 export class PostcssProvider {
     constructor() {
         if (PostcssProvider._instance) {
+            // biome-ignore lint/correctness/noConstructorReturn: <explanation>
             return PostcssProvider._instance;
         }
         PostcssProvider._instance = this;
@@ -33,6 +34,29 @@ export class PostcssProvider {
             this.postcss = require('postcss');
             this.postcssrc = require('postcss-load-config');
             this.notice = 'PostcssProvider initialized';
+            this.syntax = require('postcss-syntax')({
+                rules: [
+                    {
+                        test: /\.(?:[sx]?html?|[sx]ht|vue|ux|php)$/i,
+                        extract: 'html',
+                    },
+                    {
+                        test: /\.(?:markdown|md)$/i,
+                        extract: 'markdown',
+                    },
+                    {
+                        test: /\.(?:m?[jt]sx?|es\d*|pac)$/i,
+                        extract: 'jsx',
+                    },
+                    {
+                        test: /\.(?:postcss|pcss|css)$/i,
+                        lang: 'scss',
+                    },
+                ],
+                css: require('postcss-safe-parser'),
+                sass: require('postcss-sass'),
+                scss: require('postcss-scss'),
+            });
         });
     }
     /**
@@ -95,14 +119,14 @@ export class PostcssProvider {
             try {
                 // Run postcss process
                 const postCssResult = yield this.postcss(postCSSConfig.plugins).process(fileContent, {
-                    syntax: (_b = (_a = postCSSConfig.options) === null || _a === void 0 ? void 0 : _a.syntax) !== null && _b !== void 0 ? _b : this.bldrConfig.bldrSettings.syntax,
+                    syntax: (_b = (_a = postCSSConfig.options) === null || _a === void 0 ? void 0 : _a.syntax) !== null && _b !== void 0 ? _b : this.syntax,
                     from: src,
                     to: writeFileName,
                     map: (_d = (_c = postCSSConfig.options) === null || _c === void 0 ? void 0 : _c.map) !== null && _d !== void 0 ? _d : mapOpts,
                 });
                 // Check if postCssResult contains css
                 if (!(postCssResult === null || postCssResult === void 0 ? void 0 : postCssResult.css)) {
-                    logError(`postcss`, `${fileName} does not contain css, generated blank file`);
+                    logError('postcss', `${fileName} does not contain css, generated blank file`);
                 }
                 // Check if destination directory exists, make it if not
                 yield ensureDirectory(dest);
@@ -112,9 +136,9 @@ export class PostcssProvider {
                 }
                 catch (err) {
                     // Error if can't write file
-                    logError(`postcss`, `error writing ${fileName} to ${dest}`, {});
-                    logError(`postcss`, `${err}`, toBailOrNotToBail);
-                    return false;
+                    logError('postcss', `error writing ${fileName} to ${dest}`, {});
+                    logError('postcss', `${err}`, toBailOrNotToBail);
+                    return;
                 }
                 // Write maps
                 if (mapOpts) {
@@ -124,9 +148,9 @@ export class PostcssProvider {
                         }
                         catch (err) {
                             // Error if can't write file
-                            logError(`postcss`, `error writing ${fileName} map file to ${dest}`, {});
-                            logError(`postcss`, `${err}`, toBailOrNotToBail);
-                            return false;
+                            logError('postcss', `error writing ${fileName} map file to ${dest}`, {});
+                            logError('postcss', `${err}`, toBailOrNotToBail);
+                            return;
                         }
                     }
                 }
@@ -135,7 +159,8 @@ export class PostcssProvider {
                 // Log success message
                 logSuccess('postcss', `${fileName} processed`, ((stop - start) / 1000));
                 // All done
-                return true;
+                return;
+                // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             }
             catch (err) {
                 if (err === null || err === void 0 ? void 0 : err.file) {
@@ -144,12 +169,12 @@ export class PostcssProvider {
                 }
                 else {
                     // General error caught
-                    logError(`postcss`, `General error:`, {});
-                    logError(`postcss`, `${err}`, toBailOrNotToBail);
+                    logError('postcss', 'General error:', {});
+                    logError('postcss', `${err}`, toBailOrNotToBail);
                 }
                 // Allow process to continue if watch is running
                 if (this.bldrConfig.isDev) {
-                    return false;
+                    return;
                 }
                 process.exit(1);
             }

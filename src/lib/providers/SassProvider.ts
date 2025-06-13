@@ -1,4 +1,4 @@
-import { ProcessAsset } from '../@types/configTypes.js';
+import type { ProcessAsset } from '../@types/configTypes.js';
 import { BldrConfig } from '../BldrConfig.js';
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
@@ -30,11 +30,13 @@ export class SassProvider {
    * @property null|object
    * Dart Sass instance
    */
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   private sass: any;
 
   constructor() {
 
     if (SassProvider._instance) {
+      // biome-ignore lint/correctness/noConstructorReturn: <explanation>
       return SassProvider._instance;
     }
 
@@ -49,7 +51,7 @@ export class SassProvider {
    * @returns {Promise<void>}
    * @memberof SassProvider
    */
-  async initialize() {
+  async initialize(): Promise<void> {
     const require = createRequire(import.meta.url);
     this.bldrConfig = BldrConfig._instance;
     this.sass = require('sass');
@@ -71,7 +73,14 @@ export class SassProvider {
   }
 
 
-  async buildProcessAssetGroupsBundle() {
+
+  /**
+   * @method buildProcessAssetGroupsBundle
+   * @description Builds the process bundle for sass
+   * @returns {Promise<void>}
+   * @memberof SassProvider
+   */
+  async buildProcessAssetGroupsBundle(): Promise<void> {
     if ( this.bldrConfig.sdcProcessAssetGroups?.sass ) {
       for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.sass)) {
         await this.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.sass[asset]);
@@ -87,7 +96,7 @@ export class SassProvider {
    * @returns {Promise<void>}
    * @memberof SassProvider
    */
-  async buildAssetGroup(assetGroup: ProcessAsset) {
+  async buildAssetGroup(assetGroup: ProcessAsset): Promise<void> {
 
     const start       = Date.now();
     const {src, dest} = assetGroup;
@@ -98,7 +107,8 @@ export class SassProvider {
 
     try {
     
-      let result;
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      let result: any;
 
       await ensureDirectory(dest);
       
@@ -116,7 +126,7 @@ export class SassProvider {
       let cssString = result.css.toString();
 
       if ( result?.sourceMap ) {
-        cssString += '\n'.repeat(2) + '/*# sourceMappingURL=' + `${cleanName}.css.map` + ' */';
+        cssString += `\n\n/*# sourceMappingURL=${cleanName}.css.map */`;
         fs.writeFileSync(path.join(dest, `${cleanName}.css.map`), JSON.stringify(result.sourceMap));
       }
 
@@ -131,8 +141,8 @@ export class SassProvider {
     } catch (error) {
       // General error caught
       const toBailOrNotToBail = this.bldrConfig.isDev ? {} : { throwError: true, exit: true };
-      logError(`sass`, `General error:`, {});
-      logError(`sass`, `${error}`, toBailOrNotToBail);
+      logError('sass', 'General error:', {});
+      logError('sass', `${error}`, toBailOrNotToBail);
     }
     
   }
@@ -146,7 +156,7 @@ export class SassProvider {
    * @returns {Promise<void>}
    * @memberof SassProvider
    */
-  async #legacy(src: string, dest: string) {
+  async #legacy(src: string, dest: string): Promise<void> {
     return this.sass.renderSync({
       file: src,
       sourceMap: this.bldrConfig.isDev,
@@ -164,7 +174,7 @@ export class SassProvider {
    * @returns {Promise<void>}
    * @memberof SassProvider
    */
-  async #build(src: string, dest: string) {
+  async #build(src: string, dest: string): Promise<void> {
     return this.sass.compile(src, {
       sourceMap: this.bldrConfig.isDev,
       sourceMapContents: true,

@@ -1,9 +1,9 @@
-import { CommandSettings } from "./@types/commandSettings";
-import { AssetObject, BldrBiomeSettings, BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, ConfigSettings, LocalConfigSettings, ProcessAsset, ProcessKey } from "./@types/configTypes";
-import { BldrSettings } from "./BldrSettings.js";
-import path from "node:path";
+import type { CommandSettings } from "./@types/commandSettings";
+import type { BldrBiomeSettings, BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, ConfigSettings, LocalConfigSettings, ProcessAsset, ProcessAssetGroup, ProcessKey } from "./@types/configTypes";
 import { logAction, logError, logWarn } from "./utils/loggers.js";
-import { createRequire } from 'node:module';
+import FastGlob from "fast-glob";
+import path from "node:path";
+import fs from "node:fs";
 
 export class BldrConfig {
   
@@ -20,9 +20,24 @@ export class BldrConfig {
   public cliArgs!: CommandSettings;
 
   /**
-   * @property null|Class BldrSettings
+   * @description Name of the user config file
    */
-  public bldrSettings!: BldrSettings;
+  public configFileName!: string;
+
+  /**
+   * @description Path to the user config file
+   */
+  public configFilePath!: string;
+
+  /**
+   * @description Name of the user local config file
+   */
+  public localConfigFileName!: string;
+
+  /**
+   * @description Path to the user local config file
+   */
+  public localConfigFilePath!: string;
 
   /**
    * @property boolean
@@ -46,13 +61,15 @@ export class BldrConfig {
    * @property object
    * Process data source
    */
-  public processSrc!: any;
+  
+  // biome-ignore lint/suspicious/noExplicitAny: its complicated
+  public  processSrc!: any;
 
   /**
    * @property null|object
    * Settings for processes
    */
-  public processAssetGroups:any = {};
+  public processAssetGroups:ProcessAssetGroup = {};
 
   /**
    * @property null|array
@@ -76,20 +93,18 @@ export class BldrConfig {
    * @property boolean
    * If Single Directory Component actions should be ran
    */
-  public isSDC: boolean = false;
+  public isSDC = false;
 
   /**
    * @property null|object
    * Settings for single component directory processes
    */
-  public sdcProcessAssetGroups: any = {};
+  public sdcProcessAssetGroups: ProcessAssetGroup = {};
 
   /**
-   * @property null|string
+   * @property null|array
    * Path to the SDC directory
    */
-  public sdcPath!: string;
-
   public sdcPaths!: string[];
 
   /**
@@ -140,12 +155,6 @@ export class BldrConfig {
    */
   public biomeConfig: BldrBiomeSettings | null = null;
 
-  /**
-   * @property null|function
-   * Fast-glob function
-   */
-  #fg: any = null;
-
 
 
   /**
@@ -161,19 +170,33 @@ export class BldrConfig {
    * @example
    * const bldrConfig = new BldrConfig(commandSettings);
    */
-  constructor(commandSettings: CommandSettings, isDev: boolean = false) {
+  constructor(commandSettings: CommandSettings, isDev = false) {
     if (BldrConfig._instance) {
+      // biome-ignore lint/correctness/noConstructorReturn: <explanation>
       return BldrConfig._instance;
     }
-
+    
     BldrConfig._instance = this;
-
-    const require     = createRequire(import.meta.url);
-
-    this.bldrSettings = new BldrSettings();
     this.cliArgs      = commandSettings;
     this.isDev        = isDev;
-    this.#fg          = require('fast-glob');
+
+    // Determine if old User Config File...
+    this.configFileName = 'bldrConfig.js';
+    this.configFilePath = path.join(process.cwd(), this.configFileName);
+
+    if ( !fs.existsSync(this.configFilePath) ) {
+      this.configFileName = 'bldr.config.js';
+      this.configFilePath = path.join(process.cwd(), this.configFileName);
+    }
+
+    // Determine User Local Config File
+    this.localConfigFileName = 'bldrConfigLocal.js';
+    this.localConfigFilePath = path.join(process.cwd(), this.localConfigFileName);
+
+    if ( !fs.existsSync(this.localConfigFilePath) ) {
+      this.localConfigFileName = 'bldr.local.config.js';
+      this.localConfigFilePath = path.join(process.cwd(), this.localConfigFileName);
+    }
   }
 
 
@@ -204,20 +227,20 @@ export class BldrConfig {
   async #loadConfig(): Promise<void> {
     // Load bldr config file
     try {
-      const config = await import(this.bldrSettings.configFilePath);  
+      const config = await import(this.configFilePath);  
       this.userConfig = config.default;
     } catch (error) {
       console.log(error);
-      logError('bldr', `Missing required ${this.bldrSettings.configFileName} file`, {throwError: true, exit: true});
+      logError('bldr', `Missing required ${this.configFileName} file`, {throwError: true, exit: true});
     }
 
     // Load Local User Config
     try {
-      const localConfig = await import(this.bldrSettings.localConfigFilePath);  
+      const localConfig = await import(this.localConfigFilePath);  
       this.localConfig = localConfig.default;
     } catch (error) {
       if ( this.isDev && !this.userConfig.browsersync?.disable ) {
-        logWarn('bldr', `Missing ${this.bldrSettings.localConfigFileName} file, using defaults`);
+        logWarn('bldr', `Missing ${this.localConfigFileName} file, using defaults`);
       }
       this.localConfig = null;
     }
@@ -256,7 +279,7 @@ export class BldrConfig {
     }
 
     // Dedupe chokidar watch array
-    this.chokidarWatchArray = this.chokidarWatchArray.filter((elem, pos) => this.chokidarWatchArray.indexOf(elem) == pos);
+    this.chokidarWatchArray = this.chokidarWatchArray.filter((elem, pos) => this.chokidarWatchArray.indexOf(elem) === pos);
 
   }
 
@@ -299,16 +322,16 @@ export class BldrConfig {
       return;
     }
 
-    this.processSrc[key].forEach((p: AssetObject) => {
-      const files = this.#fg.sync([`${path.join(process.cwd(), p.src)}`]);
+    for (const p of this.processSrc[key]) {
+      const files = FastGlob.sync([`${path.join(process.cwd(), p.src)}`]);
 
-      if ( files && files.length > 0 ) {
+      if (files && files.length > 0) {
         for (const file of files) {
           this.chokidarIgnorePathsArray.push(path.resolve(p.dest));
           this.addFileToAssetGroup(file, key as ProcessKey, false, p.dest);
         }
       }
-    });
+    }
   }
 
 
@@ -317,19 +340,21 @@ export class BldrConfig {
    * @method addFileToAssetGroup
    * @description add a file an asset group
    */
-  async addFileToAssetGroup(file: string, key: ProcessKey, isSDC: boolean = false, dest: string | null = null) {
+  async addFileToAssetGroup(file: string, key: ProcessKey, isSDC = false, dest: string | null = null) {
     const group = isSDC ? this.sdcProcessAssetGroups : this.processAssetGroups;
-    const localFile = file.replace(process.cwd() + '/', '');
+    const localFile = file.replace(`${process.cwd()}/`, '');
 
     if ( !group?.[key] ) {
       group[key] = {};
     }
+
+    let setDest = dest;
     
-    if ( !dest ) {
-      dest = path.dirname(file);
+    if ( !setDest ) {
+      setDest = path.dirname(file);
     }
 
-    group[key][localFile] = this.#createSrcDestObject(file, dest);
+    group[key][localFile] = this.#createSrcDestObject(file, setDest);
   }
 
 
@@ -397,11 +422,11 @@ export class BldrConfig {
    * @private
    */
   async #handleSDCType(ext: string, key: ProcessKey, sdcDirPath: string): Promise<void> {
-    const files = await this.#fg.sync([`${sdcDirPath}/**/**/${this.sdcAssetSubDirectory}/*.${ext}`]);
+    const files = FastGlob.sync([`${sdcDirPath}/**/**/${this.sdcAssetSubDirectory}/*.${ext}`]);
 
     if ( files && files.length > 0 ) {
       for (const file of files) {
-        let dest = path.normalize(path.join(path.dirname(file), '..'));
+        const dest = path.normalize(path.join(path.dirname(file), '..'));
         this.addFileToAssetGroup(file, key, true, dest);
       }
     }
@@ -505,6 +530,7 @@ export class BldrConfig {
       useEslint: true,
       options: {},
       forceBuildIfError: true,
+      ignorePaths: [],
     };
 
     if ( this.userConfig?.eslint ) {
@@ -524,6 +550,7 @@ export class BldrConfig {
     this.stylelintConfig = {
       useStyleLint: true,
       forceBuildIfError: true,
+      ignorePaths: [],
     };
 
     if ( this.userConfig?.stylelint ) {

@@ -15,6 +15,7 @@ import { ensureDirectory } from '../utils/ensureDirectory.js';
 export class EsBuildProvider {
     constructor() {
         if (EsBuildProvider._instance) {
+            // biome-ignore lint/correctness/noConstructorReturn: <explanation>
             return EsBuildProvider._instance;
         }
         EsBuildProvider._instance = this;
@@ -70,7 +71,7 @@ export class EsBuildProvider {
             const plugins = ((_c = (_b = (_a = this.bldrConfig) === null || _a === void 0 ? void 0 : _a.esBuildConfig) === null || _b === void 0 ? void 0 : _b.plugins) !== null && _c !== void 0 ? _c : []).map(([name, options]) => (Object.assign({ name }, options)));
             try {
                 yield ensureDirectory(dest);
-                const result = yield esBuild
+                yield esBuild
                     .build({
                     entryPoints: [src],
                     bundle: true,
@@ -84,8 +85,8 @@ export class EsBuildProvider {
             catch (error) {
                 // General error caught
                 const toBailOrNotToBail = this.bldrConfig.isDev ? {} : { throwError: true, exit: true };
-                logError(`esbuild`, `General error:`, {});
-                logError(`esbuild`, `${error}`, toBailOrNotToBail);
+                logError('esbuild', 'General error:', {});
+                logError('esbuild', `${error}`, toBailOrNotToBail);
             }
         });
     }

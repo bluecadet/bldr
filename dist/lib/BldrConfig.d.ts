@@ -1,6 +1,5 @@
-import { CommandSettings } from "./@types/commandSettings";
-import { BldrBiomeSettings, BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, ConfigSettings, LocalConfigSettings, ProcessKey } from "./@types/configTypes";
-import { BldrSettings } from "./BldrSettings.js";
+import type { CommandSettings } from "./@types/commandSettings";
+import type { BldrBiomeSettings, BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, ConfigSettings, LocalConfigSettings, ProcessAssetGroup, ProcessKey } from "./@types/configTypes";
 export declare class BldrConfig {
     #private;
     /**
@@ -14,9 +13,21 @@ export declare class BldrConfig {
      */
     cliArgs: CommandSettings;
     /**
-     * @property null|Class BldrSettings
+     * @description Name of the user config file
      */
-    bldrSettings: BldrSettings;
+    configFileName: string;
+    /**
+     * @description Path to the user config file
+     */
+    configFilePath: string;
+    /**
+     * @description Name of the user local config file
+     */
+    localConfigFileName: string;
+    /**
+     * @description Path to the user local config file
+     */
+    localConfigFilePath: string;
     /**
      * @property boolean
      * If running in `dev` mode
@@ -41,7 +52,7 @@ export declare class BldrConfig {
      * @property null|object
      * Settings for processes
      */
-    processAssetGroups: any;
+    processAssetGroups: ProcessAssetGroup;
     /**
      * @property null|array
      * Files for chokidar to watch
@@ -66,12 +77,11 @@ export declare class BldrConfig {
      * @property null|object
      * Settings for single component directory processes
      */
-    sdcProcessAssetGroups: any;
+    sdcProcessAssetGroups: ProcessAssetGroup;
     /**
-     * @property null|string
+     * @property null|array
      * Path to the SDC directory
      */
-    sdcPath: string;
     sdcPaths: string[];
     /**
      * @property null|string

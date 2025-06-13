@@ -33,6 +33,7 @@ export class ChokidarProvider {
          * @property null|object
          * Chokidar instance
          */
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
         this.watcher = null;
         this.isSDCFile = false;
         this.Browsersync = new BrowsersyncProvider();
@@ -61,21 +62,21 @@ export class ChokidarProvider {
                     }
                     // Ignore dest files
                     let isDestPath = false;
-                    this.bldrConfig.chokidarIgnorePathsArray.forEach((destPath) => {
+                    for (const destPath of this.bldrConfig.chokidarIgnorePathsArray) {
                         if (isChildOfDir(path, destPath)) {
                             isDestPath = true;
                         }
-                    });
+                    }
                     return isDestPath;
                 },
                 ignoreInitial: true,
             });
             this.watcher.on('ready', () => {
-                console.log(``);
-                console.log(`-------------------------------------------`);
+                console.log('');
+                console.log('-'.repeat(process.stdout.columns));
                 logAction('bldr', '💪 Ready and waiting for changes!');
-                console.log(`-------------------------------------------`);
-                console.log(``);
+                console.log('-'.repeat(process.stdout.columns));
+                console.log('');
                 this.Browsersync.bootstrap();
             });
             this.watcher.on('add', (filepath) => {

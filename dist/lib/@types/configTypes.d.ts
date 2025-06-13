@@ -1,5 +1,5 @@
 import type { InputOptions, OutputOptions } from "rollup";
-import { RollupBabelInputPluginOptions } from "@rollup/plugin-babel";
+import type { RollupBabelInputPluginOptions } from "@rollup/plugin-babel";
 import type { Options as SWCOptions } from '@swc/core';
 /**
  * @description Bldr configuration settings for bldr.config.js
@@ -50,16 +50,6 @@ export interface EnvObjectConfig {
      * @description JS Paths
      */
     js?: AssetObjects[];
-}
-export interface PostCSSSettings {
-    /**
-     * @description PostCssPlugins
-     */
-    plugins?: [string, any][];
-    /**
-     * @description Override PostCssPlugins native to bldr
-     */
-    overridePlugins?: boolean;
 }
 export interface BldrEsBuildSettings {
     /**
@@ -137,6 +127,7 @@ export interface BldrEsLintSettings {
     useEslint?: boolean;
     options?: any;
     forceBuildIfError?: boolean;
+    ignorePaths?: string[];
 }
 export interface BldrBiomeSettings {
     useBiome?: boolean;
@@ -147,6 +138,7 @@ export interface BldrBiomeSettings {
 }
 export interface BldrStyleLintSettings {
     useStyleLint?: boolean;
+    ignorePaths?: string[];
     forceBuildIfError?: boolean;
 }
 export interface BldrSassSettings {

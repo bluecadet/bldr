@@ -24,7 +24,7 @@ import { EslintProvider } from "./providers/EslintProvider.js";
 import { StylelintProvider } from "./providers/StylelintProvider.js";
 import { BiomeProvider } from "./providers/BiomeProvider.js";
 export class Bldr {
-    constructor(commandSettings, isDev = false, isInit = false) {
+    constructor(commandSettings, isDev = false) {
         _Bldr_instances.add(this);
         this.commandSettings = commandSettings;
         this.isDev = isDev;
@@ -42,7 +42,6 @@ export class Bldr {
 _Bldr_instances = new WeakSet(), _Bldr_initialize = function _Bldr_initialize() {
     return __awaiter(this, void 0, void 0, function* () {
         // Initialize the Bldr instance with command settings
-        logAction('bldr', '...initializing providers...');
         yield this.bldrConfig.initialize();
         yield Promise.all([
             this.EsBuildProvider.initialize(),
@@ -62,16 +61,17 @@ _Bldr_instances = new WeakSet(), _Bldr_initialize = function _Bldr_initialize() 
     });
 }, _Bldr_dev = function _Bldr_dev() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
+        if ((_a = this.bldrConfig) === null || _a === void 0 ? void 0 : _a.envKey) {
+            logAction('bldr', `🐣 Starting dev using ${(_b = this.bldrConfig) === null || _b === void 0 ? void 0 : _b.envKey} env configuration...`);
+        }
+        else {
+            logAction('bldr', '🐣 Starting dev...');
+        }
         // The once command was sent, run dev build and bail
-        if ((_a = this.commandSettings) === null || _a === void 0 ? void 0 : _a.once) {
+        if ((_c = this.commandSettings) === null || _c === void 0 ? void 0 : _c.once) {
             const processStart = new Date().getTime();
-            if ((_b = this.bldrConfig) === null || _b === void 0 ? void 0 : _b.envKey) {
-                logAction('bldr', `Running single dev build using ${this.bldrConfig.envKey} env configuration...`);
-            }
-            else {
-                logAction('bldr', 'Running single dev build...');
-            }
+            logAction('bldr', '💪 Running single dev build...');
             yield __classPrivateFieldGet(this, _Bldr_instances, "m", _Bldr_runOnce).call(this);
             const processEnd = new Date().getTime();
             // All Done
@@ -79,7 +79,7 @@ _Bldr_instances = new WeakSet(), _Bldr_initialize = function _Bldr_initialize() 
             return;
         }
         // The start command was sent, run dev build before proceeding
-        if ((_c = this.commandSettings) === null || _c === void 0 ? void 0 : _c.start) {
+        if ((_d = this.commandSettings) === null || _d === void 0 ? void 0 : _d.start) {
             logAction('bldr', 'Running single dev build before starting server...');
             yield __classPrivateFieldGet(this, _Bldr_instances, "m", _Bldr_runOnce).call(this);
         }
@@ -89,20 +89,20 @@ _Bldr_instances = new WeakSet(), _Bldr_initialize = function _Bldr_initialize() 
     });
 }, _Bldr_production = function _Bldr_production() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a;
+        var _a, _b;
         const processStart = new Date().getTime();
-        console.log(``);
+        console.log('');
         if ((_a = this.bldrConfig) === null || _a === void 0 ? void 0 : _a.envKey) {
-            console.log(`-----------------------------------------------------------------------------------------------`);
-            logAction('bldr', '💪 Starting production build using ${this.bldrConfig?.envKey} env configuration...');
-            console.log(`-----------------------------------------------------------------------------------------------`);
+            console.log('-'.repeat(process.stdout.columns));
+            logAction('bldr', `💪 Starting production build using ${(_b = this.bldrConfig) === null || _b === void 0 ? void 0 : _b.envKey} env configuration...`);
+            console.log('-'.repeat(process.stdout.columns));
         }
         else {
-            console.log(`--------------------------------------------`);
+            console.log('-'.repeat(process.stdout.columns));
             logAction('bldr', '💪 Starting production build...');
-            console.log(`--------------------------------------------`);
+            console.log('-'.repeat(process.stdout.columns));
         }
-        console.log(``);
+        console.log('');
         yield __classPrivateFieldGet(this, _Bldr_instances, "m", _Bldr_runOnce).call(this);
         const processEnd = new Date().getTime();
         // All Done

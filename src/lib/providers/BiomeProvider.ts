@@ -2,10 +2,9 @@ import { BldrConfig } from '../BldrConfig.js';
 import { Biome, Distribution } from "@biomejs/js-api";
 import { dashPadFromString, logSuccess, logError } from '../utils/loggers.js';
 import path from 'node:path';
-import { createRequire } from 'node:module';
-import { ProcessAsset, ProcessKey } from '../@types/configTypes.js';
 import fs from 'node:fs';
 import chalk from 'chalk';
+import { getAllFiles } from '../utils/getAllFiles.js';
 
 export class BiomeProvider {
 
@@ -41,20 +40,31 @@ export class BiomeProvider {
   /**
    * @property null | string[]
    */
-  private biomeAllPaths!: string[];
+  private biomeAllPaths!: false | string[];
 
-
-  private globIgnorePaths!: string[];
-
-  private writeLogfile: boolean = false;
+  /**
+   * @property boolean
+   * Whether to write a log file
+   */
+  private writeLogfile = false;
+  
+  /**
+   * @property null | string
+   * Path to the log file
+   */
   private logFilePath!: string;
   
-  private hasErrors: boolean = false;
+  /**
+   * @property boolean
+   * Whether or not errors have been found
+   */
+  private hasErrors = false;
 
 
   constructor() {
 
     if (BiomeProvider._instance) {
+      // biome-ignore lint/correctness/noConstructorReturn: <explanation>
       return BiomeProvider._instance;
     }
 
@@ -110,20 +120,20 @@ export class BiomeProvider {
     this.hasErrors = false;
 
     // Set paths for linting
-    await this.#setBiomePaths();
+    this.biomeAllPaths = await getAllFiles(['css', 'js'], this.bldrConfig.biomeConfig?.ignorePaths || []);
     
     // If paths are set, run lint
-    if (this.biomeAllPaths.length > 0) {
+    if (this.biomeAllPaths) {
       await this.#runLint(this.biomeAllPaths);
     }
 
     if (this.hasErrors && this.bldrConfig.biomeConfig?.forceBuildIfError === true) {
       console.log('');
-      logError(`biome`, '🚨🚨🚨 Biome errors found 🚨🚨🚨', { throwError: true, exit: true });
+      logError('biome', '🚨🚨🚨 Biome errors found 🚨🚨🚨', { throwError: true, exit: true });
     } else if (this.hasErrors) {
-      logError(`biome`, 'Biome errors found, forceBuildIfError set to true, continuing on', {});
+      logError('biome', 'Biome errors found, forceBuildIfError set to true, continuing on', {});
     } else {
-      logSuccess(`biome`, `No Biome errors found`);
+      logSuccess('biome', 'No Biome errors found');
     }
     
   }
@@ -135,72 +145,72 @@ export class BiomeProvider {
    * @memberof BiomeProvider
    * @private
    */
-  async #setBiomePaths(): Promise<void> {
+  // async #setBiomePaths(): Promise<void> {
 
-    this.biomeAllPaths = [];
-    const pathStore: string[] = [];
-    const require = createRequire(import.meta.url);
-    const fg = require('fast-glob');
+  //   this.biomeAllPaths = [];
+  //   const pathStore: string[] = [];
+  //   const require = createRequire(import.meta.url);
+  //   const fg = require('fast-glob');
 
-    // Set glob ignore paths
-    this.globIgnorePaths = [
-      '**/node_modules/**'
-    ];
+  //   // Set glob ignore paths
+  //   this.globIgnorePaths = [
+  //     '**/node_modules/**'
+  //   ];
 
-    // Ignore paths from user config
-    if ( this.bldrConfig.biomeConfig?.ignorePaths ) {
-      this.globIgnorePaths.push(...this.bldrConfig.biomeConfig.ignorePaths);
-    }
+  //   // Ignore paths from user config
+  //   if ( this.bldrConfig.biomeConfig?.ignorePaths ) {
+  //     this.globIgnorePaths.push(...this.bldrConfig.biomeConfig.ignorePaths);
+  //   }
 
-    // Ignore SDC Paths in globs as
-    if (this.bldrConfig.isSDC && this.bldrConfig?.sdcPaths) {
-      this.bldrConfig.sdcPaths.forEach((sdcPath) => {
-        this.globIgnorePaths.push(`${sdcPath}/**/*`);
-      });
-    }
+  //   // Ignore SDC Paths in globs as
+  //   if (this.bldrConfig.isSDC && this.bldrConfig?.sdcPaths) {
+  //     for (const sdcPath of this.bldrConfig.sdcPaths) {
+  //       this.globIgnorePaths.push(`${sdcPath}/**/*`);
+  //     }
+  //   }
 
-    // Ignore dist files
-    await Promise.all([
-      this.#addUserDestToIgnorePaths('js'),
-      this.#addUserDestToIgnorePaths('css')
-    ]);
+  //   // Ignore dist files
+  //   await Promise.all([
+  //     this.#addUserDestToIgnorePaths('js'),
+  //     this.#addUserDestToIgnorePaths('css')
+  //   ]);
 
-    // Use chokidar watch array
-    if ( this.bldrConfig.chokidarWatchArray.length > 0 ) {
+  //   // Use chokidar watch array
+  //   if ( this.bldrConfig.chokidarWatchArray.length > 0 ) {
 
-      // Loop watch paths and get all js and css files
-      this.bldrConfig.chokidarWatchArray.forEach((filepath) => {
-        if ( this.bldrConfig.userConfig?.js ) {
-          pathStore.push(`${path.join(filepath, `**`, `*.js`)}`);
-        }
+  //     // Loop watch paths and get all js and css files
+  //     for (const filepath of this.bldrConfig.chokidarWatchArray) {
+  //       if ( this.bldrConfig.userConfig?.js ) {
+  //         pathStore.push(path.join(filepath, '**', '*.js'));
+  //       }
 
-        if ( this.bldrConfig.userConfig?.css ) {
-          pathStore.push(`${path.join(filepath, `**`, `*.css`)}`);
-        }
-      });
+  //       if ( this.bldrConfig.userConfig?.css ) {
+  //         pathStore.push(path.join(filepath, '**', '*.css'));
+  //       }
+  //     }
 
-      // Get all the files to lint
-      this.biomeAllPaths = fg.sync(pathStore, {
-        ignore: this.globIgnorePaths,
-      });
+  //     // Get all the files to lint
+  //     this.biomeAllPaths = fg.sync(pathStore, {
+  //       ignore: this.globIgnorePaths,
+  //     });
 
-      if ( this.bldrConfig.isSDC ) {
-        if ( this.bldrConfig.sdcProcessAssetGroups?.js) {
-          for (const [key, value] of Object.entries(this.bldrConfig.sdcProcessAssetGroups.js)) {
-            this.biomeAllPaths.push(key);
-          }
-        }
+  //     if ( this.bldrConfig.isSDC ) {
+  //       if ( this.bldrConfig.sdcProcessAssetGroups?.js) {
+  //         for (const [key, value] of Object.entries(this.bldrConfig.sdcProcessAssetGroups.js)) {
+  //           this.biomeAllPaths.push(key);
+  //         }
+  //       }
 
-        if ( this.bldrConfig.sdcProcessAssetGroups?.css) {
-          for (const [key, value] of Object.entries(this.bldrConfig.sdcProcessAssetGroups.css)) {
-            this.biomeAllPaths.push(key);
-          }
-        }
-      }
+  //       if ( this.bldrConfig.sdcProcessAssetGroups?.css) {
+  //         for (const [key, value] of Object.entries(this.bldrConfig.sdcProcessAssetGroups.css)) {
+  //           this.biomeAllPaths.push(key);
+  //         }
+  //       }
+  //     }
       
-      return;
-    }
-  }
+  //     return;
+  //   }
+  // }
 
 
 
@@ -235,8 +245,10 @@ export class BiomeProvider {
         return;
       }
 
+      let fileArray = files;
+
       if (typeof files === 'string') {
-        files = [files];
+        fileArray = [files];
       }
 
       // If writing to log, clear file first
@@ -246,16 +258,10 @@ export class BiomeProvider {
 
       const errorArray: string[] = [];
 
-      for (const file of files) {
-        const contentBuffer = fs.readFileSync(file);
+      for (const file of fileArray) {
+        const contentBuffer = fs.readFileSync(file, { encoding: 'utf-8' });
 
-        console.log(contentBuffer.toString())
-
-        const formatted = this.biomeInstance.formatContent(contentBuffer.toString(), {
-          filePath: file,
-        });
-
-        const result = this.biomeInstance.lintContent(formatted.content, {
+        const result = this.biomeInstance.lintContent(contentBuffer, {
           filePath: file,
         });
 
@@ -278,14 +284,14 @@ export class BiomeProvider {
 
       if ( this.hasErrors && errorArray.length > 0 ) {
         const dashes = dashPadFromString(this.resultMessage);
-        logError(`biome`, dashes, {});
-        logError(`biome`, this.resultMessage, {});
-        logError(`biome`, dashes, {});
+        logError('biome', dashes, {});
+        logError('biome', this.resultMessage, {});
+        logError('biome', dashes, {});
         
-        errorArray.forEach((html) => {
+        for (const html of errorArray) {
           console.log(this.#formatHTML(html));
-          logError(`biome`, dashes, {});
-        });
+          logError('biome', dashes, {});
+        }
       }
 
     } catch (err) {
@@ -308,15 +314,15 @@ export class BiomeProvider {
    * @private
    * @memberof BiomeProvider
    */
-  async #addUserDestToIgnorePaths(key: ProcessKey): Promise<void> {
-    if ( this.bldrConfig.userConfig?.[key] ) {
-      this.bldrConfig.userConfig[key].forEach((p: ProcessAsset) => {
-        let destPath = p.dest.startsWith('./') ? p.dest.replace('./', '') : p.dest;
-        destPath = destPath.endsWith('/') ? destPath : `${destPath}/`;
-        this.globIgnorePaths.push(`${destPath}**/*.${key}`);
-      });
-    }
-  }
+  // async #addUserDestToIgnorePaths(key: ProcessKey): Promise<void> {
+  //   if ( this.bldrConfig.userConfig?.[key] ) {
+  //     for (const p of this.bldrConfig.userConfig[key]) {
+  //       let destPath = p.dest.startsWith('./') ? p.dest.replace('./', '') : p.dest;
+  //       destPath = destPath.endsWith('/') ? destPath : `${destPath}/`;
+  //       this.globIgnorePaths.push(`${destPath}**/*.${key}`);
+  //     }
+  //   }
+  // }
 
 
 
@@ -331,7 +337,7 @@ export class BiomeProvider {
     newHTML = newHTML.replace(/&gt;/g, '>');
     newHTML = newHTML.replace(/&amp;/g, '&');
     newHTML = newHTML.replace(/<span style="color: Tomato;">(.*?)<\/span>/g, chalk.red(`$1`));
-    newHTML = newHTML.replace(/lint\//g, `\nlint/`);
+    newHTML = newHTML.replace(/lint\//g, '\nlint/');
     newHTML = newHTML.replace(/<span style="color: lightgreen;">(.*?)<\/span>/g, chalk.green(`$1`));
     newHTML = newHTML.replace(/<span style="color: MediumSeaGreen;">(.*?)<\/span>/g, chalk.greenBright(`$1`));
     newHTML = newHTML.replace(/<span style="opacity: 0.8;">(.*?)<\/span>/g, chalk.dim(`$1`));

@@ -1,4 +1,4 @@
-import { ProcessAsset } from '../@types/configTypes.js';
+import type { ProcessAsset } from '../@types/configTypes.js';
 export declare class SassProvider {
     #private;
     /**
@@ -30,6 +30,12 @@ export declare class SassProvider {
      */
     initialize(): Promise<void>;
     buildProcessBundle(): Promise<void>;
+    /**
+     * @method buildProcessAssetGroupsBundle
+     * @description Builds the process bundle for sass
+     * @returns {Promise<void>}
+     * @memberof SassProvider
+     */
     buildProcessAssetGroupsBundle(): Promise<void>;
     /**
      * @method buildAssetGroup

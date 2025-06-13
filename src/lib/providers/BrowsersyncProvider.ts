@@ -16,14 +16,24 @@ export class BrowsersyncProvider {
    */
   public static _instance: BrowsersyncProvider;
 
+  /**
+   * @property null|string
+   * Notice message
+   */
   public notice!: string;
 
-  public browsersyncInstance: any = null;
+  /**
+   * @property null|object
+   * Browsersync instance
+   */
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  public  browsersyncInstance: any = null;
 
 
   constructor() {
 
     if (BrowsersyncProvider._instance) {
+      // biome-ignore lint/correctness/noConstructorReturn: <explanation>
       return BrowsersyncProvider._instance;
     }
 
@@ -47,7 +57,12 @@ export class BrowsersyncProvider {
     this.notice = 'BrowsersyncProvider initialized';
   }
 
-  bootstrap() {
+  /**
+   * @method bootstrap
+   * @description Starts the Browsersync server with the provided configuration.
+   * @returns {void}
+   */
+  bootstrap(): void {
     if ( this.bldrConfig.userConfig?.browsersync?.disable ) return;
 
     let bsOptions = {
@@ -63,19 +78,33 @@ export class BrowsersyncProvider {
   }
 
 
-  reload() {
+  /**
+   * @method reload
+   * @description Reloads the Browsersync server.
+   * @returns {void}
+   */
+  reload(): void {
     if ( !this.browsersyncInstance ) return;
     this.browsersyncInstance.reload();
   }
 
 
-  reloadJS() {
+  /**
+   * @method reloadHTML
+   * @description Reloads the Browsersync server for js files.
+   * @returns {void}
+   */
+  reloadJS(): void {
     if ( !this.browsersyncInstance ) return;
     this.browsersyncInstance.reload(['*.js']);
   }
 
-
-  reloadCSS() {
+  /**
+   * @method reloadCSS
+   * @description Reloads the Browsersync server for css files.
+   * @returns {void}
+   */
+  reloadCSS(): void {
     if ( !this.browsersyncInstance ) return;
     this.browsersyncInstance.reload(['*.css']);
   }

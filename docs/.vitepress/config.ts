@@ -32,6 +32,7 @@ export default defineConfig({
               { text: 'PostCSS', link: '/config/providers/postcss' },
               { text: 'esbuild', link: '/config/providers/esbuild' },
               { text: 'Rollup', link: '/config/providers/rollup' },
+              { text: 'Biome', link: '/config/providers/biome' },
               { text: 'ESLint', link: '/config/providers/eslint' },
               { text: 'Stylelint', link: '/config/providers/stylelint' },
               { text: 'Sass', link: '/config/providers/sass' },

@@ -8,20 +8,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { BldrConfig } from '../BldrConfig.js';
-import path from 'node:path';
-import fs from 'node:fs';
+import { logAction, logError, logSuccess } from '../utils/loggers.js';
+import { ensureDirectory } from '../utils/ensureDirectory.js';
 import { rollup } from 'rollup';
 import commonjs from '@rollup/plugin-commonjs';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
-// import injectProcessEnv from 'rollup-plugin-inject-process-env';
 import swc from '@rollup/plugin-swc';
 import { babel } from '@rollup/plugin-babel';
 import { minify } from "terser";
-import { logAction, logError, logSuccess } from '../utils/loggers.js';
-import { ensureDirectory } from '../utils/ensureDirectory.js';
+import path from 'node:path';
+import fs from 'node:fs';
 export class RollupProvider {
     constructor() {
         if (RollupProvider._instance) {
+            // biome-ignore lint/correctness/noConstructorReturn: <explanation>
             return RollupProvider._instance;
         }
         RollupProvider._instance = this;
@@ -91,15 +91,13 @@ export class RollupProvider {
             if (isSDC && ((_d = (_c = this.bldrConfig.rollupConfig) === null || _c === void 0 ? void 0 : _c.sdcOptions) === null || _d === void 0 ? void 0 : _d.format)) {
                 bundleConfig.outputOptions.format = (_e = this.bldrConfig.rollupConfig.sdcOptions) === null || _e === void 0 ? void 0 : _e.format;
             }
-            let bundle;
+            let bundle = null;
             let buildStart = 0;
             let buildEnd = 0;
             try {
                 yield ensureDirectory(dest);
                 buildStart = new Date().getTime();
-                // create a bundle
                 bundle = yield rollup(Object.assign(Object.assign({}, this.rollupFinalConfig.inputOptions), { input: src }));
-                // write the bundle
                 yield bundle.write(Object.assign(Object.assign({}, this.rollupFinalConfig.outputOptions), { file: destPath }));
             }
             catch (error) {
@@ -151,10 +149,6 @@ export class RollupProvider {
                 const inputPlugins = [];
                 // CommonJS
                 inputPlugins.push(commonjs());
-                // Replace process.env in files with production
-                // inputPlugins.push(injectProcessEnv({
-                //   NODE_ENV: 'production',
-                // }));
                 // SWC or Babel
                 if (this.rollupFinalConfig.useSWC) {
                     inputPlugins.push(swc(this.rollupFinalConfig.swcPluginOptions || {}));

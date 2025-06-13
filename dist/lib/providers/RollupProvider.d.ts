@@ -1,4 +1,4 @@
-import { ProcessAsset } from '../@types/configTypes.js';
+import type { ProcessAsset } from '../@types/configTypes.js';
 export declare class RollupProvider {
     /**
      * @property null|object
@@ -10,7 +10,13 @@ export declare class RollupProvider {
      * Singleton instance of RollupProvider
      */
     static _instance: RollupProvider;
+    /**
+     * @property rollupFinalConfig
+     */
     private rollupFinalConfig;
+    /**
+     * @property null|string notice
+     */
     notice: string;
     constructor();
     initialize(): Promise<void>;

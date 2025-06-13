@@ -8,9 +8,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { existsSync, mkdirSync } from 'node:fs';
+/**
+ * Ensures that a directory exists by creating it if it does not.
+ * @param directory - The path of the directory to ensure.
+ * @returns {void}
+ */
 export function ensureDirectory(directory) {
     return __awaiter(this, void 0, void 0, function* () {
-        // Check if directory exists, make it if not
         if (!existsSync(directory)) {
             mkdirSync(directory, { recursive: true });
         }

@@ -1,1 +1,1 @@
-{"version":3,"file":"checkIsSDCFile.d.ts","sourceRoot":"","sources":["../../../src/lib/utils/checkIsSDCFile.ts"],"names":[],"mappings":"AAEA,wBAAgB,cAAc,CAAC,QAAQ,EAAE,MAAM,EAAE,KAAK,EAAE,MAAM,GAAG,MAAM,EAAE,GAAG,OAAO,CAWlF"}
+{"version":3,"file":"checkIsSDCFile.d.ts","sourceRoot":"","sources":["../../../src/lib/utils/checkIsSDCFile.ts"],"names":[],"mappings":"AAEA;;;;;GAKG;AACH,wBAAgB,cAAc,CAAC,QAAQ,EAAE,MAAM,EAAE,KAAK,EAAE,MAAM,GAAG,MAAM,EAAE,GAAG,OAAO,CAWlF"}
