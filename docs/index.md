@@ -28,3 +28,4 @@ Bldr is not for every project. Bldr is at home in:
 - Rollup (build only)
 - EsLint
 - Stylelint
+- Biome

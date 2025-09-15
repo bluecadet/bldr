@@ -34,6 +34,7 @@ export default defineConfig({
               { text: 'Rollup', link: '/config/providers/rollup' },
               { text: 'ESLint', link: '/config/providers/eslint' },
               { text: 'Stylelint', link: '/config/providers/stylelint' },
+              { text: 'Biome', link: '/config/providers/biome' },
               { text: 'Sass', link: '/config/providers/sass' },
               { text: 'Browsersync', link: '/config/providers/browsersync' },
             ]

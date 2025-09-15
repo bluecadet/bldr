@@ -19,7 +19,7 @@ Running `init` will run a simple interactive config setup.
 $ bldr lint
 ```
 
-Running `lint` will run EsLint and Stylelint, given that each provider should be ran (see config below).
+Running `lint` will run EsLint, Biome, and/or Stylelint, given that each provider should be ran (see config below).
 
 
 ## Dev Mode
