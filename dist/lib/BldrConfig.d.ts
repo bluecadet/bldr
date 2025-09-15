@@ -1,5 +1,5 @@
-import { CommandSettings } from "./@types/commandSettings";
-import { BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, ConfigSettings, LocalConfigSettings, ProcessKey } from "./@types/configTypes";
+import type { CommandSettings } from "./@types/commandSettings";
+import type { BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, BldrBiomeSettings, ConfigSettings, LocalConfigSettings, ProcessKey } from "./@types/configTypes";
 import { BldrSettings } from "./BldrSettings.js";
 export declare class BldrConfig {
     #private;
@@ -108,6 +108,11 @@ export declare class BldrConfig {
      * User defined config for StyleLint processing
      */
     stylelintConfig: BldrStyleLintSettings | null;
+    /**
+     * @property null|object
+     * User defined config for StyleLint processing
+     */
+    biomeConfig: BldrBiomeSettings | null;
     /**
      * @description BldrConfig constructor
      *

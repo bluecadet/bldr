@@ -1,5 +1,5 @@
-import { CommandSettings } from "./@types/commandSettings";
-import { AssetObject, BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, ConfigSettings, LocalConfigSettings, ProcessAsset, ProcessKey } from "./@types/configTypes";
+import type { CommandSettings } from "./@types/commandSettings";
+import type { AssetObject, BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, BldrBiomeSettings, ConfigSettings, LocalConfigSettings, ProcessAsset, ProcessKey } from "./@types/configTypes";
 import { BldrSettings } from "./BldrSettings.js";
 import path from "node:path";
 import { logAction, logError, logWarn } from "./utils/loggers.js";
@@ -133,6 +133,13 @@ export class BldrConfig {
    * User defined config for StyleLint processing
    */
   public stylelintConfig: BldrStyleLintSettings | null = null;
+
+
+  /**
+   * @property null|object
+   * User defined config for StyleLint processing
+   */
+  public biomeConfig: BldrBiomeSettings | null = null;
 
   /**
    * @property null|function
@@ -417,8 +424,11 @@ export class BldrConfig {
    * @private
    */
   async #buildProviderConfig(): Promise<void> {
+    const jsExists = this.processAssetGroups?.js || this.sdcProcessAssetGroups?.js;
+    const sassExists = this.processAssetGroups?.sass || this.sdcProcessAssetGroups?.sass;
+    const cssExists = this.processAssetGroups?.css || this.sdcProcessAssetGroups?.css || sassExists;
 
-    if ( this.processAssetGroups?.js || this.sdcProcessAssetGroups?.js ) {
+    if ( jsExists ) {
       if ( this.isDev ) {
         await this.#setEsBuildConfig();
       } else {
@@ -428,12 +438,16 @@ export class BldrConfig {
       await this.#setEslintConfig();
     }
 
-    if ( this.processAssetGroups?.sass || this.sdcProcessAssetGroups?.sass ) {
+    if ( sassExists ) {
       await this.#setSassConfig();
     }
 
-    if ( this.processAssetGroups?.css || this.sdcProcessAssetGroups?.css || this.processAssetGroups?.sass || this.sdcProcessAssetGroups?.sass ) {
+    if ( cssExists ) {
       await this.#setStylelintConfig(); 
+    }
+
+    if ( jsExists || cssExists ) {
+      await this.#setBiomeConfig(); 
     }
   }
 
@@ -542,8 +556,30 @@ export class BldrConfig {
       forceBuildIfError: true,
     };
 
-    if ( this.userConfig?.sass ) {
+    if ( this.userConfig?.stylelint ) {
       this.stylelintConfig = {...this.stylelintConfig, ...this.userConfig.stylelint};
+    }
+  }
+
+
+  /**
+   * @method setBiomeConfig
+   * @description Set the Biome config based on the user config and bldr defaults
+   * @return {Promise<void>}
+   * @private
+   */
+  async #setBiomeConfig(): Promise<void> {
+    this.biomeConfig = {
+      useBiome: false,
+      dev: true,
+      write: false,
+      devWrite: false,
+      devFormat: false,
+      forceBuildIfError: true,
+    };
+
+    if ( this.userConfig?.biome ) {
+      this.biomeConfig = {...this.biomeConfig, ...this.userConfig?.biome};
     }
   }
 

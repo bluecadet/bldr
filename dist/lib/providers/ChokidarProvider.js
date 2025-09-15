@@ -23,6 +23,7 @@ import { BrowsersyncProvider } from './BrowsersyncProvider.js';
 import { logAction } from '../utils/loggers.js';
 import { EslintProvider } from './EslintProvider.js';
 import { StylelintProvider } from './StylelintProvider.js';
+import { BiomeProvider } from './BiomeProvider.js';
 export class ChokidarProvider {
     constructor() {
         _ChokidarProvider_instances.add(this);
@@ -39,6 +40,7 @@ export class ChokidarProvider {
         this.EsBuild = EsBuildProvider._instance;
         this.EsLint = EslintProvider._instance;
         this.Stylelint = StylelintProvider._instance;
+        this.Biome = BiomeProvider._instance;
     }
     /**
      * @method initialize
@@ -133,6 +135,7 @@ _ChokidarProvider_instances = new WeakSet(), _ChokidarProvider_changeFile = func
         // Process js files
         if ((ext === 'js' || ext === 'ts') && this.EsBuild) {
             yield this.EsLint.lintFile(filepath);
+            yield this.Biome.lintFile(filepath);
             if (this.isSDCFile && ((_e = this.bldrConfig.sdcProcessAssetGroups.js) === null || _e === void 0 ? void 0 : _e[filepath])) {
                 yield this.EsBuild.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.js[filepath]);
             }

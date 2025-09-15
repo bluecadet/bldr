@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'node:module';
-import { CommandSettings } from './@types/commandSettings';
+import type { CommandSettings } from './@types/commandSettings';
 
 
 export class BldrSettings {

@@ -1,4 +1,4 @@
-import { CommandSettings } from './@types/commandSettings';
+import type { CommandSettings } from './@types/commandSettings';
 export declare class BldrSettings {
     /**
      * @description Singleton instance of BldrSettings

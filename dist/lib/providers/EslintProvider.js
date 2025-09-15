@@ -53,15 +53,15 @@ export class EslintProvider {
             if (this.bldrConfig.isDev || ((_d = this.bldrConfig.eslintConfig) === null || _d === void 0 ? void 0 : _d.forceBuildIfError) === true) {
                 this.bailOnError = {};
                 if (this.bldrConfig.isDev) {
-                    this.resultMessage = `Errors found in Eslint`;
+                    this.resultMessage = "Errors found in Eslint";
                 }
                 else {
-                    this.resultMessage = `Errors found in Eslint, but build forced in config`;
+                    this.resultMessage = "Errors found in Eslint, but build forced in config";
                 }
             }
             else {
                 this.bailOnError = { throwError: true, exit: true };
-                this.resultMessage = `Errors found in Eslint - process aborted`;
+                this.resultMessage = "Errors found in Eslint - process aborted";
             }
             yield __classPrivateFieldGet(this, _EslintProvider_instances, "m", _EslintProvider_compileFinalConfig).call(this);
         });
@@ -102,18 +102,18 @@ _EslintProvider_instances = new WeakSet(), _EslintProvider_setEsLintPaths = func
         var _a, _b;
         this.eslintAllPaths = [];
         // Check if eslint.config.js exists in the project root, and use files from config if defined
-        const eslintConfigPath = path.join(process.cwd(), `eslint.config.js`);
+        const eslintConfigPath = path.join(process.cwd(), 'eslint.config.js');
         if (fs.existsSync(eslintConfigPath)) {
             const configFile = yield import(eslintConfigPath);
-            configFile.default.forEach((c) => {
+            for (const c of configFile.default) {
                 if (c === null || c === void 0 ? void 0 : c.files) {
-                    c.files.forEach((file) => {
+                    for (const file of c.files) {
                         this.eslintAllPaths.push(path.join(process.cwd(), file));
-                    });
+                    }
                 }
-            });
+            }
             if (this.eslintAllPaths.length > 0) {
-                logAction(`eslint`, `Linting files from eslint.config.js`);
+                logAction('eslint', 'Linting files from eslint.config.js');
                 return;
             }
         }
@@ -121,14 +121,14 @@ _EslintProvider_instances = new WeakSet(), _EslintProvider_setEsLintPaths = func
         const require = createRequire(import.meta.url);
         const fg = require('fast-glob');
         if ((_a = this.bldrConfig.processSrc) === null || _a === void 0 ? void 0 : _a.js) {
-            this.bldrConfig.processSrc.js.forEach((p) => {
+            for (const p of this.bldrConfig.processSrc.js) {
                 const files = fg.sync([`${path.join(process.cwd(), p.src)}`]);
                 if (files && files.length > 0) {
                     for (const file of files) {
                         this.eslintAllPaths.push(path.resolve(file));
                     }
                 }
-            });
+            }
         }
         if ((_b = this.bldrConfig.sdcProcessAssetGroups) === null || _b === void 0 ? void 0 : _b.js) {
             for (const [key, value] of Object.entries(this.bldrConfig.sdcProcessAssetGroups.js)) {
@@ -145,17 +145,17 @@ _EslintProvider_instances = new WeakSet(), _EslintProvider_setEsLintPaths = func
             }
             const results = yield this.eslint.lintFiles(files);
             const resultText = this.formatter.format(results);
-            results.forEach((res) => {
+            for (const res of results) {
                 if (res.errorCount > 0) {
                     const dashes = dashPadFromString(this.resultMessage);
-                    logError(`eslint`, dashes, {});
-                    logError(`eslint`, this.resultMessage, {});
-                    logError(`eslint`, dashes, {});
+                    logError('eslint', dashes, {});
+                    logError('eslint', this.resultMessage, {});
+                    logError('eslint', dashes, {});
                     console.log(resultText);
-                    logError(`eslint`, dashes, this.bailOnError);
+                    logError("eslint", dashes, this.bailOnError);
                     console.log('');
                 }
-            });
+            }
         }
         catch (err) {
             if (this.bldrConfig.isDev || ((_a = this.bldrConfig.eslintConfig) === null || _a === void 0 ? void 0 : _a.forceBuildIfError)) {

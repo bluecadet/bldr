@@ -18,7 +18,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _BldrConfig_instances, _BldrConfig_fg, _BldrConfig_loadConfig, _BldrConfig_createProcessConfig, _BldrConfig_setProcessSrc, _BldrConfig_handleProcessGroup, _BldrConfig_createSrcDestObject, _BldrConfig_handleSDC, _BldrConfig_handleSDCType, _BldrConfig_buildProviderConfig, _BldrConfig_setEsBuildConfig, _BldrConfig_setRollupConfig, _BldrConfig_setEslintConfig, _BldrConfig_setSassConfig, _BldrConfig_setStylelintConfig;
+var _BldrConfig_instances, _BldrConfig_fg, _BldrConfig_loadConfig, _BldrConfig_createProcessConfig, _BldrConfig_setProcessSrc, _BldrConfig_handleProcessGroup, _BldrConfig_createSrcDestObject, _BldrConfig_handleSDC, _BldrConfig_handleSDCType, _BldrConfig_buildProviderConfig, _BldrConfig_setEsBuildConfig, _BldrConfig_setRollupConfig, _BldrConfig_setEslintConfig, _BldrConfig_setSassConfig, _BldrConfig_setStylelintConfig, _BldrConfig_setBiomeConfig;
 import { BldrSettings } from "./BldrSettings.js";
 import path from "node:path";
 import { logAction, logError, logWarn } from "./utils/loggers.js";
@@ -104,6 +104,11 @@ export class BldrConfig {
          * User defined config for StyleLint processing
          */
         this.stylelintConfig = null;
+        /**
+         * @property null|object
+         * User defined config for StyleLint processing
+         */
+        this.biomeConfig = null;
         /**
          * @property null|function
          * Fast-glob function
@@ -298,8 +303,11 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
     });
 }, _BldrConfig_buildProviderConfig = function _BldrConfig_buildProviderConfig() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g, _h;
-        if (((_a = this.processAssetGroups) === null || _a === void 0 ? void 0 : _a.js) || ((_b = this.sdcProcessAssetGroups) === null || _b === void 0 ? void 0 : _b.js)) {
+        var _a, _b, _c, _d, _e, _f;
+        const jsExists = ((_a = this.processAssetGroups) === null || _a === void 0 ? void 0 : _a.js) || ((_b = this.sdcProcessAssetGroups) === null || _b === void 0 ? void 0 : _b.js);
+        const sassExists = ((_c = this.processAssetGroups) === null || _c === void 0 ? void 0 : _c.sass) || ((_d = this.sdcProcessAssetGroups) === null || _d === void 0 ? void 0 : _d.sass);
+        const cssExists = ((_e = this.processAssetGroups) === null || _e === void 0 ? void 0 : _e.css) || ((_f = this.sdcProcessAssetGroups) === null || _f === void 0 ? void 0 : _f.css) || sassExists;
+        if (jsExists) {
             if (this.isDev) {
                 yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_setEsBuildConfig).call(this);
             }
@@ -308,11 +316,14 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
             }
             yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_setEslintConfig).call(this);
         }
-        if (((_c = this.processAssetGroups) === null || _c === void 0 ? void 0 : _c.sass) || ((_d = this.sdcProcessAssetGroups) === null || _d === void 0 ? void 0 : _d.sass)) {
+        if (sassExists) {
             yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_setSassConfig).call(this);
         }
-        if (((_e = this.processAssetGroups) === null || _e === void 0 ? void 0 : _e.css) || ((_f = this.sdcProcessAssetGroups) === null || _f === void 0 ? void 0 : _f.css) || ((_g = this.processAssetGroups) === null || _g === void 0 ? void 0 : _g.sass) || ((_h = this.sdcProcessAssetGroups) === null || _h === void 0 ? void 0 : _h.sass)) {
+        if (cssExists) {
             yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_setStylelintConfig).call(this);
+        }
+        if (jsExists || cssExists) {
+            yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_setBiomeConfig).call(this);
         }
     });
 }, _BldrConfig_setEsBuildConfig = function _BldrConfig_setEsBuildConfig() {
@@ -382,8 +393,23 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
             useStyleLint: true,
             forceBuildIfError: true,
         };
-        if ((_a = this.userConfig) === null || _a === void 0 ? void 0 : _a.sass) {
+        if ((_a = this.userConfig) === null || _a === void 0 ? void 0 : _a.stylelint) {
             this.stylelintConfig = Object.assign(Object.assign({}, this.stylelintConfig), this.userConfig.stylelint);
+        }
+    });
+}, _BldrConfig_setBiomeConfig = function _BldrConfig_setBiomeConfig() {
+    return __awaiter(this, void 0, void 0, function* () {
+        var _a, _b;
+        this.biomeConfig = {
+            useBiome: false,
+            dev: true,
+            write: false,
+            devWrite: false,
+            devFormat: false,
+            forceBuildIfError: true,
+        };
+        if ((_a = this.userConfig) === null || _a === void 0 ? void 0 : _a.biome) {
+            this.biomeConfig = Object.assign(Object.assign({}, this.biomeConfig), (_b = this.userConfig) === null || _b === void 0 ? void 0 : _b.biome);
         }
     });
 };

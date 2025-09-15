@@ -16,6 +16,7 @@ export interface ConfigSettings {
     rollup?: BldrRollupSettings;
     eslint?: BldrEsLintSettings;
     stylelint?: BldrStyleLintSettings;
+    biome?: BldrBiomeSettings;
     sassConfig?: BldrSassSettings;
     browsersync?: browsersyncSettings;
 }
@@ -139,6 +140,14 @@ export interface BldrEsLintSettings {
 }
 export interface BldrStyleLintSettings {
     useStyleLint?: boolean;
+    forceBuildIfError?: boolean;
+}
+export interface BldrBiomeSettings {
+    useBiome?: boolean;
+    dev?: boolean;
+    write?: boolean;
+    devWrite?: boolean;
+    devFormat?: boolean;
     forceBuildIfError?: boolean;
 }
 export interface BldrSassSettings {

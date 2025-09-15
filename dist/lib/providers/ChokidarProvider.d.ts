@@ -12,6 +12,7 @@ export declare class ChokidarProvider {
     private Browsersync;
     private EsLint;
     private Stylelint;
+    private Biome;
     private isSDCFile;
     constructor();
     /**

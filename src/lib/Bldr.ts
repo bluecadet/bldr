@@ -9,6 +9,7 @@ import { RollupProvider } from "./providers/RollupProvider.js";
 import { logAction, logSuccess } from "./utils/loggers.js";
 import { EslintProvider } from "./providers/EslintProvider.js";
 import { StylelintProvider } from "./providers/StylelintProvider.js";
+import { BiomeProvider } from "./providers/BiomeProvider.js";
 
 export class Bldr {
 
@@ -22,6 +23,7 @@ export class Bldr {
   private SassProvider: SassProvider;
   private EslintProvider: EslintProvider;
   private StylelintProvider: StylelintProvider;
+  private BiomeProvider: BiomeProvider;
 
   constructor(commandSettings: CommandSettings, isDev: boolean = false, isInit: boolean = false) {
     
@@ -35,6 +37,7 @@ export class Bldr {
     this.SassProvider = new SassProvider();
     this.EslintProvider = new EslintProvider();
     this.StylelintProvider = new StylelintProvider();
+    this.BiomeProvider = new BiomeProvider();
     
     this.#initialize();
 
@@ -54,6 +57,7 @@ export class Bldr {
       this.SassProvider.initialize(),
       this.EslintProvider.initialize(),
       this.StylelintProvider.initialize(),
+      this.BiomeProvider.initialize(),
     ]);
     
     if ( this.isDev ) {
