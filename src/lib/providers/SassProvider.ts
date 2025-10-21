@@ -57,7 +57,7 @@ export class SassProvider {
   }
 
   async buildProcessBundle() {
-    
+
     await this.buildProcessAssetGroupsBundle();
 
     if ( this.bldrConfig.sdcProcessAssetGroups?.sass ) {
@@ -110,8 +110,6 @@ export class SassProvider {
         logError('sass', `no css found in ${src}`);
         return;
       }
-
-      console.log(cleanName);
 
       let cssString = result.css.toString();
 
