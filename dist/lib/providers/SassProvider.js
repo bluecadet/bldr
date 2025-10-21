@@ -43,12 +43,9 @@ export class SassProvider {
     }
     buildProcessBundle() {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b;
-            if (!((_a = this.bldrConfig.processAssetGroups) === null || _a === void 0 ? void 0 : _a.sass)) {
-                return;
-            }
+            var _a;
             yield this.buildProcessAssetGroupsBundle();
-            if ((_b = this.bldrConfig.sdcProcessAssetGroups) === null || _b === void 0 ? void 0 : _b.sass) {
+            if ((_a = this.bldrConfig.sdcProcessAssetGroups) === null || _a === void 0 ? void 0 : _a.sass) {
                 for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.sass)) {
                     yield this.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.sass[asset]);
                 }
@@ -58,9 +55,9 @@ export class SassProvider {
     buildProcessAssetGroupsBundle() {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
-            if ((_a = this.bldrConfig.sdcProcessAssetGroups) === null || _a === void 0 ? void 0 : _a.sass) {
-                for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.sass)) {
-                    yield this.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.sass[asset]);
+            if ((_a = this.bldrConfig.processAssetGroups) === null || _a === void 0 ? void 0 : _a.sass) {
+                for (const asset of Object.keys(this.bldrConfig.processAssetGroups.sass)) {
+                    yield this.buildAssetGroup(this.bldrConfig.processAssetGroups.sass[asset]);
                 }
             }
         });
@@ -81,6 +78,7 @@ export class SassProvider {
             const ext = path.extname(src);
             const cleanName = filename.replace(ext, '');
             try {
+                // biome-ignore lint/suspicious/noExplicitAny: <explanation>
                 let result;
                 yield ensureDirectory(dest);
                 if ((_b = (_a = this.bldrConfig) === null || _a === void 0 ? void 0 : _a.sassConfig) === null || _b === void 0 ? void 0 : _b.useLegacy) {
@@ -93,9 +91,10 @@ export class SassProvider {
                     logError('sass', `no css found in ${src}`);
                     return;
                 }
+                console.log(cleanName);
                 let cssString = result.css.toString();
                 if (result === null || result === void 0 ? void 0 : result.sourceMap) {
-                    cssString += '\n'.repeat(2) + '/*# sourceMappingURL=' + `${cleanName}.css.map` + ' */';
+                    cssString += `\n\n/*# sourceMappingURL=${cleanName}.css.map */`;
                     fs.writeFileSync(path.join(dest, `${cleanName}.css.map`), JSON.stringify(result.sourceMap));
                 }
                 fs.writeFileSync(path.join(dest, `${cleanName}.css`), cssString);
@@ -107,8 +106,8 @@ export class SassProvider {
             catch (error) {
                 // General error caught
                 const toBailOrNotToBail = this.bldrConfig.isDev ? {} : { throwError: true, exit: true };
-                logError(`sass`, `General error:`, {});
-                logError(`sass`, `${error}`, toBailOrNotToBail);
+                logError('sass', 'General error:', {});
+                logError('sass', `${error}`, toBailOrNotToBail);
             }
         });
     }

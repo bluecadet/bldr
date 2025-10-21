@@ -146,14 +146,12 @@ export class BldrConfig {
     addFileToAssetGroup(file_1, key_1) {
         return __awaiter(this, arguments, void 0, function* (file, key, isSDC = false, dest = null) {
             const group = isSDC ? this.sdcProcessAssetGroups : this.processAssetGroups;
-            const localFile = file.replace(process.cwd() + '/', '');
+            const localFile = file.replace(`${process.cwd()}/`, '');
+            const destPath = dest ? dest : path.dirname(file);
             if (!(group === null || group === void 0 ? void 0 : group[key])) {
                 group[key] = {};
             }
-            if (!dest) {
-                dest = path.dirname(file);
-            }
-            group[key][localFile] = __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_createSrcDestObject).call(this, file, dest);
+            group[key][localFile] = __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_createSrcDestObject).call(this, file, destPath);
         });
     }
     /**
@@ -251,7 +249,7 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
         if (!((_a = this.processSrc) === null || _a === void 0 ? void 0 : _a[key])) {
             return;
         }
-        this.processSrc[key].forEach((p) => {
+        for (const p of this.processSrc[key]) {
             const files = __classPrivateFieldGet(this, _BldrConfig_fg, "f").sync([`${path.join(process.cwd(), p.src)}`]);
             if (files && files.length > 0) {
                 for (const file of files) {
@@ -259,7 +257,7 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
                     this.addFileToAssetGroup(file, key, false, p.dest);
                 }
             }
-        });
+        }
     });
 }, _BldrConfig_createSrcDestObject = function _BldrConfig_createSrcDestObject(src, dest) {
     return {

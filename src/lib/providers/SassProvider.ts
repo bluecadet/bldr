@@ -57,10 +57,7 @@ export class SassProvider {
   }
 
   async buildProcessBundle() {
-    if ( !this.bldrConfig.processAssetGroups?.sass) {
-      return;
-    }
-
+    
     await this.buildProcessAssetGroupsBundle();
 
     if ( this.bldrConfig.sdcProcessAssetGroups?.sass ) {
@@ -72,9 +69,9 @@ export class SassProvider {
 
 
   async buildProcessAssetGroupsBundle() {
-    if ( this.bldrConfig.sdcProcessAssetGroups?.sass ) {
-      for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.sass)) {
-        await this.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.sass[asset]);
+    if ( this.bldrConfig.processAssetGroups?.sass ) {
+      for (const asset of Object.keys(this.bldrConfig.processAssetGroups.sass)) {
+        await this.buildAssetGroup(this.bldrConfig.processAssetGroups.sass[asset]);
       }  
     }
   }
@@ -98,7 +95,8 @@ export class SassProvider {
 
     try {
     
-      let result;
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      let result: any;
 
       await ensureDirectory(dest);
       
@@ -113,10 +111,12 @@ export class SassProvider {
         return;
       }
 
+      console.log(cleanName);
+
       let cssString = result.css.toString();
 
       if ( result?.sourceMap ) {
-        cssString += '\n'.repeat(2) + '/*# sourceMappingURL=' + `${cleanName}.css.map` + ' */';
+        cssString += `\n\n/*# sourceMappingURL=${cleanName}.css.map */`;
         fs.writeFileSync(path.join(dest, `${cleanName}.css.map`), JSON.stringify(result.sourceMap));
       }
 
@@ -131,8 +131,8 @@ export class SassProvider {
     } catch (error) {
       // General error caught
       const toBailOrNotToBail = this.bldrConfig.isDev ? {} : { throwError: true, exit: true };
-      logError(`sass`, `General error:`, {});
-      logError(`sass`, `${error}`, toBailOrNotToBail);
+      logError('sass', 'General error:', {});
+      logError('sass', `${error}`, toBailOrNotToBail);
     }
     
   }

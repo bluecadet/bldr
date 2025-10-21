@@ -33,12 +33,9 @@ export class EsBuildProvider {
      */
     buildProcessBundle() {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b;
-            if (!((_a = this.bldrConfig.processAssetGroups) === null || _a === void 0 ? void 0 : _a.js)) {
-                return;
-            }
+            var _a;
             yield this.buildProcessAssetGroupsBundle();
-            if ((_b = this.bldrConfig.sdcProcessAssetGroups) === null || _b === void 0 ? void 0 : _b.js) {
+            if ((_a = this.bldrConfig.sdcProcessAssetGroups) === null || _a === void 0 ? void 0 : _a.js) {
                 for (const asset of Object.keys(this.bldrConfig.sdcProcessAssetGroups.js)) {
                     yield this.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.js[asset]);
                 }

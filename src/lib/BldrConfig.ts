@@ -300,16 +300,16 @@ export class BldrConfig {
       return;
     }
 
-    this.processSrc[key].forEach((p: AssetObject) => {
+    for (const p of this.processSrc[key]) {
       const files = this.#fg.sync([`${path.join(process.cwd(), p.src)}`]);
 
-      if ( files && files.length > 0 ) {
+      if (files && files.length > 0) {
         for (const file of files) {
           this.chokidarIgnorePathsArray.push(path.resolve(p.dest));
           this.addFileToAssetGroup(file, key as ProcessKey, false, p.dest);
         }
       }
-    });
+    }
   }
 
 
@@ -318,19 +318,16 @@ export class BldrConfig {
    * @method addFileToAssetGroup
    * @description add a file an asset group
    */
-  async addFileToAssetGroup(file: string, key: ProcessKey, isSDC: boolean = false, dest: string | null = null) {
+  async addFileToAssetGroup(file: string, key: ProcessKey, isSDC = false, dest: string | null = null) {
     const group = isSDC ? this.sdcProcessAssetGroups : this.processAssetGroups;
-    const localFile = file.replace(process.cwd() + '/', '');
+    const localFile = file.replace(`${process.cwd()}/`, '');
+    const destPath = dest ? dest : path.dirname(file);
 
     if ( !group?.[key] ) {
       group[key] = {};
     }
-    
-    if ( !dest ) {
-      dest = path.dirname(file);
-    }
 
-    group[key][localFile] = this.#createSrcDestObject(file, dest);
+    group[key][localFile] = this.#createSrcDestObject(file, destPath);
   }
 
 

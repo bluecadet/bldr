@@ -46,10 +46,7 @@ export class EsBuildProvider {
    * @memberof EsBuildProvider
    */
   async buildProcessBundle(): Promise<void> {
-    if ( !this.bldrConfig.processAssetGroups?.js) {
-      return;
-    }
-
+    
     await this.buildProcessAssetGroupsBundle();
 
     if ( this.bldrConfig.sdcProcessAssetGroups?.js ) {
