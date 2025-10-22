@@ -91,7 +91,6 @@ export class SassProvider {
                     logError('sass', `no css found in ${src}`);
                     return;
                 }
-                console.log(cleanName);
                 let cssString = result.css.toString();
                 if (result === null || result === void 0 ? void 0 : result.sourceMap) {
                     cssString += `\n\n/*# sourceMappingURL=${cleanName}.css.map */`;

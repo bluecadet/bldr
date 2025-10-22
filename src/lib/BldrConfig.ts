@@ -4,6 +4,7 @@ import { BldrSettings } from "./BldrSettings.js";
 import path from "node:path";
 import { logAction, logError, logWarn } from "./utils/loggers.js";
 import { createRequire } from 'node:module';
+import fs from "node:fs";
 
 export class BldrConfig {
   
@@ -212,11 +213,12 @@ export class BldrConfig {
       logError('bldr', `Missing required ${this.bldrSettings.configFileName} file`, {throwError: true, exit: true});
     }
 
-    // Load Local User Config
+
     try {
       const localConfig = await import(this.bldrSettings.localConfigFilePath);  
       this.localConfig = localConfig.default;
     } catch (error) {
+      console.warn(error);
       if ( this.isDev && !this.userConfig.browsersync?.disable ) {
         logWarn('bldr', `Missing ${this.bldrSettings.localConfigFileName} file, using defaults`);
       }
