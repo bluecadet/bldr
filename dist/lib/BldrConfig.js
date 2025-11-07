@@ -194,9 +194,9 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
         try {
             const localConfig = yield import(this.bldrSettings.localConfigFilePath);
             this.localConfig = localConfig.default;
+            // biome-ignore lint/correctness/noUnusedVariables: error required by TS
         }
         catch (error) {
-            console.warn(error);
             if (this.isDev && !((_a = this.userConfig.browsersync) === null || _a === void 0 ? void 0 : _a.disable)) {
                 logWarn('bldr', `Missing ${this.bldrSettings.localConfigFileName} file, using defaults`);
             }

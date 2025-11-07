@@ -217,8 +217,8 @@ export class BldrConfig {
     try {
       const localConfig = await import(this.bldrSettings.localConfigFilePath);  
       this.localConfig = localConfig.default;
+    // biome-ignore lint/correctness/noUnusedVariables: error required by TS
     } catch (error) {
-      console.warn(error);
       if ( this.isDev && !this.userConfig.browsersync?.disable ) {
         logWarn('bldr', `Missing ${this.bldrSettings.localConfigFileName} file, using defaults`);
       }
