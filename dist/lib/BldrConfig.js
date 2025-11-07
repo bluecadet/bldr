@@ -23,7 +23,6 @@ import { BldrSettings } from "./BldrSettings.js";
 import path from "node:path";
 import { logAction, logError, logWarn } from "./utils/loggers.js";
 import { createRequire } from 'node:module';
-import fs from "node:fs";
 export class BldrConfig {
     /**
      * @description BldrConfig constructor
@@ -193,10 +192,7 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
             logError('bldr', `Missing required ${this.bldrSettings.configFileName} file`, { throwError: true, exit: true });
         }
         try {
-            console.log(this.bldrSettings.localConfigFilePath);
-            console.log(fs.existsSync(this.bldrSettings.localConfigFilePath));
             const localConfig = yield import(this.bldrSettings.localConfigFilePath);
-            console.log(localConfig);
             this.localConfig = localConfig.default;
         }
         catch (error) {
