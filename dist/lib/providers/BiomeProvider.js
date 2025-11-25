@@ -10,8 +10,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { BldrConfig } from '../BldrConfig.js';
 import { execSync } from 'node:child_process';
 import { dashPadFromString, logError, logSuccess } from '../utils/loggers.js';
+import { createRequire } from 'node:module';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 export class BiomeProvider {
     constructor() {
+        // biome-ignore lint/suspicious/noExplicitAny: Not bringing in biome, so using any for json config (no biome types)
+        this.biomeConfig = {};
         if (BiomeProvider._instance) {
             return;
         }
@@ -21,6 +26,10 @@ export class BiomeProvider {
         var _a, _b, _c, _d, _e, _f;
         this.bldrConfig = BldrConfig._instance;
         this.throwError = !this.bldrConfig.isDev && ((_a = this.bldrConfig.biomeConfig) === null || _a === void 0 ? void 0 : _a.forceBuildIfError) === true;
+        if (existsSync(join(process.cwd(), 'biome.json'))) {
+            const biomeConfigRaw = readFileSync(join(process.cwd(), 'biome.json'), 'utf-8');
+            this.biomeConfig = JSON.parse(biomeConfigRaw);
+        }
         if (this.bldrConfig.isDev || ((_b = this.bldrConfig.biomeConfig) === null || _b === void 0 ? void 0 : _b.forceBuildIfError) === true) {
             this.bailOnError = {};
             if (this.bldrConfig.isDev) {
@@ -73,17 +82,53 @@ export class BiomeProvider {
      */
     lintFile(filepath) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d;
+            var _a, _b, _c, _d, _e, _f;
             if (!((_b = (_a = this.bldrConfig) === null || _a === void 0 ? void 0 : _a.biomeConfig) === null || _b === void 0 ? void 0 : _b.useBiome)) {
-                return;
+                return false;
             }
             if (this.bldrConfig.isDev && !((_d = (_c = this.bldrConfig) === null || _c === void 0 ? void 0 : _c.biomeConfig) === null || _d === void 0 ? void 0 : _d.dev)) {
-                return;
+                return false;
+            }
+            if (((_f = (_e = this.biomeConfig) === null || _e === void 0 ? void 0 : _e.files) === null || _f === void 0 ? void 0 : _f.includes) && Array.isArray(this.biomeConfig.files.includes)) {
+                if (!this.matchesPattern(filepath, this.biomeConfig.files.includes)) {
+                    return false;
+                }
             }
             logSuccess('biome', `${filepath} linted`);
             const stdout = execSync(`${this.devRunCommand} ${filepath}`).toString();
             console.log(stdout);
+            return true;
         });
+    }
+    /**
+     * Check if a file matches any pattern in an array of glob patterns
+     * Patterns starting with ! are treated as negations
+     * @param {string} filePath - The file path to check
+     * @param {string[]} patterns - Array of glob patterns (can include negations with !)
+     * @returns {boolean} - True if file matches and isn't negated, false otherwise
+     */
+    matchesPattern(filePath, patterns) {
+        if (!patterns || patterns.length === 0) {
+            return false;
+        }
+        const require = createRequire(import.meta.url);
+        const picomatch = require('picomatch');
+        let isMatch = false;
+        for (const pattern of patterns) {
+            const isNegation = pattern.startsWith('!');
+            const cleanPattern = isNegation ? pattern.slice(1) : pattern;
+            // Create a matcher for this pattern
+            const isMatchFn = picomatch(cleanPattern, { dot: true });
+            if (isMatchFn(filePath)) {
+                if (isNegation) {
+                    return false; // Negation pattern matched - file should be excluded
+                }
+                else {
+                    isMatch = true; // Positive pattern matched
+                }
+            }
+        }
+        return isMatch;
     }
 }
 //# sourceMappingURL=BiomeProvider.js.map

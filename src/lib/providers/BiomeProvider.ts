@@ -1,6 +1,10 @@
 import { BldrConfig } from '../BldrConfig.js';
 import { execSync } from 'node:child_process';
-import { dashPadFromString, logAction, logError, logSuccess } from '../utils/loggers.js';
+import { dashPadFromString, logError, logSuccess } from '../utils/loggers.js';
+import { createRequire } from 'node:module';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+
 export class BiomeProvider {
 
   /**
@@ -42,6 +46,10 @@ export class BiomeProvider {
    */
   private devRunCommand!: string;
 
+
+  // biome-ignore lint/suspicious/noExplicitAny: Not bringing in biome, so using any for json config (no biome types)
+  private biomeConfig: any = {};
+
   /**
    * @property null|Class BiomeProvider
    * Singleton instance of BiomeProvider
@@ -62,6 +70,11 @@ export class BiomeProvider {
 
     this.bldrConfig = BldrConfig._instance;
     this.throwError = !this.bldrConfig.isDev && this.bldrConfig.biomeConfig?.forceBuildIfError === true;
+
+    if ( existsSync( join(process.cwd(), 'biome.json') ) ) {
+      const biomeConfigRaw = readFileSync( join(process.cwd(), 'biome.json'), 'utf-8' );
+      this.biomeConfig = JSON.parse(biomeConfigRaw);
+    }
 
     if ( this.bldrConfig.isDev || this.bldrConfig.biomeConfig?.forceBuildIfError === true ) {
       this.bailOnError = {};
@@ -117,18 +130,62 @@ export class BiomeProvider {
    * @returns {Promise<void>}
    * @memberof BiomeProvider
    */
-  async lintFile(filepath: string) {
+  async lintFile(filepath: string): Promise<boolean> {
 
     if ( !this.bldrConfig?.biomeConfig?.useBiome ) {
-      return;
+      return false;
     }
 
     if ( this.bldrConfig.isDev && !this.bldrConfig?.biomeConfig?.dev ) {
-      return;
+      return false;
+    }
+
+    if ( this.biomeConfig?.files?.includes && Array.isArray(this.biomeConfig.files.includes) ) {
+      if ( !this.matchesPattern(filepath, this.biomeConfig.files.includes) ) {
+        return false;
+      }
     }
 
     logSuccess('biome', `${filepath} linted`);
     const stdout = execSync(`${this.devRunCommand} ${filepath}`).toString();
     console.log(stdout);
+    
+    return true;
+  }
+
+
+  /**
+   * Check if a file matches any pattern in an array of glob patterns
+   * Patterns starting with ! are treated as negations
+   * @param {string} filePath - The file path to check
+   * @param {string[]} patterns - Array of glob patterns (can include negations with !)
+   * @returns {boolean} - True if file matches and isn't negated, false otherwise
+   */
+  matchesPattern(filePath: string, patterns: string[]): boolean {
+    if (!patterns || patterns.length === 0) {
+      return false;
+    }
+
+    const require   = createRequire(import.meta.url);
+    const picomatch = require('picomatch');
+    let isMatch     = false;
+  
+    for (const pattern of patterns) {
+      const isNegation = pattern.startsWith('!');
+      const cleanPattern = isNegation ? pattern.slice(1) : pattern;
+  
+      // Create a matcher for this pattern
+      const isMatchFn = picomatch(cleanPattern, { dot: true });
+  
+      if (isMatchFn(filePath)) {
+        if (isNegation) {
+          return false; // Negation pattern matched - file should be excluded
+        } else { 
+          isMatch = true; // Positive pattern matched
+        }
+      }
+    }
+  
+    return isMatch;
   }
 }

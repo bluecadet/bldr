@@ -28,6 +28,7 @@ export declare class BiomeProvider {
      * @property null | string
      */
     private devRunCommand;
+    private biomeConfig;
     /**
      * @property null|Class BiomeProvider
      * Singleton instance of BiomeProvider
@@ -42,6 +43,14 @@ export declare class BiomeProvider {
      * @returns {Promise<void>}
      * @memberof BiomeProvider
      */
-    lintFile(filepath: string): Promise<void>;
+    lintFile(filepath: string): Promise<boolean>;
+    /**
+     * Check if a file matches any pattern in an array of glob patterns
+     * Patterns starting with ! are treated as negations
+     * @param {string} filePath - The file path to check
+     * @param {string[]} patterns - Array of glob patterns (can include negations with !)
+     * @returns {boolean} - True if file matches and isn't negated, false otherwise
+     */
+    matchesPattern(filePath: string, patterns: string[]): boolean;
 }
 //# sourceMappingURL=BiomeProvider.d.ts.map
