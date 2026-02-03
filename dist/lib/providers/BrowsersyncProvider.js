@@ -12,11 +12,16 @@ import { createRequire } from 'node:module';
 import { logAction } from '../utils/loggers.js';
 export class BrowsersyncProvider {
     constructor() {
+        /**
+         * @property null|Class BrowsersyncProvider
+         * Singleton instance of BrowsersyncProvider
+         */
+        this._instance = null;
         this.browsersyncInstance = null;
-        if (BrowsersyncProvider._instance) {
-            return BrowsersyncProvider._instance;
+        if (this._instance) {
+            throw new Error("You can only create one instance!");
         }
-        BrowsersyncProvider._instance = this;
+        this._instance = this;
     }
     initialize() {
         return __awaiter(this, void 0, void 0, function* () {

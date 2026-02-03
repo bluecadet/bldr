@@ -95,20 +95,18 @@ export class BldrSettings {
     }
 
     // Determine User Local Config File
-    let localConfigFileName = 'bldrConfigLocal.js';
-    let localConfigFilePath = path.join(process.cwd(), localConfigFileName);
+    this.localConfigFileName = 'bldrConfigLocal.js';
+    this.localConfigFilePath = path.join(process.cwd(), this.localConfigFileName);
 
-    if ( !fs.existsSync(localConfigFilePath) ) {
-      localConfigFileName = 'bldr.local.config.js';
-      localConfigFilePath = path.join(process.cwd(), localConfigFileName);
+    if ( !fs.existsSync(this.localConfigFilePath) ) {
+      this.localConfigFileName = 'bldr.local.config.js';
+      this.localConfigFilePath = path.join(process.cwd(), this.localConfigFileName);
     }
 
     this.version             = bldrPackageJson.version;
     this.bldrRoot            = bldrRoot;
     this.configFileName      = configFileName;
     this.configFilePath      = configFilePath;
-    this.localConfigFileName = localConfigFileName;
-    this.localConfigFilePath = localConfigFilePath;
     this.root                = process.cwd();
     this.allowedProcessKeys  = ['css', 'sass', 'js'];
     

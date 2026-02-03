@@ -14,7 +14,7 @@ export class BrowsersyncProvider {
    * @property null|Class BrowsersyncProvider
    * Singleton instance of BrowsersyncProvider
    */
-  public static _instance: BrowsersyncProvider;
+  public _instance: BrowsersyncProvider | null = null;
 
   public notice!: string;
 
@@ -23,11 +23,11 @@ export class BrowsersyncProvider {
 
   constructor() {
 
-    if (BrowsersyncProvider._instance) {
-      return BrowsersyncProvider._instance;
+    if (this._instance) {
+      throw new Error("You can only create one instance!");
     }
 
-    BrowsersyncProvider._instance = this;
+    this._instance = this;
 
   }
 

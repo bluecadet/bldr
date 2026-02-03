@@ -32,21 +32,21 @@ bldrCLI
     '-o, --once',
     'run all `dev` processes once without starting local enviornment'
   )
-  .action((options, cmd) => {
+  .action((_options, cmd) => {
     new Bldr(cmd.optsWithGlobals(), true);
   });
 
 bldrCLI
   .command('build')
   .description('create a production build')
-  .action((options, cmd) => {
+  .action((_options, cmd) => {
     new Bldr(cmd.optsWithGlobals(), false);
   });
 
 bldrCLI
   .command('lint')
   .description('lint files')
-  .action((options, cmd) => {
+  .action((_options, cmd) => {
     handleLint(cmd.optsWithGlobals());
   });
 

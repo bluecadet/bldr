@@ -68,7 +68,7 @@ export class ChokidarProvider {
                 },
                 ignoreInitial: true,
             });
-            this.watcher.on('ready', () => {
+            this.watcher.once('ready', () => {
                 console.log(``);
                 console.log(`-------------------------------------------`);
                 logAction('bldr', '💪 Ready and waiting for changes!');

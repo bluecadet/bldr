@@ -5,7 +5,7 @@ When running `dev`, bldr will look for a `bldr.local.config.js`. This file can b
 All configuration should be created within a `bldr.local.config.js` file that exports the `bldrLocalConfig` method:
 
 ```js
-import { bldrLocalConfig } from "@bluecadet/bldr";
+import { bldrLocalConfig } from "@bluecadet/bldr/config";
 
 export default bldrLocalConfig({
   // Configuration here

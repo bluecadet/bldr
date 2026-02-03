@@ -8,7 +8,7 @@ export declare class BrowsersyncProvider {
      * @property null|Class BrowsersyncProvider
      * Singleton instance of BrowsersyncProvider
      */
-    static _instance: BrowsersyncProvider;
+    _instance: BrowsersyncProvider | null;
     notice: string;
     browsersyncInstance: any;
     constructor();
