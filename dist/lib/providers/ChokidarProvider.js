@@ -160,11 +160,14 @@ _ChokidarProvider_instances = new WeakSet(), _ChokidarProvider_changeFile = func
         yield this.bldrConfig.rebuildConfig();
     });
 }, _ChokidarProvider_checkIsSDCFile = function _ChokidarProvider_checkIsSDCFile(filepath) {
+    var _a;
     this.isSDCFile = false;
-    for (const file of this.bldrConfig.sdcPaths) {
-        if (__classPrivateFieldGet(this, _ChokidarProvider_instances, "m", _ChokidarProvider_isChildOfDir).call(this, filepath, file)) {
-            this.isSDCFile = true;
-            break;
+    if ((_a = this.bldrConfig) === null || _a === void 0 ? void 0 : _a.sdcPaths) {
+        for (const file of this.bldrConfig.sdcPaths) {
+            if (__classPrivateFieldGet(this, _ChokidarProvider_instances, "m", _ChokidarProvider_isChildOfDir).call(this, filepath, file)) {
+                this.isSDCFile = true;
+                break;
+            }
         }
     }
     return this.isSDCFile;

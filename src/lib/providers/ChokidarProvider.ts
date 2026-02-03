@@ -207,10 +207,12 @@ export class ChokidarProvider {
   #checkIsSDCFile(filepath: string): boolean {
     this.isSDCFile = false;
 
-    for (const file of this.bldrConfig.sdcPaths) {
-      if (this.#isChildOfDir(filepath, file)) {
-        this.isSDCFile = true;
-        break;
+    if ( this.bldrConfig?.sdcPaths ) {
+      for (const file of this.bldrConfig.sdcPaths) {
+        if (this.#isChildOfDir(filepath, file)) {
+          this.isSDCFile = true;
+          break;
+        }
       }
     }
 
