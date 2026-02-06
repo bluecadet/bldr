@@ -5,7 +5,7 @@ import { EsBuildProvider } from './EsBuildProvider.js';
 import { PostcssProvider } from './PostcssProvider.js';
 import { SassProvider } from './SassProvider.js';
 import { BrowsersyncProvider } from './BrowsersyncProvider.js';
-import { logAction } from '../utils/loggers.js';
+import { logAction, logGrayText } from '../utils/loggers.js';
 import { EslintProvider } from './EslintProvider.js';
 import { StylelintProvider } from './StylelintProvider.js';
 import { BiomeProvider } from './BiomeProvider.js';
@@ -26,6 +26,8 @@ export class ChokidarProvider {
   private Stylelint: StylelintProvider;
   private Biome: BiomeProvider;
   private isSDCFile: boolean = false;
+  private SDCAssetDepBuildMessage: string = '[building sdc dependency assets]';
+  private SDCAssetDepDoneMessage: string = '[building sdc asset]';
 
 
   constructor() {
@@ -123,6 +125,20 @@ export class ChokidarProvider {
       await this.Stylelint.lintFile(filepath);
 
       if ( this.isSDCFile && this.bldrConfig.sdcProcessAssetGroups.css?.[filepath] ) {
+        if ( this.bldrConfig?.sdcAssetDependencies?.css || this.bldrConfig?.sdcAssetDependencies?.sass ) {
+          logGrayText(this.SDCAssetDepBuildMessage);
+          if ( this.bldrConfig?.sdcAssetDependencies?.css ) {
+            for (const dep in this.bldrConfig.sdcAssetDependencies.css) {
+              await this.Postcss.buildAssetGroup(this.bldrConfig.sdcAssetDependencies.css[dep]);
+            }
+          }
+          if ( this.bldrConfig?.sdcAssetDependencies?.sass ) {
+            for (const dep in this.bldrConfig.sdcAssetDependencies.sass) {
+              await this.Postcss.buildAssetGroup(this.bldrConfig.sdcAssetDependencies.css[dep]);
+            }
+          }
+          logGrayText(this.SDCAssetDepDoneMessage);
+        }
         await this.Postcss.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.css[filepath]);
       } else if ( this.bldrConfig.processAssetGroups.css?.[filepath] ) {
         await this.Postcss.buildAssetGroup(this.bldrConfig.processAssetGroups.css[filepath]);
@@ -139,6 +155,20 @@ export class ChokidarProvider {
       await this.Stylelint.lintFile(filepath);
       
       if ( this.isSDCFile && this.bldrConfig.sdcProcessAssetGroups.sass?.[filepath] ) {
+        if ( this.bldrConfig?.sdcAssetDependencies?.css || this.bldrConfig?.sdcAssetDependencies?.sass ) {
+          logGrayText(this.SDCAssetDepBuildMessage);
+          if ( this.bldrConfig?.sdcAssetDependencies?.css ) {
+            for (const dep in this.bldrConfig.sdcAssetDependencies.css) {
+              await this.Postcss.buildAssetGroup(this.bldrConfig.sdcAssetDependencies.css[dep]);
+            }
+          }
+          if ( this.bldrConfig?.sdcAssetDependencies?.sass ) {
+            for (const dep in this.bldrConfig.sdcAssetDependencies.sass) {
+              await this.Postcss.buildAssetGroup(this.bldrConfig.sdcAssetDependencies.css[dep]);
+            }
+          }
+          logGrayText(this.SDCAssetDepDoneMessage);
+        }
         await this.Sass.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.sass[filepath]);
       } else if ( this.bldrConfig.processAssetGroups.sass?.[filepath] ) {
         await this.Sass.buildProcessBundle();
@@ -157,6 +187,13 @@ export class ChokidarProvider {
       await this.Biome.lintFile(filepath);
 
       if ( this.isSDCFile && this.bldrConfig.sdcProcessAssetGroups.js?.[filepath] ) {
+        if ( this.bldrConfig?.sdcAssetDependencies?.js ) {
+          logGrayText(this.SDCAssetDepBuildMessage);
+          for (const dep in this.bldrConfig.sdcAssetDependencies.js) {
+            await this.EsBuild.buildAssetGroup(this.bldrConfig.sdcAssetDependencies.js[dep]);
+          }
+          logGrayText(this.SDCAssetDepDoneMessage);
+        }
         await this.EsBuild.buildAssetGroup(this.bldrConfig.sdcProcessAssetGroups.js[filepath]);
       } else if ( this.bldrConfig.processAssetGroups.js?.[filepath] ) {
         await this.EsBuild.buildProcessBundle();

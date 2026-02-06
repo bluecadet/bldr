@@ -74,6 +74,11 @@ export declare class BldrConfig {
     sdcPath: string;
     sdcPaths: string[];
     /**
+     * @property null|object
+     * Settings for single component directory processes
+     */
+    sdcAssetDependencies?: any;
+    /**
      * @property null|string
      * Path to the SDC subdirectory
      */
@@ -137,7 +142,7 @@ export declare class BldrConfig {
      * @method addFileToAssetGroup
      * @description add a file an asset group
      */
-    addFileToAssetGroup(file: string, key: ProcessKey, isSDC?: boolean, dest?: string | null): Promise<void>;
+    addFileToAssetGroup(file: string, key: ProcessKey, isSDC?: boolean, dest?: string | null, isSDCAssetDependency?: boolean): Promise<void>;
     /**
      * @method rebuildConfig
      * @description Rebuild the configuration based on the user config file

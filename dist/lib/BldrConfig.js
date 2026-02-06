@@ -18,7 +18,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _BldrConfig_instances, _BldrConfig_fg, _BldrConfig_loadConfig, _BldrConfig_createProcessConfig, _BldrConfig_setProcessSrc, _BldrConfig_handleProcessGroup, _BldrConfig_createSrcDestObject, _BldrConfig_handleSDC, _BldrConfig_handleSDCType, _BldrConfig_buildProviderConfig, _BldrConfig_setEsBuildConfig, _BldrConfig_setRollupConfig, _BldrConfig_setEslintConfig, _BldrConfig_setSassConfig, _BldrConfig_setStylelintConfig, _BldrConfig_setBiomeConfig;
+var _BldrConfig_instances, _BldrConfig_fg, _BldrConfig_loadConfig, _BldrConfig_createProcessConfig, _BldrConfig_setProcessSrc, _BldrConfig_handleProcessGroup, _BldrConfig_createSrcDestObject, _BldrConfig_handleSDC, _BldrConfig_addSdcAssetDependency, _BldrConfig_handleSDCType, _BldrConfig_buildProviderConfig, _BldrConfig_setEsBuildConfig, _BldrConfig_setRollupConfig, _BldrConfig_setEslintConfig, _BldrConfig_setSassConfig, _BldrConfig_setStylelintConfig, _BldrConfig_setBiomeConfig;
 import { BldrSettings } from "./BldrSettings.js";
 import path from "node:path";
 import { logAction, logError, logWarn } from "./utils/loggers.js";
@@ -74,6 +74,11 @@ export class BldrConfig {
          * Settings for single component directory processes
          */
         this.sdcProcessAssetGroups = {};
+        /**
+         * @property null|object
+         * Settings for single component directory processes
+         */
+        this.sdcAssetDependencies = {};
         /**
          * @property null|string
          * Environment key from CLI args
@@ -144,8 +149,8 @@ export class BldrConfig {
      * @description add a file an asset group
      */
     addFileToAssetGroup(file_1, key_1) {
-        return __awaiter(this, arguments, void 0, function* (file, key, isSDC = false, dest = null) {
-            const group = isSDC ? this.sdcProcessAssetGroups : this.processAssetGroups;
+        return __awaiter(this, arguments, void 0, function* (file, key, isSDC = false, dest = null, isSDCAssetDependency = false) {
+            const group = isSDC ? this.sdcProcessAssetGroups : isSDCAssetDependency ? this.sdcAssetDependencies : this.processAssetGroups;
             const localFile = file.replace(`${process.cwd()}/`, '');
             const destPath = dest ? dest : path.dirname(file);
             if (!(group === null || group === void 0 ? void 0 : group[key])) {
@@ -266,7 +271,7 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
     };
 }, _BldrConfig_handleSDC = function _BldrConfig_handleSDC() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c;
+        var _a, _b, _c, _d, _e;
         if (!((_a = this.userConfig.sdc) === null || _a === void 0 ? void 0 : _a.directory)) {
             logError('BldrConfig', 'No directory key found for `sdc`', { throwError: true, exit: true });
             return;
@@ -288,13 +293,36 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
                 __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_handleSDCType).call(this, 'ts', 'js', sdcFilePath),
             ]);
         }
+        if ((_e = (_d = this.userConfig) === null || _d === void 0 ? void 0 : _d.sdc) === null || _e === void 0 ? void 0 : _e.assetDependencies) {
+            this.sdcAssetDependencies = {};
+            yield Promise.all([
+                __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_addSdcAssetDependency).call(this, 'css'),
+                __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_addSdcAssetDependency).call(this, 'js'),
+                __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_addSdcAssetDependency).call(this, 'sass'),
+            ]);
+        }
+    });
+}, _BldrConfig_addSdcAssetDependency = function _BldrConfig_addSdcAssetDependency(key) {
+    return __awaiter(this, void 0, void 0, function* () {
+        var _a, _b, _c;
+        if ((_c = (_b = (_a = this.userConfig) === null || _a === void 0 ? void 0 : _a.sdc) === null || _b === void 0 ? void 0 : _b.assetDependencies) === null || _c === void 0 ? void 0 : _c[key]) {
+            for (const dep of this.userConfig.sdc.assetDependencies[key]) {
+                const files = __classPrivateFieldGet(this, _BldrConfig_fg, "f").sync([`${path.join(process.cwd(), dep.src)}`]);
+                if (files && files.length > 0) {
+                    for (const file of files) {
+                        this.chokidarIgnorePathsArray.push(path.resolve(dep.dest));
+                        this.addFileToAssetGroup(file, key, false, dep.dest, true);
+                    }
+                }
+            }
+        }
     });
 }, _BldrConfig_handleSDCType = function _BldrConfig_handleSDCType(ext, key, sdcDirPath) {
     return __awaiter(this, void 0, void 0, function* () {
         const files = yield __classPrivateFieldGet(this, _BldrConfig_fg, "f").sync([`${sdcDirPath}/**/**/${this.sdcAssetSubDirectory}/*.${ext}`]);
         if (files && files.length > 0) {
             for (const file of files) {
-                let dest = path.normalize(path.join(path.dirname(file), '..'));
+                const dest = path.normalize(path.join(path.dirname(file), '..'));
                 this.addFileToAssetGroup(file, key, true, dest);
             }
         }

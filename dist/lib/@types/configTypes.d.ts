@@ -161,7 +161,18 @@ export interface BldrSDCSettings {
      * @description Path to single directory components or array of paths
      */
     directory: string | string[];
+    /**
+     * @description Name of the directory within an SDC component where asset files (css/js) are located. Default is `assets`
+     */
     assetSubDirectory: string;
+    /**
+     * @description Additional asset dependencies that should be rebuilt when an SDC file is changed.
+     */
+    assetDependencies?: {
+        css?: Array<AssetObject>;
+        js?: Array<AssetObject>;
+        sass?: Array<AssetObject>;
+    };
 }
 export interface browsersyncSettings {
     /**

@@ -1,5 +1,5 @@
 import type { CommandSettings } from "./@types/commandSettings";
-import type { BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, BldrBiomeSettings, ConfigSettings, LocalConfigSettings, ProcessAsset, ProcessKey } from "./@types/configTypes";
+import type { BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, BldrBiomeSettings, ConfigSettings, LocalConfigSettings, ProcessAsset, ProcessKey, AssetObject, ProcessAssetGroup } from "./@types/configTypes";
 import { BldrSettings } from "./BldrSettings.js";
 import path from "node:path";
 import { logAction, logError, logWarn } from "./utils/loggers.js";
@@ -91,6 +91,12 @@ export class BldrConfig {
   public sdcPath!: string;
 
   public sdcPaths!: string[];
+
+  /**
+   * @property null|object
+   * Settings for single component directory processes
+   */
+  public sdcAssetDependencies?: any = {};
 
   /**
    * @property null|string
@@ -319,8 +325,8 @@ export class BldrConfig {
    * @method addFileToAssetGroup
    * @description add a file an asset group
    */
-  async addFileToAssetGroup(file: string, key: ProcessKey, isSDC = false, dest: string | null = null) {
-    const group = isSDC ? this.sdcProcessAssetGroups : this.processAssetGroups;
+  async addFileToAssetGroup(file: string, key: ProcessKey, isSDC = false, dest: string | null = null, isSDCAssetDependency = false): Promise<void> {
+    const group = isSDC ? this.sdcProcessAssetGroups : isSDCAssetDependency ? this.sdcAssetDependencies : this.processAssetGroups;
     const localFile = file.replace(`${process.cwd()}/`, '');
     const destPath = dest ? dest : path.dirname(file);
 
@@ -384,11 +390,34 @@ export class BldrConfig {
       
     }
 
-   
+    if ( this.userConfig?.sdc?.assetDependencies ) {
+      this.sdcAssetDependencies = {};
+      await Promise.all([
+        this.#addSdcAssetDependency('css'),
+        this.#addSdcAssetDependency('js'),
+        this.#addSdcAssetDependency('sass'),
+      ]);
+    }
     
     
 
     
+  }
+
+
+  async #addSdcAssetDependency(key: ProcessKey) {
+    if ( this.userConfig?.sdc?.assetDependencies?.[key] ) {
+      for (const dep of this.userConfig.sdc.assetDependencies[key]) {
+        const files = this.#fg.sync([`${path.join(process.cwd(), dep.src)}`]);
+
+        if (files && files.length > 0) {
+          for (const file of files) {
+            this.chokidarIgnorePathsArray.push(path.resolve(dep.dest));
+            this.addFileToAssetGroup(file, key as ProcessKey, false, dep.dest, true);
+          }
+        }
+      }
+    }
   }
 
 
@@ -406,7 +435,7 @@ export class BldrConfig {
 
     if ( files && files.length > 0 ) {
       for (const file of files) {
-        let dest = path.normalize(path.join(path.dirname(file), '..'));
+        const dest = path.normalize(path.join(path.dirname(file), '..'));
         this.addFileToAssetGroup(file, key, true, dest);
       }
     }

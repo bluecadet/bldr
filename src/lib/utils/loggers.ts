@@ -52,6 +52,11 @@ export function logIffyNews(consoleMessage: string) {
   console.log(`${colors.yellow(consoleMessage)}`);
 }
 
+// Iffy News Message :(
+export function logGrayText(consoleMessage: string) {
+  console.log(`${colors.italic.gray(consoleMessage)}`);
+}
+
 
 
 // PostCss Error Message

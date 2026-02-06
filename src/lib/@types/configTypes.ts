@@ -214,12 +214,19 @@ export interface BldrSDCSettings {
    */
   directory: string | string[];
 
+  /**
+   * @description Name of the directory within an SDC component where asset files (css/js) are located. Default is `assets`
+   */
   assetSubDirectory: string;
 
   /**
-   * @description File prefix for SDC files. Default is `.bldr`, which, for example will process `file.bldr.css` to `file.css`
+   * @description Additional asset dependencies that should be rebuilt when an SDC file is changed.
    */
-  // fileExtensionPrefix?: string;
+  assetDependencies?: {
+    css?: Array<AssetObject>;
+    js?: Array<AssetObject>;
+    sass?: Array<AssetObject>;
+  };
 
 
 }

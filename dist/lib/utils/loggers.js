@@ -37,6 +37,10 @@ export function logBadNews(consoleMessage) {
 export function logIffyNews(consoleMessage) {
     console.log(`${colors.yellow(consoleMessage)}`);
 }
+// Iffy News Message :(
+export function logGrayText(consoleMessage) {
+    console.log(`${colors.italic.gray(consoleMessage)}`);
+}
 // PostCss Error Message
 export function logPostCssErrorMessage(err, errOpts) {
     const errMessage = `${colors.red(`Error proccessing file ./${err.file}`)}

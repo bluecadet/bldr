@@ -14,6 +14,8 @@ export declare class ChokidarProvider {
     private Stylelint;
     private Biome;
     private isSDCFile;
+    private SDCAssetDepBuildMessage;
+    private SDCAssetDepDoneMessage;
     constructor();
     /**
      * @method initialize
