@@ -105,7 +105,6 @@ export class ChokidarProvider {
    * @memberof ChokidarProvider
    */
   async #changeFile(filepath: string) {
-    this.#checkIsSDCFile(filepath);
 
     const ext = path.extname(filepath).replace('.', '');
 
@@ -114,6 +113,8 @@ export class ChokidarProvider {
       this.Browsersync.reload();
       return;
     }
+
+    this.#checkIsSDCFile(filepath);
 
     // Ignore files that are SDC files but are not in the SDC asset subdirectory
     if ( this.isSDCFile && !path.dirname(filepath).endsWith(this.bldrConfig.sdcAssetSubDirectory) ) {
