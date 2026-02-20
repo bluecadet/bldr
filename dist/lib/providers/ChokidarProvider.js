@@ -93,13 +93,13 @@ export class ChokidarProvider {
 _ChokidarProvider_instances = new WeakSet(), _ChokidarProvider_changeFile = function _ChokidarProvider_changeFile(filepath) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z;
-        __classPrivateFieldGet(this, _ChokidarProvider_instances, "m", _ChokidarProvider_checkIsSDCFile).call(this, filepath);
         const ext = path.extname(filepath).replace('.', '');
         // Reload if extension is in the reloadExtensions array
         if (this.bldrConfig.reloadExtensions.includes(ext)) {
             this.Browsersync.reload();
             return;
         }
+        __classPrivateFieldGet(this, _ChokidarProvider_instances, "m", _ChokidarProvider_checkIsSDCFile).call(this, filepath);
         // Ignore files that are SDC files but are not in the SDC asset subdirectory
         if (this.isSDCFile && !path.dirname(filepath).endsWith(this.bldrConfig.sdcAssetSubDirectory)) {
             return;
