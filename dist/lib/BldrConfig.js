@@ -23,6 +23,7 @@ import { BldrSettings } from "./BldrSettings.js";
 import path from "node:path";
 import { logAction, logError, logWarn } from "./utils/loggers.js";
 import { createRequire } from 'node:module';
+import { deepMerge } from "./utils/deepMerge.js";
 export class BldrConfig {
     /**
      * @description BldrConfig constructor
@@ -206,6 +207,9 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
                 logWarn('bldr', `Missing ${this.bldrSettings.localConfigFileName} file, using defaults`);
             }
             this.localConfig = null;
+        }
+        if (this.isDev && this.localConfig && this.userConfig) {
+            this.userConfig = deepMerge(this.userConfig, this.localConfig);
         }
     });
 }, _BldrConfig_createProcessConfig = function _BldrConfig_createProcessConfig() {

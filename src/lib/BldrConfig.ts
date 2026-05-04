@@ -1,9 +1,10 @@
 import type { CommandSettings } from "./@types/commandSettings";
-import type { BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, BldrBiomeSettings, ConfigSettings, LocalConfigSettings, ProcessAsset, ProcessKey, AssetObject, ProcessAssetGroup } from "./@types/configTypes";
+import type { BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, BldrBiomeSettings, ConfigSettings, ProcessAsset, ProcessKey, AssetObject, ProcessAssetGroup, browsersyncSettings, browsersyncSettings } from "./@types/configTypes";
 import { BldrSettings } from "./BldrSettings.js";
 import path from "node:path";
 import { logAction, logError, logWarn } from "./utils/loggers.js";
 import { createRequire } from 'node:module';
+import { deepMerge } from "./utils/deepMerge.js";
 
 export class BldrConfig {
   
@@ -40,7 +41,7 @@ export class BldrConfig {
    * @property null|object
    * Local config
    */
-  public localConfig: null | LocalConfigSettings = null;
+  public localConfig: null | ConfigSettings = null;
 
   /**
    * @property object
@@ -147,6 +148,12 @@ export class BldrConfig {
    */
   public biomeConfig: BldrBiomeSettings | null = null;
 
+
+  /**
+   * @property null|object
+   */
+  public browsersync: browsersyncSettings | null = null;
+
   /**
    * @property null|function
    * Fast-glob function
@@ -228,6 +235,10 @@ export class BldrConfig {
         logWarn('bldr', `Missing ${this.bldrSettings.localConfigFileName} file, using defaults`);
       }
       this.localConfig = null;
+    }
+
+    if ( this.isDev && this.localConfig && this.userConfig ) {
+      this.userConfig = deepMerge(this.userConfig, this.localConfig);
     }
   }
 

@@ -63,13 +63,18 @@ const createBldrLocalConfig = () => __awaiter(void 0, void 0, void 0, function* 
         }
     ]);
     const config = {
-        browsersync: {}
+        browsersync: {
+            port: '',
+            proxy: ''
+        }
     };
-    if (localPrompt.port !== '') {
-        config.browsersync.port = localPrompt.port;
-    }
-    if (localPrompt.proxyUrl !== '') {
-        config.browsersync.proxy = localPrompt.proxyUrl;
+    if (config === null || config === void 0 ? void 0 : config.browsersync) {
+        if (localPrompt.port !== '') {
+            config.browsersync.port = localPrompt.port;
+        }
+        if (localPrompt.proxyUrl !== '') {
+            config.browsersync.proxy = localPrompt.proxyUrl;
+        }
     }
     const content = `import { bldrLocalConfig } from "@bluecadet/bldr";
 

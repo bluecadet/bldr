@@ -1,6 +1,6 @@
 # Local Config
 
-When running `dev`, bldr will look for a `bldr.local.config.js`. This file can be used to configure custom settings for browsersync. You could omit it from git if you wish to let other devs create their own config.
+When running `dev`, bldr will look for a `bldr.local.config.js`. This file can be used to configure custom settings for your local development workflow. Effectively, you can use this file to overwrite settings in `bldr.config.js`.
 
 All configuration should be created within a `bldr.local.config.js` file that exports the `bldrLocalConfig` method:
 
@@ -11,11 +11,3 @@ export default bldrLocalConfig({
   // Configuration here
 });
 ```
-
-## Options
-
-### browsersync
-
-`object | null` - Default: `null`
-
-The `browsersync` object can contain any of the [options provided by browsersync](https://browsersync.io/docs/options). We recommend including `proxy` and setting its value to your local dev url.

@@ -23,6 +23,22 @@ Set to `true` to prevent a browsersync instance from being created when running 
 Name of the instance that gets created when Browsersync instance is created. Useful if you ever need to access the browsersync instance externally. See [browsersync.create](https://browsersync.io/docs/api#api-create)
 
 
+### Browsersync Options
+
+The `browsersync` object will be passed to the browersync instance, so any of the [options provided by browsersync](https://browsersync.io/docs/options) cab be added. 
+
+#### To proxy your local dev env:
+
+```js
+import {bldrConfig} from '@bluecadet/bldr/config';
+
+export default bldrConfig({
+  browsersync: {
+    port: 'https://[LOCAL-DEV-DOMAIN]'
+  }
+});
+```
+
 ## All Options (with defaults)
 ```js
 import {bldrConfig} from '@bluecadet/bldr/config';
@@ -31,6 +47,7 @@ export default bldrConfig({
   browsersync: {
     disable: false,
     instanceName: null,
+    // ...additional browsersync options
   },
 })
 ```

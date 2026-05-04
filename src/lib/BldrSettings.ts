@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'node:module';
 import type { CommandSettings } from './@types/commandSettings';
+import { logWarn } from './utils/loggers';
 
 
 export class BldrSettings {
@@ -86,10 +87,13 @@ export class BldrSettings {
     const bldrPackageJson = require(bldrPackagePath);
 
     // Determine User Config File
+    // Check for old deprecated file name
     let configFileName = 'bldrConfig.js';
     let configFilePath = path.join(process.cwd(), configFileName);
 
-    if ( !fs.existsSync(configFilePath) ) {
+    if ( fs.existsSync(configFilePath) ) {
+      logWarn('bldr', `The config file name "bldrConfig.js" is deprecated. Please rename it to "bldr.config.js".`);
+    } else {
       configFileName = 'bldr.config.js';
       configFilePath = path.join(process.cwd(), configFileName);
     }
@@ -98,7 +102,9 @@ export class BldrSettings {
     this.localConfigFileName = 'bldrConfigLocal.js';
     this.localConfigFilePath = path.join(process.cwd(), this.localConfigFileName);
 
-    if ( !fs.existsSync(this.localConfigFilePath) ) {
+    if ( fs.existsSync(this.localConfigFilePath) ) {
+      logWarn('bldr', `The local config file name "bldrConfigLocal.js" is deprecated. Please rename it to "bldr.local.config.js".`);
+    } else {
       this.localConfigFileName = 'bldr.local.config.js';
       this.localConfigFilePath = path.join(process.cwd(), this.localConfigFileName);
     }

@@ -1,7 +1,7 @@
 import { CommandSettings } from "../lib/@types/commandSettings";
 import { BldrSettings } from "../lib/BldrSettings.js";
 import { logSuccess, logError } from "../lib/utils/loggers.js";
-import { ConfigSettings, LocalConfigSettings } from "../lib/@types/configTypes";
+import { ConfigSettings } from "../lib/@types/configTypes";
 import { handleBrowsersync, handleEsLint, handlePathPrompt, handleReloadExtensions, handleRollup, handleSDC, handleStylelint, handleWatchPaths } from "../lib/utils/createFilePrompts.js";
 import path from "node:path";
 import fs from "node:fs";
@@ -66,17 +66,24 @@ const createBldrLocalConfig = async () => {
     }
   ]);
 
-  const config: LocalConfigSettings = {
-    browsersync: {}
+  const config: ConfigSettings = {
+    browsersync: {
+      port: '',
+      proxy: ''
+    }
   };
 
-  if ( localPrompt.port !== '' ) {
-    config.browsersync.port = localPrompt.port;
+  if ( config?.browsersync ) {
+    if ( localPrompt.port !== '' ) {
+      config.browsersync.port = localPrompt.port;
+    }
+
+    if ( localPrompt.proxyUrl !== '' ) {
+      config.browsersync.proxy = localPrompt.proxyUrl;
+    }
   }
 
-  if ( localPrompt.proxyUrl !== '' ) {
-    config.browsersync.proxy = localPrompt.proxyUrl;
-  }
+  
 
   const content = `import { bldrLocalConfig } from "@bluecadet/bldr";
 

@@ -175,6 +175,7 @@ export interface BldrSDCSettings {
     };
 }
 export interface browsersyncSettings {
+    [key: string]: unknown;
     /**
      * @description set to false if browsersync should not be ran. Default: true
      */
@@ -183,12 +184,6 @@ export interface browsersyncSettings {
      * @description browsersync instance name
      */
     instanceName?: string;
-}
-export interface LocalConfigSettings {
-    /**
-     * @description browsersync options
-     */
-    browsersync?: any;
 }
 export type ProcessKey = 'css' | 'js' | 'sass';
 export interface ProcessAssetGroup {

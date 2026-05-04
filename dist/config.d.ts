@@ -1,4 +1,4 @@
-import { ConfigSettings, LocalConfigSettings } from "./lib/@types/configTypes";
+import { ConfigSettings } from "./lib/@types/configTypes";
 export declare function bldrConfig(config: ConfigSettings): ConfigSettings;
-export declare function bldrLocalConfig(config: LocalConfigSettings): LocalConfigSettings;
+export declare function bldrLocalConfig(config: ConfigSettings): ConfigSettings;
 //# sourceMappingURL=config.d.ts.map
