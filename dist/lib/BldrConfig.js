@@ -116,6 +116,10 @@ export class BldrConfig {
          */
         this.biomeConfig = null;
         /**
+         * @property null|object
+         */
+        this.browsersync = null;
+        /**
          * @property null|function
          * Fast-glob function
          */
@@ -333,7 +337,7 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
     });
 }, _BldrConfig_buildProviderConfig = function _BldrConfig_buildProviderConfig() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f;
+        var _a, _b, _c, _d, _e, _f, _g;
         const jsExists = ((_a = this.processAssetGroups) === null || _a === void 0 ? void 0 : _a.js) || ((_b = this.sdcProcessAssetGroups) === null || _b === void 0 ? void 0 : _b.js);
         const sassExists = ((_c = this.processAssetGroups) === null || _c === void 0 ? void 0 : _c.sass) || ((_d = this.sdcProcessAssetGroups) === null || _d === void 0 ? void 0 : _d.sass);
         const cssExists = ((_e = this.processAssetGroups) === null || _e === void 0 ? void 0 : _e.css) || ((_f = this.sdcProcessAssetGroups) === null || _f === void 0 ? void 0 : _f.css) || sassExists;
@@ -354,6 +358,9 @@ _BldrConfig_fg = new WeakMap(), _BldrConfig_instances = new WeakSet(), _BldrConf
         }
         if (jsExists || cssExists) {
             yield __classPrivateFieldGet(this, _BldrConfig_instances, "m", _BldrConfig_setBiomeConfig).call(this);
+        }
+        if (((_g = this.userConfig) === null || _g === void 0 ? void 0 : _g.browsersync) && !this.userConfig.browsersync.disable) {
+            this.browsersync = Object.assign({ disable: false, instanceName: `bldr-${Math.floor(Math.random() * 1000)}` }, this.userConfig.browsersync);
         }
     });
 }, _BldrConfig_setEsBuildConfig = function _BldrConfig_setEsBuildConfig() {

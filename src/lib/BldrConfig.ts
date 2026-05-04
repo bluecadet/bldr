@@ -1,5 +1,5 @@
 import type { CommandSettings } from "./@types/commandSettings";
-import type { BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, BldrBiomeSettings, ConfigSettings, ProcessAsset, ProcessKey, AssetObject, ProcessAssetGroup, browsersyncSettings, browsersyncSettings } from "./@types/configTypes";
+import type { BldrEsBuildSettings, BldrEsLintSettings, BldrRollupSettings, BldrSassSettings, BldrStyleLintSettings, BldrBiomeSettings, ConfigSettings, ProcessAsset, ProcessKey, AssetObject, ProcessAssetGroup, browsersyncSettings } from "./@types/configTypes";
 import { BldrSettings } from "./BldrSettings.js";
 import path from "node:path";
 import { logAction, logError, logWarn } from "./utils/loggers.js";
@@ -486,6 +486,14 @@ export class BldrConfig {
 
     if ( jsExists || cssExists ) {
       await this.#setBiomeConfig(); 
+    }
+
+    if ( this.userConfig?.browsersync && !this.userConfig.browsersync.disable ) {
+      this.browsersync = {
+        disable: false,
+        instanceName: `bldr-${Math.floor(Math.random() * 1000)}`,
+        ...this.userConfig.browsersync
+      };
     }
   }
 

@@ -27,26 +27,29 @@ export class BrowsersyncProvider {
         return __awaiter(this, void 0, void 0, function* () {
             var _a, _b, _c, _d;
             this.bldrConfig = BldrConfig._instance;
-            if ((_b = (_a = this.bldrConfig.userConfig) === null || _a === void 0 ? void 0 : _a.browsersync) === null || _b === void 0 ? void 0 : _b.disable) {
+            if ((_b = (_a = this.bldrConfig) === null || _a === void 0 ? void 0 : _a.browsersync) === null || _b === void 0 ? void 0 : _b.disable) {
                 return;
             }
             logAction('bldr', '...starting local server...');
             const require = createRequire(import.meta.url);
-            const bsName = ((_d = (_c = this.bldrConfig.userConfig) === null || _c === void 0 ? void 0 : _c.browsersync) === null || _d === void 0 ? void 0 : _d.instanceName) || `bldr-${Math.floor(Math.random() * 1000)}`;
+            const bsName = ((_d = (_c = this.bldrConfig) === null || _c === void 0 ? void 0 : _c.browsersync) === null || _d === void 0 ? void 0 : _d.instanceName) || `bldr-${Math.floor(Math.random() * 1000)}`;
             this.browsersyncInstance = require('browser-sync').create(bsName);
             this.notice = 'BrowsersyncProvider initialized';
         });
     }
     bootstrap() {
-        var _a, _b, _c, _d;
-        if ((_b = (_a = this.bldrConfig.userConfig) === null || _a === void 0 ? void 0 : _a.browsersync) === null || _b === void 0 ? void 0 : _b.disable)
+        var _a, _b, _c;
+        if ((_b = (_a = this.bldrConfig) === null || _a === void 0 ? void 0 : _a.browsersync) === null || _b === void 0 ? void 0 : _b.disable)
             return;
         let bsOptions = {
             logPrefix: 'bldr',
             logFileChanges: false,
         };
-        if ((_d = (_c = this.bldrConfig) === null || _c === void 0 ? void 0 : _c.localConfig) === null || _d === void 0 ? void 0 : _d.browsersync) {
-            bsOptions = Object.assign(Object.assign({}, this.bldrConfig.localConfig.browsersync), bsOptions);
+        if ((_c = this.bldrConfig) === null || _c === void 0 ? void 0 : _c.browsersync) {
+            const bsOnlyOptions = Object.assign({}, this.bldrConfig.browsersync);
+            delete bsOnlyOptions.disable;
+            delete bsOnlyOptions.instanceName;
+            bsOptions = Object.assign(Object.assign({}, bsOnlyOptions), bsOptions);
         }
         this.browsersyncInstance.init(bsOptions);
     }

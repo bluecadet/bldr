@@ -35,20 +35,20 @@ export class BrowsersyncProvider {
   async initialize() {
     this.bldrConfig = BldrConfig._instance;
 
-    if ( this.bldrConfig.userConfig?.browsersync?.disable ) {
+    if ( this.bldrConfig?.browsersync?.disable ) {
       return;
     }
 
     logAction('bldr', '...starting local server...');
 
     const require = createRequire(import.meta.url);
-    const bsName = this.bldrConfig.userConfig?.browsersync?.instanceName || `bldr-${Math.floor(Math.random() * 1000)}`;
+    const bsName = this.bldrConfig?.browsersync?.instanceName || `bldr-${Math.floor(Math.random() * 1000)}`;
     this.browsersyncInstance = require('browser-sync').create(bsName);
     this.notice = 'BrowsersyncProvider initialized';
   }
 
   bootstrap() {
-    if ( this.bldrConfig.userConfig?.browsersync?.disable ) return;
+    if ( this.bldrConfig?.browsersync?.disable ) return;
 
     let bsOptions = {
       logPrefix: 'bldr',

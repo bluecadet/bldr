@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'node:module';
 import type { CommandSettings } from './@types/commandSettings';
-import { logWarn } from './utils/loggers';
+import { logWarn } from './utils/loggers.js';
 
 
 export class BldrSettings {
